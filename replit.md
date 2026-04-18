@@ -25,3 +25,24 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+
+## Artifacts
+
+### Tokai — Neuro Dashboard (`artifacts/tokai/`)
+- **Type**: Streamlit (Python) web application
+- **Port**: 20318 (artifact), served at `/`
+- **Stack**: Python, Streamlit, Plotly, Pandas, NumPy
+- **Entry point**: `artifacts/tokai/app.py`
+- **Config**: `artifacts/tokai/.streamlit/config.toml`
+- **Workflow**: `artifacts/tokai: web`
+- **Features**:
+  - Simulated EEG Focus Index (Alpha/Beta wave ratios)
+  - Real-time Plotly line chart
+  - Optimal Focus Window Predictor (bio-energy based)
+  - Task/Todo list integration
+  - LUNA AI insights panel
+  - Dark mode cyber-medical theme
+
+### API Server (`artifacts/api-server/`)
+- Express 5 + TypeScript backend at `/api`
+- Health check endpoint: `/api/healthz`

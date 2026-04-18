@@ -1,0 +1,21 @@
+kind = "web"
+previewPath = "/"
+title = "Tokai — Neuro Dashboard"
+version = "1.0.0"
+id = "artifacts/tokai"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20318
+
+[services.development]
+run = "streamlit run /home/runner/workspace/artifacts/tokai/app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true"
+
+[services.env]
+PORT = "20318"
