@@ -253,7 +253,7 @@ export default function Dashboard() {
             onMouseEnter={e => (e.currentTarget.style.color = "#c084fc")}
             onMouseLeave={e => (e.currentTarget.style.color = "#5a8fa8")}
           >
-            <Github size={14} />
+            <Github size={20} />
             Source Code
           </a>
         </div>
