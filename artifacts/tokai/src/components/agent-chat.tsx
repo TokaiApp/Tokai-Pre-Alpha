@@ -12,7 +12,7 @@ interface Message {
   content: string;
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
 export default function AgentChat({ neuralState }: { neuralState: NeuralState }) {
   const [messages, setMessages] = useState<Message[]>([
