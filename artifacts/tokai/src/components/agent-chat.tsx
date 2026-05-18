@@ -62,11 +62,11 @@ export default function AgentChat({ neuralState }: { neuralState: NeuralState })
   }
 
   return (
-    <div style={{ background: "linear-gradient(135deg, #0a1628, #0d1b2e)", border: "1px solid rgba(0,245,212,0.2)", borderRadius: 10, overflow: "hidden", marginTop: 4 }}>
+    <div style={{ background: "linear-gradient(135deg, #0a1628, #0d1b2e)", border: "1px solid rgba(0,245,212,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(0,245,212,0.07)" }}>
       {/* Header */}
       <div style={{ padding: "12px 20px", borderBottom: "1px solid rgba(0,245,212,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(0,245,212,0.03)" }}>
         <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#00f5d4", boxShadow: "0 0 8px rgba(0,245,212,0.9)", flexShrink: 0 }} />
-        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#00f5d4", letterSpacing: 3 }}>TOKAGENT · TASK PLANNER</span>
+        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, color: "#00f5d4", letterSpacing: 3 }}>TOKAGENT · TASK PLANNER</span>
         <div style={{ marginLeft: "auto", display: "flex", gap: 16, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8" }}>
           <span>FOCUS {neuralState.focusIndex.toFixed(1)}/100</span>
           <span>ENERGY {Math.round(neuralState.bioEnergy)}%</span>

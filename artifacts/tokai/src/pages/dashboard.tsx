@@ -259,8 +259,8 @@ export default function Dashboard() {
           <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 4 }}>NEUROSUPPORTIVE DASHBOARD · ADHD MANAGEMENT SYSTEM</div>
         </div>
 
-        {/* Metric cards — 5 columns including focus window predictor */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 14 }}>
+        {/* Metric cards — 6 columns including focus window predictor + wave breakdown */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 14 }}>
           <MetricCard title="FOCUS INDEX">
             <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
               {neural.focusIndex.toFixed(1)}<span style={{ fontSize: 16, color: "#5a8fa8" }}>/100</span>
@@ -303,13 +303,32 @@ export default function Dashboard() {
                 : `CONFIDENCE ${Math.min(99, Math.round(50 + samples * 1.2))}%`}
             </div>
           </MetricCard>
+
+          <MetricCard title="WAVE BREAKDOWN">
+            <div style={{ height: 82 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={waveData} margin={{ top: 0, right: 4, bottom: 22, left: 4 }}>
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: "#5a8fa8", fontSize: 8, fontFamily: "'Share Tech Mono', monospace" }}
+                    axisLine={false} tickLine={false}
+                  />
+                  <YAxis hide domain={[0, 200]} />
+                  <Bar dataKey="value" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+                    <Cell fill="#00f5d4" />
+                    <Cell fill="#0066ff" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </MetricCard>
         </div>
 
         {/* Charts row */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 14 }}>
           {/* Left: focus chart */}
           <Panel title="REAL-TIME FOCUS STREAM">
-            <div style={{ position: "relative", height: 200 }}>
+            <div style={{ position: "relative", height: 150 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={focusHistory} margin={{ top: 8, right: 48, bottom: 0, left: 0 }}>
                   <XAxis
@@ -338,43 +357,28 @@ export default function Dashboard() {
             </div>
           </Panel>
 
-          {/* Right: insights + wave breakdown */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <Panel title="TOKAI · NEURAL INSIGHTS">
-              <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#00f5d4", letterSpacing: 2, marginBottom: 10 }}>
-                ● TOKAI · ADAPTIVE RESPONSE
-              </div>
-              <p style={{ fontSize: 15, color: "#c8d8e8", lineHeight: 1.65, fontStyle: "italic", margin: 0 }}>
-                "{getInsight()}"
-              </p>
-            </Panel>
-
-            <Panel title="WAVE BREAKDOWN">
-              <div style={{ height: 130 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={waveData} margin={{ top: 4, right: 8, bottom: 24, left: 8 }}>
-                    <XAxis
-                      dataKey="name"
-                      tick={{ fill: "#5a8fa8", fontSize: 9, fontFamily: "'Share Tech Mono', monospace" }}
-                      axisLine={false} tickLine={false}
-                    />
-                    <YAxis hide domain={[0, 200]} />
-                    <Bar dataKey="value" radius={[3, 3, 0, 0]} isAnimationActive={false}>
-                      <Cell fill="#00f5d4" />
-                      <Cell fill="#0066ff" />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </Panel>
-          </div>
+          {/* Right: insights */}
+          <Panel title="TOKAI · NEURAL INSIGHTS">
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#00f5d4", letterSpacing: 2, marginBottom: 10 }}>
+              ● TOKAI · ADAPTIVE RESPONSE
+            </div>
+            <p style={{ fontSize: 15, color: "#c8d8e8", lineHeight: 1.65, fontStyle: "italic", margin: 0 }}>
+              "{getInsight()}"
+            </p>
+          </Panel>
         </div>
 
         {/* Bottom row: TokAgent (left) + Task Integration (right) */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 14 }}>
+        <div style={{ borderTop: "1px solid rgba(0,245,212,0.25)", paddingTop: 20 }}>
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#00f5d4", letterSpacing: 3, marginBottom: 14 }}>── PLANNING INTERFACE ──────────────────────────────</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 14 }}>
           <AgentChat neuralState={neural} />
 
-          <Panel title="TASK INTEGRATION">
+          <div style={{ background: "linear-gradient(135deg, #0d1b2e, #0f2035)", border: "1px solid rgba(0,245,212,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(0,245,212,0.07)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+              <div style={{ width: 3, height: 16, background: "#00f5d4", borderRadius: 1, flexShrink: 0 }} />
+              <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, color: "#00f5d4", letterSpacing: 3 }}>TASK INTEGRATION</span>
+            </div>
             <input
               value={newTask}
               onChange={e => setNewTask(e.target.value)}
@@ -403,7 +407,8 @@ export default function Dashboard() {
             <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 1 }}>
               PROGRESS {completedCount}/{tasks.length} {completedCount > 0 && completedCount === tasks.length ? "✓ COMPLETE" : ""}
             </div>
-          </Panel>
+          </div>
+          </div>
         </div>
       </main>
     </div>
