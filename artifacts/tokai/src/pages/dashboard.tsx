@@ -371,9 +371,6 @@ export default function Dashboard() {
 
           {/* Right: insights */}
           <Panel title="TOKAI · NEURAL INSIGHTS">
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc", letterSpacing: 2, marginBottom: 10 }}>
-              ● TOKAI · ADAPTIVE RESPONSE
-            </div>
             <p style={{ fontSize: 15, color: "#c8d8e8", lineHeight: 1.65, fontStyle: "italic", margin: 0 }}>
               "{getInsight()}"
             </p>
