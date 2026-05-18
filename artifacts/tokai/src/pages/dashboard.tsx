@@ -49,43 +49,43 @@ const T = {
       `Focus index is low (${f}/100). Neural noise is elevated. Recommend switching to low-cognitive tasks — organizing, reviewing notes, or short breaks. Energy at ${e}%. Allow your neural state to recover before tackling demanding work.`,
   },
   zh: {
-    version: "Tokai 预览版 v0.1",
-    systemControl: "系统控制",
-    liveStream: "实时流",
-    refreshRate: "刷新频率（秒）",
-    manualRefresh: "⊕ 手动刷新",
-    sessionInfo: "会话信息",
-    date: "日期", time: "时间", samples: "样本", status: "状态",
-    active: "活跃", paused: "暂停",
-    aboutTokai: "关于 TOKAI",
-    aboutText: "Tokai 融合 EEG 脑电流数据与生物节律，为 ADHD 用户提供自适应认知建议。",
-    sourceCode: "源代码",
-    sessionLabel: "会话",
-    subtitle: "神经支持仪表盘 · ADHD 管理系统",
-    focusIndex: "专注指数",
+    version: "Tokai 預覽版 v0.1",
+    systemControl: "系統控制",
+    liveStream: "即時串流",
+    refreshRate: "更新頻率（秒）",
+    manualRefresh: "⊕ 手動更新",
+    sessionInfo: "工作階段資訊",
+    date: "日期", time: "時間", samples: "樣本", status: "狀態",
+    active: "作用中", paused: "已暫停",
+    aboutTokai: "關於 TOKAI",
+    aboutText: "Tokai 整合 EEG 腦電流數據與生理節律，為 ADHD 使用者提供自適應認知建議。",
+    sourceCode: "原始碼",
+    sessionLabel: "工作階段",
+    subtitle: "神經支援儀表板 · ADHD 管理系統",
+    focusIndex: "專注指數",
     bioEnergy: "生理能量",
-    neuralNoise: "神经噪声",
+    neuralNoise: "神經噪訊",
     abRatio: "α/β 波比",
-    focusWindow: "专注窗口",
-    collectingData: "数据采集中...",
-    streamMoreSamples: "继续采集样本",
-    confidence: "置信度",
+    focusWindow: "專注窗口",
+    collectingData: "資料收集中...",
+    streamMoreSamples: "繼續收集樣本",
+    confidence: "可信度",
     waveBreakdown: "波形分析",
-    focusStream: "实时专注流",
-    neuralInsights: "TOKAI · 神经洞察",
-    tokTodo: "任务清单",
-    taskPlaceholder: "输入任务，按回车添加...",
-    progress: "进度",
+    focusStream: "即時專注串流",
+    neuralInsights: "TOKAI · 神經洞察",
+    tokTodo: "任務清單",
+    taskPlaceholder: "輸入任務，按 Enter 新增...",
+    progress: "進度",
     complete: "✓ 全部完成",
-    planningInterface: "── 规划界面 ──────────────────────────────────────",
-    focusLow: "低", focusMod: "中等", focusHigh: "高", focusOpt: "最优",
+    planningInterface: "── 規劃介面 ──────────────────────────────────────",
+    focusLow: "低", focusMod: "中等", focusHigh: "高", focusOpt: "最佳",
     noiseClean: "清晰", noiseNom: "正常", noiseElev: "偏高", noiseHigh: "高",
     insightOptimal: (f: string, e: string) =>
-      `检测到最优认知窗口。专注度高（${f}/100），能量储备充足（${e}%）。现在是深度工作与高价值创造任务的黄金时段，请优先处理最具挑战性的工作。`,
+      `檢測到最佳認知窗口。專注度高（${f}/100），能量儲備充足（${e}%）。現在是深度工作與高價值創造任務的黃金時段，請優先處理最具挑戰性的工作。`,
     insightMod: (f: string, noise: string, e: string, eLevel: string) =>
-      `神经基线${noise}。认知工作条件良好，专注度中等（${f}/100）。建议以 20 分钟为单元分解任务。生理能量${eLevel}（${e}%），适合持续的问题求解工作。`,
+      `神經基線${noise}。認知工作條件良好，專注度中等（${f}/100）。建議以 20 分鐘為單元分解任務。生理能量${eLevel}（${e}%），適合持續的問題求解工作。`,
     insightLow: (f: string, e: string) =>
-      `专注指数偏低（${f}/100），神经噪声较高。建议切换至低认知负荷任务——整理资料、回顾笔记或短暂休息。能量水平 ${e}%，待神经状态恢复后再处理高难度工作。`,
+      `專注指數偏低（${f}/100），神經噪訊較高。建議切換至低認知負荷任務——整理資料、回顧筆記或短暫休息。能量水平 ${e}%，待神經狀態恢復後再處理高難度工作。`,
   },
 };
 
@@ -237,7 +237,7 @@ export default function Dashboard() {
     const e = neural.bioEnergy;
     if (f > 70 && e > 70) return t.insightOptimal(f.toFixed(1), String(Math.round(e)));
     if (f > 50) {
-      const eLevel = lang === "en" ? (e > 60 ? "high" : "moderate") : (e > 60 ? "高" : "中等");
+      const eLevel = lang === "en" ? (e > 60 ? "high" : "moderate") : (e > 60 ? "高" : "中等"); // trad/simp same here
       return t.insightMod(f.toFixed(1), noiseInfo.label.toLowerCase(), String(Math.round(e)), eLevel);
     }
     return t.insightLow(f.toFixed(1), String(Math.round(e)));
@@ -336,9 +336,9 @@ export default function Dashboard() {
             onClick={() => setLang(l => l === "en" ? "zh" : "en")}
             style={{ display: "flex", alignItems: "center", gap: 0, background: "rgba(192,132,252,0.06)", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 6, overflow: "hidden", cursor: "pointer", marginTop: 8, fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 1 }}
           >
-            <span style={{ padding: "6px 12px", color: lang === "en" ? "#c084fc" : "#5a8fa8", fontWeight: lang === "en" ? 700 : 400, background: lang === "en" ? "rgba(192,132,252,0.15)" : "transparent", transition: "all 0.2s" }}>EN</span>
+            <span style={{ width: 48, textAlign: "center", padding: "6px 0", display: "inline-block", color: lang === "en" ? "#c084fc" : "#5a8fa8", fontWeight: lang === "en" ? 700 : 400, background: lang === "en" ? "rgba(192,132,252,0.15)" : "transparent", transition: "all 0.2s" }}>EN</span>
             <span style={{ color: "rgba(192,132,252,0.3)", padding: "6px 0" }}>|</span>
-            <span style={{ padding: "6px 12px", color: lang === "zh" ? "#c084fc" : "#5a8fa8", fontWeight: lang === "zh" ? 700 : 400, background: lang === "zh" ? "rgba(192,132,252,0.15)" : "transparent", transition: "all 0.2s" }}>中文</span>
+            <span style={{ width: 48, textAlign: "center", padding: "6px 0", display: "inline-block", color: lang === "zh" ? "#c084fc" : "#5a8fa8", fontWeight: lang === "zh" ? 700 : 400, background: lang === "zh" ? "rgba(192,132,252,0.15)" : "transparent", transition: "all 0.2s" }}>中文</span>
           </button>
         </div>
 

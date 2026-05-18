@@ -56,7 +56,7 @@ Your behavior:
 - Be direct and actionable
 - Use a calm, focused tone
 - Do not use emojis
-${lang === "zh" ? "- Respond in Simplified Chinese (简体中文)" : "- Respond in English"}`;
+${lang === "zh" ? "- Respond in Traditional Chinese (繁體中文)" : "- Respond in English"}`;
 
     const response = await client.messages.create({
       model: "claude-sonnet-4-5",

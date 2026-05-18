@@ -30,15 +30,15 @@ const UI = {
     error: "Neural link disrupted. Make sure the API server is running and ANTHROPIC_API_KEY is set.",
   },
   zh: {
-    title: "TOKAGENT · 任务规划",
-    focus: "专注", energy: "能量", noise: "噪声",
+    title: "TOKAGENT · 任務規劃",
+    focus: "專注", energy: "能量", noise: "噪訊",
     label: "TOKAGENT",
-    analyzing: "神经状态分析中...",
-    placeholder: "告诉 TokAgent 你今天想做什么...",
-    send: "发送",
+    analyzing: "神經狀態分析中...",
+    placeholder: "告訴 TokAgent 你今天想做什麼...",
+    send: "傳送",
     greeting: (f: string, e: string) =>
-      `神经同步完成。我是 TokAgent，你的任务规划助手。根据你当前的状态——专注度 ${f}/100，能量 ${e}%——我可以帮你制定并优先排列今日任务清单。你今天需要完成什么？`,
-    error: "神经链路中断。请确认 API 服务器正在运行且 ANTHROPIC_API_KEY 已配置。",
+      `神經同步完成。我是 TokAgent，你的任務規劃助手。根據你當前的狀態——專注度 ${f}/100，能量 ${e}%——我可以幫你制定並優先排列今日任務清單。你今天需要完成什麼？`,
+    error: "神經鏈路中斷。請確認 API 伺服器正在運行且 ANTHROPIC_API_KEY 已設定。",
   },
 };
 
@@ -108,7 +108,7 @@ export default function AgentChat({ neuralState, tasks, lang = "en" }: { neuralS
       <div style={{ padding: "12px 20px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(192,132,252,0.03)" }}>
         <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c084fc", boxShadow: "0 0 8px rgba(192,132,252,0.9)", flexShrink: 0 }} />
         <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, letterSpacing: 3 }}>
-          <span style={{ color: "#f472b6" }}>TOK</span><span style={{ color: "#c084fc" }}>{lang === "en" ? "AGENT · TASK PLANNER" : "AGENT · 任务规划"}</span>
+          <span style={{ color: "#f472b6" }}>TOK</span><span style={{ color: "#c084fc" }}>{lang === "en" ? "AGENT · TASK PLANNER" : "AGENT · 任務規劃"}</span>
         </span>
         <div style={{ marginLeft: "auto", display: "flex", gap: 16, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8" }}>
           <span>{t.focus} {neuralState.focusIndex.toFixed(1)}/100</span>
