@@ -36,13 +36,13 @@ function formatTime(d: Date) {
 function getFocusLabel(f: number): { label: string; color: string } {
   if (f < 30) return { label: "LOW", color: "#ff4d4d" };
   if (f < 60) return { label: "MODERATE", color: "#ffa040" };
-  if (f < 80) return { label: "HIGH", color: "#00f5d4" };
-  return { label: "OPTIMAL", color: "#00ff88" };
+  if (f < 80) return { label: "HIGH", color: "#c084fc" };
+  return { label: "OPTIMAL", color: "#f472b6" };
 }
 
 function getNoiseLabel(n: number): { label: string; color: string } {
-  if (n < 20) return { label: "CLEAN", color: "#00ff88" };
-  if (n < 40) return { label: "NOMINAL", color: "#00f5d4" };
+  if (n < 20) return { label: "CLEAN", color: "#f472b6" };
+  if (n < 40) return { label: "NOMINAL", color: "#c084fc" };
   if (n < 60) return { label: "ELEVATED", color: "#ffa040" };
   return { label: "HIGH", color: "#ff4d4d" };
 }
@@ -53,7 +53,7 @@ function drift(val: number, amount: number, min: number, max: number) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#00f5d4", letterSpacing: 3, marginBottom: 10, borderBottom: "1px solid rgba(0,245,212,0.2)", paddingBottom: 4 }}>
+    <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc", letterSpacing: 3, marginBottom: 10, borderBottom: "1px solid rgba(192,132,252,0.2)", paddingBottom: 4 }}>
       {children}
     </div>
   );
@@ -63,17 +63,17 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   return (
     <div
       onClick={() => onChange(!checked)}
-      style={{ width: 36, height: 20, background: checked ? "rgba(0,245,212,0.25)" : "rgba(0,0,0,0.4)", borderRadius: 10, cursor: "pointer", position: "relative", border: `1px solid ${checked ? "#00f5d4" : "rgba(0,245,212,0.2)"}`, transition: "all 0.2s", flexShrink: 0 }}
+      style={{ width: 36, height: 20, background: checked ? "rgba(192,132,252,0.25)" : "rgba(0,0,0,0.4)", borderRadius: 10, cursor: "pointer", position: "relative", border: `1px solid ${checked ? "#c084fc" : "rgba(192,132,252,0.2)"}`, transition: "all 0.2s", flexShrink: 0 }}
     >
-      <div style={{ position: "absolute", top: 2, left: checked ? 17 : 2, width: 14, height: 14, borderRadius: "50%", background: checked ? "#00f5d4" : "#5a8fa8", transition: "left 0.2s" }} />
+      <div style={{ position: "absolute", top: 2, left: checked ? 17 : 2, width: 14, height: 14, borderRadius: "50%", background: checked ? "#c084fc" : "#5a8fa8", transition: "left 0.2s" }} />
     </div>
   );
 }
 
 function MetricCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "linear-gradient(135deg, #0d1b2e, #0f2035)", border: "1px solid rgba(0,245,212,0.15)", borderRadius: 10, padding: "16px 20px", position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", top: 0, left: 0, width: 3, height: "100%", background: "linear-gradient(180deg, #00f5d4, #0066ff)" }} />
+    <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.15)", borderRadius: 10, padding: "16px 20px", position: "relative", overflow: "hidden" }}>
+      <div style={{ position: "absolute", top: 0, left: 0, width: 3, height: "100%", background: "linear-gradient(180deg, #c084fc, #7c3aed)" }} />
       <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 2, marginBottom: 8 }}>{title}</div>
       {children}
     </div>
@@ -82,10 +82,10 @@ function MetricCard({ title, children }: { title: string; children: React.ReactN
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "linear-gradient(135deg, #0d1b2e, #0f2035)", border: "1px solid rgba(0,245,212,0.15)", borderRadius: 10, padding: 16 }}>
+    <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.15)", borderRadius: 10, padding: 16 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-        <div style={{ width: 3, height: 16, background: "#00f5d4", borderRadius: 1, flexShrink: 0 }} />
-        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#00f5d4", letterSpacing: 3 }}>{title}</span>
+        <div style={{ width: 3, height: 16, background: "#c084fc", borderRadius: 1, flexShrink: 0 }} />
+        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#c084fc", letterSpacing: 3 }}>{title}</span>
       </div>
       {children}
     </div>
@@ -187,9 +187,9 @@ export default function Dashboard() {
   ];
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "linear-gradient(135deg, #070d1a 0%, #0a1628 50%, #06111f 100%)", fontFamily: "'Rajdhani', sans-serif", color: "#c8d8e8" }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: "linear-gradient(135deg, #0c0818 0%, #100a25 50%, #080614 100%)", fontFamily: "'Rajdhani', sans-serif", color: "#c8d8e8" }}>
       {/* ── Sidebar ── */}
-      <aside style={{ width: 200, minWidth: 200, padding: "24px 16px", borderRight: "1px solid rgba(0,245,212,0.15)", display: "flex", flexDirection: "column", gap: 24, position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
+      <aside style={{ width: 200, minWidth: 200, padding: "24px 16px", borderRight: "1px solid rgba(192,132,252,0.15)", display: "flex", flexDirection: "column", gap: 24, position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
         <div>
           <img src="/tokai_logo.png" alt="Tokai" style={{ width: "100%", maxWidth: 110, display: "block", marginBottom: 6 }} />
           <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", letterSpacing: 2 }}>Tokai Pre-Alpha v0.1</div>
@@ -204,17 +204,17 @@ export default function Dashboard() {
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
               <span style={{ fontSize: 13, color: "#5a8fa8" }}>Refresh Rate (s)</span>
-              <span style={{ fontSize: 11, color: "#00f5d4", fontFamily: "'Share Tech Mono', monospace" }}>{refreshRate}</span>
+              <span style={{ fontSize: 11, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace" }}>{refreshRate}</span>
             </div>
             <input
               type="range" min={1} max={10} value={refreshRate}
               onChange={e => setRefreshRate(Number(e.target.value))}
-              style={{ width: "100%", accentColor: "#00f5d4", cursor: "pointer" }}
+              style={{ width: "100%", accentColor: "#c084fc", cursor: "pointer" }}
             />
           </div>
           <button
             onClick={tick}
-            style={{ width: "100%", padding: "6px 0", background: "transparent", border: "1px solid rgba(0,245,212,0.4)", color: "#00f5d4", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", letterSpacing: 1, borderRadius: 4 }}
+            style={{ width: "100%", padding: "6px 0", background: "transparent", border: "1px solid rgba(192,132,252,0.4)", color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", letterSpacing: 1, borderRadius: 4 }}
           >
             ⊕ Manual Refresh
           </button>
@@ -232,7 +232,7 @@ export default function Dashboard() {
               ] as [string, string][]).map(([k, v]) => (
                 <tr key={k}>
                   <td style={{ color: "#5a8fa8", paddingRight: 8, paddingBottom: 5, fontFamily: "'Share Tech Mono', monospace", letterSpacing: 1 }}>{k}</td>
-                  <td style={{ color: k === "STATUS" ? (liveStream ? "#00f5d4" : "#ffa040") : "#c8d8e8", fontFamily: "'Share Tech Mono', monospace" }}>{v}</td>
+                  <td style={{ color: k === "STATUS" ? (liveStream ? "#c084fc" : "#ffa040") : "#c8d8e8", fontFamily: "'Share Tech Mono', monospace" }}>{v}</td>
                 </tr>
               ))}
             </tbody>
@@ -246,7 +246,7 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div style={{ marginTop: "auto", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(0,245,212,0.3)", letterSpacing: 1 }}>
+        <div style={{ marginTop: "auto", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(192,132,252,0.3)", letterSpacing: 1 }}>
           SESSION {sessionDuration}m
         </div>
       </aside>
@@ -255,7 +255,7 @@ export default function Dashboard() {
       <main style={{ flex: 1, padding: "24px 28px", display: "flex", flexDirection: "column", gap: 20, overflowX: "hidden" }}>
         {/* Header */}
         <div>
-          <h1 style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 52, fontWeight: 700, color: "#00f5d4", letterSpacing: 14, textShadow: "0 0 30px rgba(0,245,212,0.5), 0 0 60px rgba(0,245,212,0.2)", margin: "0 0 4px 0" }}>TOKAI</h1>
+          <h1 style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 52, fontWeight: 700, color: "#c084fc", letterSpacing: 14, textShadow: "0 0 30px rgba(192,132,252,0.5), 0 0 60px rgba(192,132,252,0.2)", margin: "0 0 4px 0" }}>TOKAI</h1>
           <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 4 }}>NEUROSUPPORTIVE DASHBOARD · ADHD MANAGEMENT SYSTEM</div>
         </div>
 
@@ -272,8 +272,8 @@ export default function Dashboard() {
             <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
               {Math.round(neural.bioEnergy)}<span style={{ fontSize: 16, color: "#5a8fa8" }}>%</span>
             </div>
-            <div style={{ height: 4, background: "rgba(0,245,212,0.1)", borderRadius: 2 }}>
-              <div style={{ height: "100%", width: `${neural.bioEnergy}%`, background: "linear-gradient(90deg, #00f5d4, #0066ff)", borderRadius: 2, transition: "width 0.5s ease" }} />
+            <div style={{ height: 4, background: "rgba(192,132,252,0.1)", borderRadius: 2 }}>
+              <div style={{ height: "100%", width: `${neural.bioEnergy}%`, background: "linear-gradient(90deg, #c084fc, #7c3aed)", borderRadius: 2, transition: "width 0.5s ease" }} />
             </div>
           </MetricCard>
 
@@ -315,8 +315,8 @@ export default function Dashboard() {
                   />
                   <YAxis hide domain={[0, 200]} />
                   <Bar dataKey="value" radius={[3, 3, 0, 0]} isAnimationActive={false}>
-                    <Cell fill="#00f5d4" />
-                    <Cell fill="#0066ff" />
+                    <Cell fill="#c084fc" />
+                    <Cell fill="#7c3aed" />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -346,12 +346,12 @@ export default function Dashboard() {
                   <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
                   <Line
                     type="monotone" dataKey="value"
-                    stroke="#00f5d4" strokeWidth={2}
+                    stroke="#c084fc" strokeWidth={2}
                     dot={false} isAnimationActive={false}
                   />
                 </LineChart>
               </ResponsiveContainer>
-              <div style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#00f5d4" }}>
+              <div style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc" }}>
                 {neural.focusIndex.toFixed(1)}
               </div>
             </div>
@@ -359,7 +359,7 @@ export default function Dashboard() {
 
           {/* Right: insights */}
           <Panel title="TOKAI · NEURAL INSIGHTS">
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#00f5d4", letterSpacing: 2, marginBottom: 10 }}>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc", letterSpacing: 2, marginBottom: 10 }}>
               ● TOKAI · ADAPTIVE RESPONSE
             </div>
             <p style={{ fontSize: 15, color: "#c8d8e8", lineHeight: 1.65, fontStyle: "italic", margin: 0 }}>
@@ -369,30 +369,30 @@ export default function Dashboard() {
         </div>
 
         {/* Bottom row: TokAgent (left) + Task Integration (right) */}
-        <div style={{ borderTop: "1px solid rgba(0,245,212,0.25)", paddingTop: 20 }}>
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#00f5d4", letterSpacing: 3, marginBottom: 14 }}>── PLANNING INTERFACE ──────────────────────────────</div>
+        <div style={{ borderTop: "1px solid rgba(192,132,252,0.25)", paddingTop: 20 }}>
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc", letterSpacing: 3, marginBottom: 14 }}>── PLANNING INTERFACE ──────────────────────────────</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 14 }}>
           <AgentChat neuralState={neural} />
 
-          <div style={{ background: "linear-gradient(135deg, #0d1b2e, #0f2035)", border: "1px solid rgba(0,245,212,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(0,245,212,0.07)" }}>
+          <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <div style={{ width: 3, height: 16, background: "#00f5d4", borderRadius: 1, flexShrink: 0 }} />
-              <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, color: "#00f5d4", letterSpacing: 3 }}>TASK INTEGRATION</span>
+              <div style={{ width: 3, height: 16, background: "#c084fc", borderRadius: 1, flexShrink: 0 }} />
+              <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, color: "#c084fc", letterSpacing: 3 }}>TASK INTEGRATION</span>
             </div>
             <input
               value={newTask}
               onChange={e => setNewTask(e.target.value)}
               onKeyDown={addTask}
               placeholder="Add a task and press Enter..."
-              style={{ width: "100%", padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(0,245,212,0.2)", borderRadius: 4, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, marginBottom: 10, boxSizing: "border-box", outline: "none" }}
+              style={{ width: "100%", padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 4, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, marginBottom: 10, boxSizing: "border-box", outline: "none" }}
             />
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {tasks.map(task => (
-                <div key={task.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 8px", background: "rgba(0,0,0,0.2)", borderRadius: 4, border: "1px solid rgba(0,245,212,0.1)" }}>
+                <div key={task.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 8px", background: "rgba(0,0,0,0.2)", borderRadius: 4, border: "1px solid rgba(192,132,252,0.1)" }}>
                   <input
                     type="checkbox" checked={task.done}
                     onChange={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
-                    style={{ accentColor: "#00f5d4", cursor: "pointer", flexShrink: 0 }}
+                    style={{ accentColor: "#c084fc", cursor: "pointer", flexShrink: 0 }}
                   />
                   <span style={{ flex: 1, fontSize: 15, color: task.done ? "#5a8fa8" : "#c8d8e8", textDecoration: task.done ? "line-through" : "none" }}>
                     {task.text}

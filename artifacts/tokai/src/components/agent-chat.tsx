@@ -62,11 +62,11 @@ export default function AgentChat({ neuralState }: { neuralState: NeuralState })
   }
 
   return (
-    <div style={{ background: "linear-gradient(135deg, #0a1628, #0d1b2e)", border: "1px solid rgba(0,245,212,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(0,245,212,0.07)" }}>
+    <div style={{ background: "linear-gradient(135deg, #100a25, #120d28)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(192,132,252,0.07)" }}>
       {/* Header */}
-      <div style={{ padding: "12px 20px", borderBottom: "1px solid rgba(0,245,212,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(0,245,212,0.03)" }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#00f5d4", boxShadow: "0 0 8px rgba(0,245,212,0.9)", flexShrink: 0 }} />
-        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, color: "#00f5d4", letterSpacing: 3 }}>TOKAGENT · TASK PLANNER</span>
+      <div style={{ padding: "12px 20px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(192,132,252,0.03)" }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c084fc", boxShadow: "0 0 8px rgba(192,132,252,0.9)", flexShrink: 0 }} />
+        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, color: "#c084fc", letterSpacing: 3 }}>TOKAGENT · TASK PLANNER</span>
         <div style={{ marginLeft: "auto", display: "flex", gap: 16, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8" }}>
           <span>FOCUS {neuralState.focusIndex.toFixed(1)}/100</span>
           <span>ENERGY {Math.round(neuralState.bioEnergy)}%</span>
@@ -83,16 +83,16 @@ export default function AgentChat({ neuralState }: { neuralState: NeuralState })
               padding: "10px 14px",
               borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
               background: msg.role === "user"
-                ? "linear-gradient(135deg, rgba(0,102,255,0.2), rgba(0,102,255,0.12))"
-                : "rgba(0,245,212,0.06)",
-              border: `1px solid ${msg.role === "user" ? "rgba(0,102,255,0.35)" : "rgba(0,245,212,0.18)"}`,
+                ? "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(124,58,237,0.12))"
+                : "rgba(192,132,252,0.06)",
+              border: `1px solid ${msg.role === "user" ? "rgba(124,58,237,0.35)" : "rgba(192,132,252,0.18)"}`,
               fontSize: 14,
               color: "#d0e8f8",
               lineHeight: 1.6,
               fontFamily: "'Rajdhani', sans-serif",
             }}>
               {msg.role === "assistant" && (
-                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#00f5d4", letterSpacing: 2, marginBottom: 5 }}>TOKAGENT</div>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc", letterSpacing: 2, marginBottom: 5 }}>TOKAGENT</div>
               )}
               {msg.content}
             </div>
@@ -101,8 +101,8 @@ export default function AgentChat({ neuralState }: { neuralState: NeuralState })
 
         {loading && (
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
-            <div style={{ padding: "10px 14px", borderRadius: "12px 12px 12px 2px", background: "rgba(0,245,212,0.06)", border: "1px solid rgba(0,245,212,0.18)" }}>
-              <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#00f5d4", letterSpacing: 2, marginBottom: 5 }}>TOKAGENT</div>
+            <div style={{ padding: "10px 14px", borderRadius: "12px 12px 12px 2px", background: "rgba(192,132,252,0.06)", border: "1px solid rgba(192,132,252,0.18)" }}>
+              <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc", letterSpacing: 2, marginBottom: 5 }}>TOKAGENT</div>
               <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 2 }}>ANALYZING NEURAL STATE...</span>
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function AgentChat({ neuralState }: { neuralState: NeuralState })
       </div>
 
       {/* Input */}
-      <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(0,245,212,0.15)", display: "flex", gap: 10, background: "rgba(0,0,0,0.15)" }}>
+      <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(192,132,252,0.15)", display: "flex", gap: 10, background: "rgba(0,0,0,0.15)" }}>
         <input
           ref={inputRef}
           value={input}
@@ -123,23 +123,23 @@ export default function AgentChat({ neuralState }: { neuralState: NeuralState })
           style={{
             flex: 1, padding: "9px 14px",
             background: "rgba(0,0,0,0.35)",
-            border: "1px solid rgba(0,245,212,0.2)",
+            border: "1px solid rgba(192,132,252,0.2)",
             borderRadius: 6, color: "#d0e8f8",
             fontFamily: "'Rajdhani', sans-serif", fontSize: 14,
             outline: "none",
             transition: "border-color 0.2s",
           }}
-          onFocus={e => (e.target.style.borderColor = "rgba(0,245,212,0.5)")}
-          onBlur={e => (e.target.style.borderColor = "rgba(0,245,212,0.2)")}
+          onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
+          onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
         />
         <button
           onClick={send}
           disabled={loading || !input.trim()}
           style={{
             padding: "9px 20px",
-            background: loading || !input.trim() ? "rgba(0,245,212,0.05)" : "rgba(0,245,212,0.15)",
-            border: "1px solid rgba(0,245,212,0.3)",
-            borderRadius: 6, color: "#00f5d4",
+            background: loading || !input.trim() ? "rgba(192,132,252,0.05)" : "rgba(192,132,252,0.15)",
+            border: "1px solid rgba(192,132,252,0.3)",
+            borderRadius: 6, color: "#c084fc",
             fontFamily: "'Share Tech Mono', monospace", fontSize: 11,
             cursor: loading || !input.trim() ? "not-allowed" : "pointer",
             letterSpacing: 1,
