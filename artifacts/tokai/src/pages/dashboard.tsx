@@ -139,7 +139,7 @@ function MetricCard({ title, children }: { title: string; children: React.ReactN
   );
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function Panel({ title, children }: { title: React.ReactNode; children: React.ReactNode }) {
   return (
     <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.15)", borderRadius: 10, padding: 16 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
@@ -326,7 +326,9 @@ export default function Dashboard() {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div>
-            <h1 style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 52, fontWeight: 700, color: "#c084fc", letterSpacing: 14, textShadow: "0 0 30px rgba(192,132,252,0.5), 0 0 60px rgba(192,132,252,0.2)", margin: "0 0 4px 0" }}>TOKAI</h1>
+            <h1 style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 52, fontWeight: 700, letterSpacing: 14, textShadow: "0 0 30px rgba(192,132,252,0.4), 0 0 60px rgba(192,132,252,0.15)", margin: "0 0 4px 0" }}>
+              <span style={{ color: "#f472b6" }}>TOK</span><span style={{ color: "#c084fc" }}>AI</span>
+            </h1>
             <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 4 }}>{t.subtitle}</div>
           </div>
           {/* Language toggle */}
@@ -430,7 +432,9 @@ export default function Dashboard() {
             <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                 <div style={{ width: 3, height: 16, background: "#c084fc", borderRadius: 1, flexShrink: 0 }} />
-                <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, color: "#c084fc", letterSpacing: 3 }}>{t.tokTodo}</span>
+                <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, letterSpacing: 3 }}>
+                  {lang === "en" ? <><span style={{ color: "#f472b6" }}>TOK</span><span style={{ color: "#c084fc" }}>TODO</span></> : <span style={{ color: "#c084fc" }}>{t.tokTodo}</span>}
+                </span>
               </div>
               <input
                 value={newTask}

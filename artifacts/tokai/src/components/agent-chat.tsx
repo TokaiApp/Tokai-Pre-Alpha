@@ -107,7 +107,9 @@ export default function AgentChat({ neuralState, tasks, lang = "en" }: { neuralS
       {/* Header */}
       <div style={{ padding: "12px 20px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(192,132,252,0.03)" }}>
         <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c084fc", boxShadow: "0 0 8px rgba(192,132,252,0.9)", flexShrink: 0 }} />
-        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, color: "#c084fc", letterSpacing: 3 }}>{t.title}</span>
+        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, letterSpacing: 3 }}>
+          <span style={{ color: "#f472b6" }}>TOK</span><span style={{ color: "#c084fc" }}>{lang === "en" ? "AGENT · TASK PLANNER" : "AGENT · 任务规划"}</span>
+        </span>
         <div style={{ marginLeft: "auto", display: "flex", gap: 16, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8" }}>
           <span>{t.focus} {neuralState.focusIndex.toFixed(1)}/100</span>
           <span>{t.energy} {Math.round(neuralState.bioEnergy)}%</span>
