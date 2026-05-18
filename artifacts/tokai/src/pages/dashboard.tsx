@@ -129,13 +129,11 @@ export default function Dashboard() {
   ]);
   const [newTask, setNewTask] = useState("");
 
-  // Clock tick
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  // Neural simulation
   const tick = useCallback(() => {
     const prev = neuralRef.current;
     const newAlpha = drift(prev.alpha, 6, 10, 180);
@@ -163,7 +161,7 @@ export default function Dashboard() {
   const focusInfo = getFocusLabel(neural.focusIndex);
   const noiseInfo = getNoiseLabel(neural.neuralNoise);
 
-  function getLunaInsight() {
+  function getInsight() {
     const f = neural.focusIndex;
     const e = neural.bioEnergy;
     if (f > 70 && e > 70)
@@ -194,7 +192,7 @@ export default function Dashboard() {
       <aside style={{ width: 200, minWidth: 200, padding: "24px 16px", borderRight: "1px solid rgba(0,245,212,0.15)", display: "flex", flexDirection: "column", gap: 24, position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
         <div>
           <img src="/tokai_logo.png" alt="Tokai" style={{ width: "100%", maxWidth: 160, display: "block", marginBottom: 6 }} />
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", letterSpacing: 2 }}>NEURO OS V0.9.2</div>
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", letterSpacing: 2 }}>Tokai Pre-Alpha v0.1</div>
         </div>
 
         <div>
@@ -242,9 +240,9 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <SectionLabel>ABOUT LUNA</SectionLabel>
+          <SectionLabel>ABOUT TOKAI</SectionLabel>
           <p style={{ fontSize: 13, color: "#5a8fa8", lineHeight: 1.6, margin: 0 }}>
-            LUNA is Tokai's embedded neural analysis model. It synthesizes EEG stream data with biological rhythms to generate adaptive cognitive recommendations.
+            Tokai synthesizes EEG stream data with biological rhythms to generate adaptive cognitive recommendations for people with ADHD.
           </p>
         </div>
 
@@ -261,8 +259,8 @@ export default function Dashboard() {
           <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 4 }}>NEUROSUPPORTIVE DASHBOARD · ADHD MANAGEMENT SYSTEM</div>
         </div>
 
-        {/* Metric cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+        {/* Metric cards — 5 columns including focus window predictor */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 14 }}>
           <MetricCard title="FOCUS INDEX">
             <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
               {neural.focusIndex.toFixed(1)}<span style={{ fontSize: 16, color: "#5a8fa8" }}>/100</span>
@@ -292,61 +290,62 @@ export default function Dashboard() {
               α:{neural.alpha.toFixed(2)}  β:{neural.beta.toFixed(2)}
             </div>
           </MetricCard>
+
+          <MetricCard title="FOCUS WINDOW">
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#e8f4ff", marginBottom: 8, lineHeight: 1.4 }}>
+              {focusHistory.length < 6
+                ? "Collecting data..."
+                : `~${Math.max(3, Math.round((80 - neural.focusIndex) / 2))} min`}
+            </div>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", letterSpacing: 1 }}>
+              {focusHistory.length < 6
+                ? "STREAM MORE SAMPLES"
+                : `CONFIDENCE ${Math.min(99, Math.round(50 + samples * 1.2))}%`}
+            </div>
+          </MetricCard>
         </div>
 
         {/* Charts row */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 14 }}>
-          {/* Left column */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <Panel title="REAL-TIME FOCUS STREAM">
-              <div style={{ position: "relative", height: 200 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={focusHistory} margin={{ top: 8, right: 48, bottom: 0, left: 0 }}>
-                    <XAxis
-                      dataKey="time"
-                      tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }}
-                      axisLine={false} tickLine={false}
-                      interval="preserveStartEnd"
-                    />
-                    <YAxis
-                      domain={[0, 100]}
-                      tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }}
-                      axisLine={false} tickLine={false}
-                      ticks={[0, 20, 40, 60, 80, 100]}
-                    />
-                    <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
-                    <Line
-                      type="monotone" dataKey="value"
-                      stroke="#00f5d4" strokeWidth={2}
-                      dot={false} isAnimationActive={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-                {/* Current value label */}
-                <div style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#00f5d4" }}>
-                  {neural.focusIndex.toFixed(1)}
-                </div>
+          {/* Left: focus chart */}
+          <Panel title="REAL-TIME FOCUS STREAM">
+            <div style={{ position: "relative", height: 200 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={focusHistory} margin={{ top: 8, right: 48, bottom: 0, left: 0 }}>
+                  <XAxis
+                    dataKey="time"
+                    tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }}
+                    axisLine={false} tickLine={false}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    domain={[0, 100]}
+                    tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }}
+                    axisLine={false} tickLine={false}
+                    ticks={[0, 20, 40, 60, 80, 100]}
+                  />
+                  <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
+                  <Line
+                    type="monotone" dataKey="value"
+                    stroke="#00f5d4" strokeWidth={2}
+                    dot={false} isAnimationActive={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              <div style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#00f5d4" }}>
+                {neural.focusIndex.toFixed(1)}
               </div>
-            </Panel>
+            </div>
+          </Panel>
 
-            <Panel title="OPTIMAL FOCUS WINDOW PREDICTOR">
-              <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "center", color: "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 14, letterSpacing: 1 }}>
-                {focusHistory.length < 6
-                  ? "Collecting baseline data... stream more samples."
-                  : `Next optimal window in ~${Math.max(3, Math.round((80 - neural.focusIndex) / 2))} min · Confidence ${Math.min(99, Math.round(50 + samples * 1.2))}%`}
-              </div>
-
-            </Panel>
-          </div>
-
-          {/* Right column */}
+          {/* Right: insights + wave breakdown */}
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <Panel title="LUNA · NEURAL INSIGHTS">
+            <Panel title="TOKAI · NEURAL INSIGHTS">
               <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#00f5d4", letterSpacing: 2, marginBottom: 10 }}>
-                ● LUNA MODEL · ADAPTIVE RESPONSE
+                ● TOKAI · ADAPTIVE RESPONSE
               </div>
               <p style={{ fontSize: 15, color: "#c8d8e8", lineHeight: 1.65, fontStyle: "italic", margin: 0 }}>
-                "{getLunaInsight()}"
+                "{getInsight()}"
               </p>
             </Panel>
 
@@ -368,42 +367,44 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </div>
             </Panel>
-
-            <Panel title="TASK INTEGRATION">
-              <input
-                value={newTask}
-                onChange={e => setNewTask(e.target.value)}
-                onKeyDown={addTask}
-                placeholder="Add a task and press Enter..."
-                style={{ width: "100%", padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(0,245,212,0.2)", borderRadius: 4, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, marginBottom: 10, boxSizing: "border-box", outline: "none" }}
-              />
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {tasks.map(task => (
-                  <div key={task.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 8px", background: "rgba(0,0,0,0.2)", borderRadius: 4, border: "1px solid rgba(0,245,212,0.1)" }}>
-                    <input
-                      type="checkbox" checked={task.done}
-                      onChange={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
-                      style={{ accentColor: "#00f5d4", cursor: "pointer", flexShrink: 0 }}
-                    />
-                    <span style={{ flex: 1, fontSize: 15, color: task.done ? "#5a8fa8" : "#c8d8e8", textDecoration: task.done ? "line-through" : "none" }}>
-                      {task.text}
-                    </span>
-                    <button
-                      onClick={() => setTasks(p => p.filter(t => t.id !== task.id))}
-                      style={{ background: "none", border: "none", color: "#5a8fa8", cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1, flexShrink: 0 }}
-                    >×</button>
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 1 }}>
-                PROGRESS {completedCount}/{tasks.length} {completedCount > 0 && completedCount === tasks.length ? "✓ COMPLETE" : ""}
-              </div>
-            </Panel>
           </div>
         </div>
 
-        {/* Agent Chat */}
-        <AgentChat neuralState={neural} />
+        {/* Bottom row: TokAgent (left) + Task Integration (right) */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 14 }}>
+          <AgentChat neuralState={neural} />
+
+          <Panel title="TASK INTEGRATION">
+            <input
+              value={newTask}
+              onChange={e => setNewTask(e.target.value)}
+              onKeyDown={addTask}
+              placeholder="Add a task and press Enter..."
+              style={{ width: "100%", padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(0,245,212,0.2)", borderRadius: 4, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, marginBottom: 10, boxSizing: "border-box", outline: "none" }}
+            />
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {tasks.map(task => (
+                <div key={task.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 8px", background: "rgba(0,0,0,0.2)", borderRadius: 4, border: "1px solid rgba(0,245,212,0.1)" }}>
+                  <input
+                    type="checkbox" checked={task.done}
+                    onChange={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
+                    style={{ accentColor: "#00f5d4", cursor: "pointer", flexShrink: 0 }}
+                  />
+                  <span style={{ flex: 1, fontSize: 15, color: task.done ? "#5a8fa8" : "#c8d8e8", textDecoration: task.done ? "line-through" : "none" }}>
+                    {task.text}
+                  </span>
+                  <button
+                    onClick={() => setTasks(p => p.filter(t => t.id !== task.id))}
+                    style={{ background: "none", border: "none", color: "#5a8fa8", cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1, flexShrink: 0 }}
+                  >×</button>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 1 }}>
+              PROGRESS {completedCount}/{tasks.length} {completedCount > 0 && completedCount === tasks.length ? "✓ COMPLETE" : ""}
+            </div>
+          </Panel>
+        </div>
       </main>
     </div>
   );
