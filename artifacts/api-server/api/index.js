@@ -12,7 +12,7 @@ app.get("/api/health", (_req, res) => {
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const { messages, neuralState, tasks } = req.body;
+    const { messages, neuralState, tasks, lang } = req.body;
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
@@ -55,7 +55,8 @@ Your behavior:
 - Keep responses concise — 2-4 sentences unless the user asks for more detail
 - Be direct and actionable
 - Use a calm, focused tone
-- Do not use emojis`;
+- Do not use emojis
+${lang === "zh" ? "- Respond in Simplified Chinese (简体中文)" : "- Respond in English"}`;
 
     const response = await client.messages.create({
       model: "claude-sonnet-4-5",

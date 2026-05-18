@@ -6,6 +6,89 @@ import {
 } from "recharts";
 import AgentChat from "@/components/agent-chat";
 
+type Lang = "en" | "zh";
+
+const T = {
+  en: {
+    version: "Tokai Pre-Alpha v0.1",
+    systemControl: "SYSTEM CONTROL",
+    liveStream: "Live Stream",
+    refreshRate: "Refresh Rate (s)",
+    manualRefresh: "⊕ Manual Refresh",
+    sessionInfo: "SESSION INFO",
+    date: "DATE", time: "TIME", samples: "SAMPLES", status: "STATUS",
+    active: "ACTIVE", paused: "PAUSED",
+    aboutTokai: "ABOUT TOKAI",
+    aboutText: "Tokai synthesizes EEG stream data with biological rhythms to generate adaptive cognitive recommendations for people with ADHD.",
+    sourceCode: "Source Code",
+    sessionLabel: "SESSION",
+    subtitle: "NEUROSUPPORTIVE DASHBOARD · ADHD MANAGEMENT SYSTEM",
+    focusIndex: "FOCUS INDEX",
+    bioEnergy: "BIO ENERGY",
+    neuralNoise: "NEURAL NOISE",
+    abRatio: "A/B WAVE RATIO",
+    focusWindow: "FOCUS WINDOW",
+    collectingData: "Collecting data...",
+    streamMoreSamples: "STREAM MORE SAMPLES",
+    confidence: "CONFIDENCE",
+    waveBreakdown: "WAVE BREAKDOWN",
+    focusStream: "REAL-TIME FOCUS STREAM",
+    neuralInsights: "TOKAI · NEURAL INSIGHTS",
+    tokTodo: "TOKTODO",
+    taskPlaceholder: "Add a task and press Enter...",
+    progress: "PROGRESS",
+    complete: "✓ COMPLETE",
+    planningInterface: "── PLANNING INTERFACE ──────────────────────────────",
+    focusLow: "LOW", focusMod: "MODERATE", focusHigh: "HIGH", focusOpt: "OPTIMAL",
+    noiseClean: "CLEAN", noiseNom: "NOMINAL", noiseElev: "ELEVATED", noiseHigh: "HIGH",
+    insightOptimal: (f: string, e: string) =>
+      `Optimal cognitive window detected. Focus is high (${f}/100) with excellent energy reserves (${e}%). This is your prime window for deep work, complex problem-solving, and high-stakes creative tasks. Prioritize your hardest challenges now.`,
+    insightMod: (f: string, noise: string, e: string, eLevel: string) =>
+      `Neural baseline is ${noise}. Conditions are favorable for sustained cognitive work. Focus is moderate (${f}/100). Consider chunking tasks into 20-minute intervals. Biological energy is ${eLevel} (${e}%). Leverage this window for complex problem-solving.`,
+    insightLow: (f: string, e: string) =>
+      `Focus index is low (${f}/100). Neural noise is elevated. Recommend switching to low-cognitive tasks — organizing, reviewing notes, or short breaks. Energy at ${e}%. Allow your neural state to recover before tackling demanding work.`,
+  },
+  zh: {
+    version: "Tokai 预览版 v0.1",
+    systemControl: "系统控制",
+    liveStream: "实时流",
+    refreshRate: "刷新频率（秒）",
+    manualRefresh: "⊕ 手动刷新",
+    sessionInfo: "会话信息",
+    date: "日期", time: "时间", samples: "样本", status: "状态",
+    active: "活跃", paused: "暂停",
+    aboutTokai: "关于 TOKAI",
+    aboutText: "Tokai 融合 EEG 脑电流数据与生物节律，为 ADHD 用户提供自适应认知建议。",
+    sourceCode: "源代码",
+    sessionLabel: "会话",
+    subtitle: "神经支持仪表盘 · ADHD 管理系统",
+    focusIndex: "专注指数",
+    bioEnergy: "生理能量",
+    neuralNoise: "神经噪声",
+    abRatio: "α/β 波比",
+    focusWindow: "专注窗口",
+    collectingData: "数据采集中...",
+    streamMoreSamples: "继续采集样本",
+    confidence: "置信度",
+    waveBreakdown: "波形分析",
+    focusStream: "实时专注流",
+    neuralInsights: "TOKAI · 神经洞察",
+    tokTodo: "任务清单",
+    taskPlaceholder: "输入任务，按回车添加...",
+    progress: "进度",
+    complete: "✓ 全部完成",
+    planningInterface: "── 规划界面 ──────────────────────────────────────",
+    focusLow: "低", focusMod: "中等", focusHigh: "高", focusOpt: "最优",
+    noiseClean: "清晰", noiseNom: "正常", noiseElev: "偏高", noiseHigh: "高",
+    insightOptimal: (f: string, e: string) =>
+      `检测到最优认知窗口。专注度高（${f}/100），能量储备充足（${e}%）。现在是深度工作与高价值创造任务的黄金时段，请优先处理最具挑战性的工作。`,
+    insightMod: (f: string, noise: string, e: string, eLevel: string) =>
+      `神经基线${noise}。认知工作条件良好，专注度中等（${f}/100）。建议以 20 分钟为单元分解任务。生理能量${eLevel}（${e}%），适合持续的问题求解工作。`,
+    insightLow: (f: string, e: string) =>
+      `专注指数偏低（${f}/100），神经噪声较高。建议切换至低认知负荷任务——整理资料、回顾笔记或短暂休息。能量水平 ${e}%，待神经状态恢复后再处理高难度工作。`,
+  },
+};
+
 interface NeuralState {
   focusIndex: number;
   bioEnergy: number;
@@ -15,38 +98,13 @@ interface NeuralState {
   beta: number;
 }
 
-interface FocusPoint {
-  time: string;
-  value: number;
-}
-
-interface Task {
-  id: string;
-  text: string;
-  done: boolean;
-}
+interface FocusPoint { time: string; value: number; }
+interface Task { id: string; text: string; done: boolean; }
 
 function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
-
-function formatTime(d: Date) {
-  return d.toTimeString().slice(0, 8);
-}
-
-function getFocusLabel(f: number): { label: string; color: string } {
-  if (f < 30) return { label: "LOW", color: "#ff4d4d" };
-  if (f < 60) return { label: "MODERATE", color: "#ffa040" };
-  if (f < 80) return { label: "HIGH", color: "#c084fc" };
-  return { label: "OPTIMAL", color: "#f472b6" };
-}
-
-function getNoiseLabel(n: number): { label: string; color: string } {
-  if (n < 20) return { label: "CLEAN", color: "#f472b6" };
-  if (n < 40) return { label: "NOMINAL", color: "#c084fc" };
-  if (n < 60) return { label: "ELEVATED", color: "#ffa040" };
-  return { label: "HIGH", color: "#ff4d4d" };
-}
+function formatTime(d: Date) { return d.toTimeString().slice(0, 8); }
 
 function drift(val: number, amount: number, min: number, max: number) {
   return parseFloat(clamp(val + (Math.random() - 0.5) * amount, min, max).toFixed(2));
@@ -102,6 +160,9 @@ function Badge({ children, color }: { children: React.ReactNode; color: string }
 }
 
 export default function Dashboard() {
+  const [lang, setLang] = useState<Lang>("en");
+  const t = T[lang];
+
   const [liveStream, setLiveStream] = useState(true);
   const [refreshRate, setRefreshRate] = useState(3);
   const [now, setNow] = useState(new Date());
@@ -109,12 +170,8 @@ export default function Dashboard() {
   const [samples, setSamples] = useState(1);
 
   const [neural, setNeural] = useState<NeuralState>({
-    focusIndex: 35.6,
-    bioEnergy: 84,
-    neuralNoise: 29,
-    abRatio: 0.78,
-    alpha: 88.48,
-    beta: 101.07,
+    focusIndex: 35.6, bioEnergy: 84, neuralNoise: 29,
+    abRatio: 0.78, alpha: 88.48, beta: 101.07,
   });
   const neuralRef = useRef(neural);
   useEffect(() => { neuralRef.current = neural; }, [neural]);
@@ -144,8 +201,7 @@ export default function Dashboard() {
       bioEnergy: drift(prev.bioEnergy, 2, 0, 100),
       neuralNoise: drift(prev.neuralNoise, 3, 0, 80),
       abRatio: parseFloat((newAlpha / newBeta).toFixed(2)),
-      alpha: newAlpha,
-      beta: newBeta,
+      alpha: newAlpha, beta: newBeta,
     };
     setNeural(next);
     neuralRef.current = next;
@@ -159,17 +215,32 @@ export default function Dashboard() {
     return () => clearInterval(id);
   }, [liveStream, refreshRate, tick]);
 
-  const focusInfo = getFocusLabel(neural.focusIndex);
-  const noiseInfo = getNoiseLabel(neural.neuralNoise);
+  function getFocusInfo(f: number) {
+    if (f < 30) return { label: t.focusLow, color: "#ff4d4d" };
+    if (f < 60) return { label: t.focusMod, color: "#ffa040" };
+    if (f < 80) return { label: t.focusHigh, color: "#c084fc" };
+    return { label: t.focusOpt, color: "#f472b6" };
+  }
+
+  function getNoiseInfo(n: number) {
+    if (n < 20) return { label: t.noiseClean, color: "#f472b6" };
+    if (n < 40) return { label: t.noiseNom, color: "#c084fc" };
+    if (n < 60) return { label: t.noiseElev, color: "#ffa040" };
+    return { label: t.noiseHigh, color: "#ff4d4d" };
+  }
+
+  const focusInfo = getFocusInfo(neural.focusIndex);
+  const noiseInfo = getNoiseInfo(neural.neuralNoise);
 
   function getInsight() {
     const f = neural.focusIndex;
     const e = neural.bioEnergy;
-    if (f > 70 && e > 70)
-      return `Optimal cognitive window detected. Focus is high (${f.toFixed(1)}/100) with excellent energy reserves (${Math.round(e)}%). This is your prime window for deep work, complex problem-solving, and high-stakes creative tasks. Prioritize your hardest challenges now.`;
-    if (f > 50)
-      return `Neural baseline is ${noiseInfo.label.toLowerCase()}. Conditions are favorable for sustained cognitive work. Focus is moderate (${f.toFixed(1)}/100). Consider chunking tasks into 20-minute intervals. Biological energy is ${e > 60 ? "high" : "moderate"} (${Math.round(e)}%). Leverage this window for complex problem-solving.`;
-    return `Focus index is low (${f.toFixed(1)}/100). Neural noise is elevated. Recommend switching to low-cognitive tasks — organizing, reviewing notes, or short breaks. Energy at ${Math.round(e)}%. Allow your neural state to recover before tackling demanding work.`;
+    if (f > 70 && e > 70) return t.insightOptimal(f.toFixed(1), String(Math.round(e)));
+    if (f > 50) {
+      const eLevel = lang === "en" ? (e > 60 ? "high" : "moderate") : (e > 60 ? "高" : "中等");
+      return t.insightMod(f.toFixed(1), noiseInfo.label.toLowerCase(), String(Math.round(e)), eLevel);
+    }
+    return t.insightLow(f.toFixed(1), String(Math.round(e)));
   }
 
   function addTask(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -181,7 +252,6 @@ export default function Dashboard() {
 
   const completedCount = tasks.filter(t => t.done).length;
   const sessionDuration = Math.floor((now.getTime() - sessionStart.current.getTime()) / 60000);
-
   const waveData = [
     { name: "Alpha (8-11 Hz)", value: neural.alpha },
     { name: "Beta (11-70 Hz)", value: neural.beta },
@@ -193,47 +263,42 @@ export default function Dashboard() {
       <aside style={{ width: 200, minWidth: 200, padding: "24px 16px", borderRight: "1px solid rgba(192,132,252,0.15)", display: "flex", flexDirection: "column", gap: 24, position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
         <a href="https://tokai.app" target="_blank" rel="noopener noreferrer" style={{ display: "flex", flexDirection: "column", alignItems: "center", textDecoration: "none" }}>
           <img src="/tokai_logo.png" alt="Tokai" style={{ width: 110, display: "block", marginBottom: 6 }} />
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", letterSpacing: 2, textAlign: "center" }}>Tokai Pre-Alpha v0.1</div>
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", letterSpacing: 2, textAlign: "center" }}>{t.version}</div>
         </a>
 
         <div>
-          <SectionLabel>SYSTEM CONTROL</SectionLabel>
+          <SectionLabel>{t.systemControl}</SectionLabel>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <span style={{ fontSize: 15, color: "#c8d8e8" }}>Live Stream</span>
+            <span style={{ fontSize: 15, color: "#c8d8e8" }}>{t.liveStream}</span>
             <Toggle checked={liveStream} onChange={setLiveStream} />
           </div>
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ fontSize: 13, color: "#5a8fa8" }}>Refresh Rate (s)</span>
+              <span style={{ fontSize: 13, color: "#5a8fa8" }}>{t.refreshRate}</span>
               <span style={{ fontSize: 11, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace" }}>{refreshRate}</span>
             </div>
-            <input
-              type="range" min={1} max={10} value={refreshRate}
+            <input type="range" min={1} max={10} value={refreshRate}
               onChange={e => setRefreshRate(Number(e.target.value))}
-              style={{ width: "100%", accentColor: "#c084fc", cursor: "pointer" }}
-            />
+              style={{ width: "100%", accentColor: "#c084fc", cursor: "pointer" }} />
           </div>
-          <button
-            onClick={tick}
-            style={{ width: "100%", padding: "6px 0", background: "transparent", border: "1px solid rgba(192,132,252,0.4)", color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", letterSpacing: 1, borderRadius: 4 }}
-          >
-            ⊕ Manual Refresh
+          <button onClick={tick} style={{ width: "100%", padding: "6px 0", background: "transparent", border: "1px solid rgba(192,132,252,0.4)", color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", letterSpacing: 1, borderRadius: 4 }}>
+            {t.manualRefresh}
           </button>
         </div>
 
         <div>
-          <SectionLabel>SESSION INFO</SectionLabel>
+          <SectionLabel>{t.sessionInfo}</SectionLabel>
           <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
             <tbody>
               {([
-                ["DATE", now.toISOString().slice(0, 10)],
-                ["TIME", formatTime(now)],
-                ["SAMPLES", String(samples)],
-                ["STATUS", liveStream ? "ACTIVE" : "PAUSED"],
+                [t.date, now.toISOString().slice(0, 10)],
+                [t.time, formatTime(now)],
+                [t.samples, String(samples)],
+                [t.status, liveStream ? t.active : t.paused],
               ] as [string, string][]).map(([k, v]) => (
                 <tr key={k}>
                   <td style={{ color: "#5a8fa8", paddingRight: 8, paddingBottom: 5, fontFamily: "'Share Tech Mono', monospace", letterSpacing: 1 }}>{k}</td>
-                  <td style={{ color: k === "STATUS" ? (liveStream ? "#c084fc" : "#ffa040") : "#c8d8e8", fontFamily: "'Share Tech Mono', monospace" }}>{v}</td>
+                  <td style={{ color: k === t.status ? (liveStream ? "#c084fc" : "#ffa040") : "#c8d8e8", fontFamily: "'Share Tech Mono', monospace" }}>{v}</td>
                 </tr>
               ))}
             </tbody>
@@ -241,46 +306,50 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <SectionLabel>ABOUT TOKAI</SectionLabel>
-          <p style={{ fontSize: 13, color: "#5a8fa8", lineHeight: 1.6, margin: "0 0 12px 0" }}>
-            Tokai synthesizes EEG stream data with biological rhythms to generate adaptive cognitive recommendations for people with ADHD.
-          </p>
-          <a
-            href="https://github.com/TokaiApp/Tokai-Pre-Alpha"
-            target="_blank"
-            rel="noopener noreferrer"
+          <SectionLabel>{t.aboutTokai}</SectionLabel>
+          <p style={{ fontSize: 13, color: "#5a8fa8", lineHeight: 1.6, margin: "0 0 12px 0" }}>{t.aboutText}</p>
+          <a href="https://github.com/TokaiApp/Tokai-Pre-Alpha" target="_blank" rel="noopener noreferrer"
             style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5a8fa8", textDecoration: "none", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, letterSpacing: 1, transition: "color 0.2s" }}
             onMouseEnter={e => (e.currentTarget.style.color = "#c084fc")}
-            onMouseLeave={e => (e.currentTarget.style.color = "#5a8fa8")}
-          >
-            <Github size={20} />
-            Source Code
+            onMouseLeave={e => (e.currentTarget.style.color = "#5a8fa8")}>
+            <Github size={20} />{t.sourceCode}
           </a>
         </div>
 
         <div style={{ marginTop: "auto", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(192,132,252,0.3)", letterSpacing: 1 }}>
-          SESSION {sessionDuration}m
+          {t.sessionLabel} {sessionDuration}m
         </div>
       </aside>
 
       {/* ── Main ── */}
       <main style={{ flex: 1, padding: "24px 28px", display: "flex", flexDirection: "column", gap: 20, overflowX: "hidden" }}>
         {/* Header */}
-        <div>
-          <h1 style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 52, fontWeight: 700, color: "#c084fc", letterSpacing: 14, textShadow: "0 0 30px rgba(192,132,252,0.5), 0 0 60px rgba(192,132,252,0.2)", margin: "0 0 4px 0" }}>TOKAI</h1>
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 4 }}>NEUROSUPPORTIVE DASHBOARD · ADHD MANAGEMENT SYSTEM</div>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <div>
+            <h1 style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 52, fontWeight: 700, color: "#c084fc", letterSpacing: 14, textShadow: "0 0 30px rgba(192,132,252,0.5), 0 0 60px rgba(192,132,252,0.2)", margin: "0 0 4px 0" }}>TOKAI</h1>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 4 }}>{t.subtitle}</div>
+          </div>
+          {/* Language toggle */}
+          <button
+            onClick={() => setLang(l => l === "en" ? "zh" : "en")}
+            style={{ display: "flex", alignItems: "center", gap: 0, background: "rgba(192,132,252,0.06)", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 6, overflow: "hidden", cursor: "pointer", marginTop: 8, fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 1 }}
+          >
+            <span style={{ padding: "6px 12px", color: lang === "en" ? "#c084fc" : "#5a8fa8", fontWeight: lang === "en" ? 700 : 400, background: lang === "en" ? "rgba(192,132,252,0.15)" : "transparent", transition: "all 0.2s" }}>EN</span>
+            <span style={{ color: "rgba(192,132,252,0.3)", padding: "6px 0" }}>|</span>
+            <span style={{ padding: "6px 12px", color: lang === "zh" ? "#c084fc" : "#5a8fa8", fontWeight: lang === "zh" ? 700 : 400, background: lang === "zh" ? "rgba(192,132,252,0.15)" : "transparent", transition: "all 0.2s" }}>中文</span>
+          </button>
         </div>
 
-        {/* Metric cards — 6 columns including focus window predictor + wave breakdown */}
+        {/* Metric cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 14 }}>
-          <MetricCard title="FOCUS INDEX">
+          <MetricCard title={t.focusIndex}>
             <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
               {neural.focusIndex.toFixed(1)}<span style={{ fontSize: 16, color: "#5a8fa8" }}>/100</span>
             </div>
             <Badge color={focusInfo.color}>{focusInfo.label}</Badge>
           </MetricCard>
 
-          <MetricCard title="BIO ENERGY">
+          <MetricCard title={t.bioEnergy}>
             <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
               {Math.round(neural.bioEnergy)}<span style={{ fontSize: 16, color: "#5a8fa8" }}>%</span>
             </div>
@@ -289,46 +358,37 @@ export default function Dashboard() {
             </div>
           </MetricCard>
 
-          <MetricCard title="NEURAL NOISE">
+          <MetricCard title={t.neuralNoise}>
             <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
               {Math.round(neural.neuralNoise)}<span style={{ fontSize: 14, color: "#5a8fa8" }}> μV²</span>
             </div>
             <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: noiseInfo.color, letterSpacing: 2 }}>{noiseInfo.label}</span>
           </MetricCard>
 
-          <MetricCard title="A/B WAVE RATIO">
+          <MetricCard title={t.abRatio}>
             <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>{neural.abRatio}</div>
             <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 1 }}>
               α:{neural.alpha.toFixed(2)}  β:{neural.beta.toFixed(2)}
             </div>
           </MetricCard>
 
-          <MetricCard title="FOCUS WINDOW">
+          <MetricCard title={t.focusWindow}>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#e8f4ff", marginBottom: 8, lineHeight: 1.4 }}>
-              {focusHistory.length < 6
-                ? "Collecting data..."
-                : `~${Math.max(3, Math.round((80 - neural.focusIndex) / 2))} min`}
+              {focusHistory.length < 6 ? t.collectingData : `~${Math.max(3, Math.round((80 - neural.focusIndex) / 2))} min`}
             </div>
             <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", letterSpacing: 1 }}>
-              {focusHistory.length < 6
-                ? "STREAM MORE SAMPLES"
-                : `CONFIDENCE ${Math.min(99, Math.round(50 + samples * 1.2))}%`}
+              {focusHistory.length < 6 ? t.streamMoreSamples : `${t.confidence} ${Math.min(99, Math.round(50 + samples * 1.2))}%`}
             </div>
           </MetricCard>
 
-          <MetricCard title="WAVE BREAKDOWN">
+          <MetricCard title={t.waveBreakdown}>
             <div style={{ height: 82 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={waveData} margin={{ top: 0, right: 4, bottom: 22, left: 4 }}>
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: "#5a8fa8", fontSize: 8, fontFamily: "'Share Tech Mono', monospace" }}
-                    axisLine={false} tickLine={false}
-                  />
+                  <XAxis dataKey="name" tick={{ fill: "#5a8fa8", fontSize: 8, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} />
                   <YAxis hide domain={[0, 200]} />
                   <Bar dataKey="value" radius={[3, 3, 0, 0]} isAnimationActive={false}>
-                    <Cell fill="#c084fc" />
-                    <Cell fill="#7c3aed" />
+                    <Cell fill="#c084fc" /><Cell fill="#7c3aed" />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -338,29 +398,14 @@ export default function Dashboard() {
 
         {/* Charts row */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 14 }}>
-          {/* Left: focus chart */}
-          <Panel title="REAL-TIME FOCUS STREAM">
+          <Panel title={t.focusStream}>
             <div style={{ position: "relative", height: 150 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={focusHistory} margin={{ top: 8, right: 48, bottom: 0, left: 0 }}>
-                  <XAxis
-                    dataKey="time"
-                    tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }}
-                    axisLine={false} tickLine={false}
-                    interval="preserveStartEnd"
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }}
-                    axisLine={false} tickLine={false}
-                    ticks={[0, 20, 40, 60, 80, 100]}
-                  />
+                  <XAxis dataKey="time" tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                  <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} />
                   <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
-                  <Line
-                    type="monotone" dataKey="value"
-                    stroke="#c084fc" strokeWidth={2}
-                    dot={false} isAnimationActive={false}
-                  />
+                  <Line type="monotone" dataKey="value" stroke="#c084fc" strokeWidth={2} dot={false} isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
               <div style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc" }}>
@@ -369,54 +414,49 @@ export default function Dashboard() {
             </div>
           </Panel>
 
-          {/* Right: insights */}
-          <Panel title="TOKAI · NEURAL INSIGHTS">
+          <Panel title={t.neuralInsights}>
             <p style={{ fontSize: 15, color: "#c8d8e8", lineHeight: 1.65, fontStyle: "italic", margin: 0 }}>
               "{getInsight()}"
             </p>
           </Panel>
         </div>
 
-        {/* Bottom row: TokAgent (left) + Task Integration (right) */}
+        {/* Bottom row */}
         <div style={{ borderTop: "1px solid rgba(192,132,252,0.25)", paddingTop: 20 }}>
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc", letterSpacing: 3, marginBottom: 14 }}>── PLANNING INTERFACE ──────────────────────────────</div>
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc", letterSpacing: 3, marginBottom: 14 }}>{t.planningInterface}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 14 }}>
-          <AgentChat neuralState={neural} tasks={tasks.map(t => ({ text: t.text, done: t.done }))} />
+            <AgentChat neuralState={neural} tasks={tasks.map(t => ({ text: t.text, done: t.done }))} lang={lang} />
 
-          <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <div style={{ width: 3, height: 16, background: "#c084fc", borderRadius: 1, flexShrink: 0 }} />
-              <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, color: "#c084fc", letterSpacing: 3 }}>TOKTODO</span>
+            <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <div style={{ width: 3, height: 16, background: "#c084fc", borderRadius: 1, flexShrink: 0 }} />
+                <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, color: "#c084fc", letterSpacing: 3 }}>{t.tokTodo}</span>
+              </div>
+              <input
+                value={newTask}
+                onChange={e => setNewTask(e.target.value)}
+                onKeyDown={addTask}
+                placeholder={t.taskPlaceholder}
+                style={{ width: "100%", padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 4, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, marginBottom: 10, boxSizing: "border-box", outline: "none" }}
+              />
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {tasks.map(task => (
+                  <div key={task.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 8px", background: "rgba(0,0,0,0.2)", borderRadius: 4, border: "1px solid rgba(192,132,252,0.1)" }}>
+                    <input type="checkbox" checked={task.done}
+                      onChange={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
+                      style={{ accentColor: "#c084fc", cursor: "pointer", flexShrink: 0 }} />
+                    <span style={{ flex: 1, fontSize: 15, color: task.done ? "#5a8fa8" : "#c8d8e8", textDecoration: task.done ? "line-through" : "none" }}>
+                      {task.text}
+                    </span>
+                    <button onClick={() => setTasks(p => p.filter(t => t.id !== task.id))}
+                      style={{ background: "none", border: "none", color: "#5a8fa8", cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 1 }}>
+                {t.progress} {completedCount}/{tasks.length} {completedCount > 0 && completedCount === tasks.length ? t.complete : ""}
+              </div>
             </div>
-            <input
-              value={newTask}
-              onChange={e => setNewTask(e.target.value)}
-              onKeyDown={addTask}
-              placeholder="Add a task and press Enter..."
-              style={{ width: "100%", padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 4, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, marginBottom: 10, boxSizing: "border-box", outline: "none" }}
-            />
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {tasks.map(task => (
-                <div key={task.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 8px", background: "rgba(0,0,0,0.2)", borderRadius: 4, border: "1px solid rgba(192,132,252,0.1)" }}>
-                  <input
-                    type="checkbox" checked={task.done}
-                    onChange={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
-                    style={{ accentColor: "#c084fc", cursor: "pointer", flexShrink: 0 }}
-                  />
-                  <span style={{ flex: 1, fontSize: 15, color: task.done ? "#5a8fa8" : "#c8d8e8", textDecoration: task.done ? "line-through" : "none" }}>
-                    {task.text}
-                  </span>
-                  <button
-                    onClick={() => setTasks(p => p.filter(t => t.id !== task.id))}
-                    style={{ background: "none", border: "none", color: "#5a8fa8", cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1, flexShrink: 0 }}
-                  >×</button>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 1 }}>
-              PROGRESS {completedCount}/{tasks.length} {completedCount > 0 && completedCount === tasks.length ? "✓ COMPLETE" : ""}
-            </div>
-          </div>
           </div>
         </div>
       </main>
