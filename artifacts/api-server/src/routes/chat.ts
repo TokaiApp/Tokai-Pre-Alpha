@@ -50,7 +50,7 @@ Your behavior:
 - Do not use emojis`;
 
     const response = await client.messages.create({
-      model: "claude-opus-4-5",
+      model: "claude-sonnet-4-5",
       max_tokens: 512,
       system,
       messages,
