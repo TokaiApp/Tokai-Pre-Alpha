@@ -18,7 +18,7 @@ export default function AgentChat({ neuralState }: { neuralState: NeuralState })
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: `Neural sync established. I'm LUNA, your cognitive assistant. Based on your current state — Focus ${neuralState.focusIndex.toFixed(1)}/100, Energy ${Math.round(neuralState.bioEnergy)}% — I can help you prioritize and sequence your work for maximum output. What are you trying to accomplish today?`,
+      content: `Neural sync established. I'm TokAgent, your task planning assistant. Based on your current state — Focus ${neuralState.focusIndex.toFixed(1)}/100, Energy ${Math.round(neuralState.bioEnergy)}% — I can help you build and prioritize your to-do list. What are you trying to accomplish today?`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -66,7 +66,7 @@ export default function AgentChat({ neuralState }: { neuralState: NeuralState })
       {/* Header */}
       <div style={{ padding: "12px 20px", borderBottom: "1px solid rgba(0,245,212,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(0,245,212,0.03)" }}>
         <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#00f5d4", boxShadow: "0 0 8px rgba(0,245,212,0.9)", flexShrink: 0 }} />
-        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#00f5d4", letterSpacing: 3 }}>LUNA · COGNITIVE AGENT</span>
+        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#00f5d4", letterSpacing: 3 }}>TOKAGENT · TASK PLANNER</span>
         <div style={{ marginLeft: "auto", display: "flex", gap: 16, fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "#5a8fa8" }}>
           <span>FOCUS {neuralState.focusIndex.toFixed(1)}/100</span>
           <span>ENERGY {Math.round(neuralState.bioEnergy)}%</span>
@@ -92,7 +92,7 @@ export default function AgentChat({ neuralState }: { neuralState: NeuralState })
               fontFamily: "'Rajdhani', sans-serif",
             }}>
               {msg.role === "assistant" && (
-                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 9, color: "#00f5d4", letterSpacing: 2, marginBottom: 5 }}>LUNA</div>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 9, color: "#00f5d4", letterSpacing: 2, marginBottom: 5 }}>TOKAGENT</div>
               )}
               {msg.content}
             </div>
@@ -118,7 +118,7 @@ export default function AgentChat({ neuralState }: { neuralState: NeuralState })
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === "Enter" && send()}
-          placeholder="Tell LUNA what you want to work on today..."
+          placeholder="Tell TokAgent what you want to work on today..."
           disabled={loading}
           style={{
             flex: 1, padding: "9px 14px",
