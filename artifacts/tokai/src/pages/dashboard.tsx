@@ -550,35 +550,35 @@ export default function Dashboard() {
     <div style={{ display: "flex", minHeight: "100vh", background: "linear-gradient(135deg, #0c0818 0%, #100a25 50%, #080614 100%)", fontFamily: "'Rajdhani', sans-serif", color: "#c8d8e8" }}>
 
       {/* ── Sidebar (desktop only) ── */}
-      <aside style={{ width: 200, minWidth: 200, padding: "24px 16px", borderRight: "1px solid rgba(192,132,252,0.15)", display: isMobile ? "none" : "flex", flexDirection: "column", gap: 24, position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
+      <aside style={{ width: 240, minWidth: 240, padding: "24px 20px", borderRight: "1px solid rgba(192,132,252,0.15)", display: isMobile ? "none" : "flex", flexDirection: "column", gap: 24, position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
         <a href="https://tokai.app" target="_blank" rel="noopener noreferrer" style={{ display: "flex", flexDirection: "column", alignItems: "center", textDecoration: "none" }}>
-          <img src="/tokai_logo.png" alt="Tokai" style={{ width: 110, display: "block", marginBottom: 6 }} />
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", letterSpacing: 2, textAlign: "center" }}>{t.version}</div>
+          <img src="/tokai_logo.png" alt="Tokai" style={{ width: 120, display: "block", marginBottom: 6 }} />
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 2, textAlign: "center" }}>{t.version}</div>
         </a>
 
         <div>
           <SectionLabel>{t.systemControl}</SectionLabel>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <span style={{ fontSize: 15, color: "#c8d8e8" }}>{t.liveStream}</span>
+            <span style={{ fontSize: 16, color: "#c8d8e8" }}>{t.liveStream}</span>
             <Toggle checked={liveStream} onChange={setLiveStream} />
           </div>
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ fontSize: 13, color: "#5a8fa8" }}>{t.refreshRate}</span>
-              <span style={{ fontSize: 11, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace" }}>{refreshRate}</span>
+              <span style={{ fontSize: 14, color: "#5a8fa8" }}>{t.refreshRate}</span>
+              <span style={{ fontSize: 13, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace" }}>{refreshRate}</span>
             </div>
             <input type="range" min={1} max={10} value={refreshRate}
               onChange={e => setRefreshRate(Number(e.target.value))}
               style={{ width: "100%", accentColor: "#c084fc", cursor: "pointer" }} />
           </div>
-          <button onClick={tick} style={{ width: "100%", padding: "6px 0", background: "transparent", border: "1px solid rgba(192,132,252,0.4)", color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", letterSpacing: 1, borderRadius: 4 }}>
+          <button onClick={tick} style={{ width: "100%", padding: "7px 0", background: "transparent", border: "1px solid rgba(192,132,252,0.4)", color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, cursor: "pointer", letterSpacing: 1, borderRadius: 4 }}>
             {t.manualRefresh}
           </button>
         </div>
 
         <div>
           <SectionLabel>{t.sessionInfo}</SectionLabel>
-          <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
+          <table style={{ width: "100%", fontSize: 14, borderCollapse: "collapse" }}>
             <tbody>
               {([
                 [t.date, now.toISOString().slice(0, 10)],
@@ -588,7 +588,7 @@ export default function Dashboard() {
                 [t.status, liveStream ? t.active : t.paused],
               ] as [string, string][]).map(([k, v]) => (
                 <tr key={k}>
-                  <td style={{ color: "#5a8fa8", paddingRight: 8, paddingBottom: 5, fontFamily: "'Share Tech Mono', monospace", letterSpacing: 1 }}>{k}</td>
+                  <td style={{ color: "#5a8fa8", paddingRight: 8, paddingBottom: 6, fontFamily: "'Share Tech Mono', monospace", letterSpacing: 1 }}>{k}</td>
                   <td style={{ color: k === t.status ? (liveStream ? "#c084fc" : "#ffa040") : "#c8d8e8", fontFamily: "'Share Tech Mono', monospace" }}>{v}</td>
                 </tr>
               ))}
@@ -597,8 +597,8 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, letterSpacing: 3, marginBottom: 10, borderBottom: "1px solid rgba(192,132,252,0.2)", paddingBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
-            <Pill size={13} color="#c084fc" />
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 3, marginBottom: 10, borderBottom: "1px solid rgba(192,132,252,0.2)", paddingBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+            <Pill size={14} color="#c084fc" />
             <span><span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>MED</span></span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -607,7 +607,7 @@ export default function Dashboard() {
               onChange={e => setNewMedName(e.target.value)}
               onKeyDown={e => e.key === "Enter" && logMed()}
               placeholder={t.medNamePlaceholder}
-              style={{ width: "100%", padding: "5px 8px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 5, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 13, outline: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 5, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, outline: "none", boxSizing: "border-box" }}
               onFocus={e => (e.target.style.borderColor = "rgba(251,191,36,0.5)")}
               onBlur={e => (e.target.style.borderColor = "rgba(251,191,36,0.2)")}
             />
@@ -617,39 +617,39 @@ export default function Dashboard() {
                 onChange={e => setNewMedDose(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && logMed()}
                 placeholder={t.medDosePlaceholder}
-                style={{ flex: 1, padding: "5px 8px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 5, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 13, outline: "none", minWidth: 0 }}
+                style={{ flex: 1, padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 5, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, outline: "none", minWidth: 0 }}
                 onFocus={e => (e.target.style.borderColor = "rgba(251,191,36,0.5)")}
                 onBlur={e => (e.target.style.borderColor = "rgba(251,191,36,0.2)")}
               />
               <button
                 onClick={logMed}
                 disabled={!newMedName.trim()}
-                style={{ padding: "5px 10px", background: newMedName.trim() ? "rgba(251,191,36,0.12)" : "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.35)", borderRadius: 5, color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, letterSpacing: 1, cursor: newMedName.trim() ? "pointer" : "not-allowed", flexShrink: 0 }}
+                style={{ padding: "6px 12px", background: newMedName.trim() ? "rgba(251,191,36,0.12)" : "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.35)", borderRadius: 5, color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 1, cursor: newMedName.trim() ? "pointer" : "not-allowed", flexShrink: 0 }}
               >
                 {t.medLogBtn}
               </button>
             </div>
             {medLog.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 2, maxHeight: 136, overflowY: "auto" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 2, maxHeight: 148, overflowY: "auto" }}>
                 {medLog.map(med => editingMedId === med.id ? (
-                  <div key={med.id} style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 6px", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.4)", borderRadius: 5 }}>
+                  <div key={med.id} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.4)", borderRadius: 5 }}>
                     <input
                       autoFocus
                       value={editMedName}
                       onChange={e => setEditMedName(e.target.value)}
                       onKeyDown={e => { if (e.key === "Enter") saveMedEdit(med.id); if (e.key === "Escape") setEditingMedId(null); }}
-                      style={{ flex: 1, padding: "1px 4px", background: "transparent", border: "none", borderBottom: "1px solid rgba(251,191,36,0.5)", color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, outline: "none", minWidth: 0 }}
+                      style={{ flex: 1, padding: "1px 4px", background: "transparent", border: "none", borderBottom: "1px solid rgba(251,191,36,0.5)", color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, outline: "none", minWidth: 0 }}
                     />
-                    <button onClick={() => saveMedEdit(med.id)} style={{ background: "none", border: "none", color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: "pointer", padding: 0, flexShrink: 0 }}>OK</button>
-                    <button onClick={() => deleteMed(med.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.7)", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: "pointer", padding: 0, flexShrink: 0 }}>✕</button>
+                    <button onClick={() => saveMedEdit(med.id)} style={{ background: "none", border: "none", color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, cursor: "pointer", padding: 0, flexShrink: 0 }}>OK</button>
+                    <button onClick={() => deleteMed(med.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.7)", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, cursor: "pointer", padding: 0, flexShrink: 0 }}>✕</button>
                   </div>
                 ) : (
-                  <div key={med.id} style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 6px", background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.18)", borderRadius: 5 }}>
+                  <div key={med.id} style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 8px", background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.18)", borderRadius: 5 }}>
                     <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#fbbf24", flexShrink: 0 }} />
-                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#fbbf24", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{med.name}{med.dose ? ` · ${med.dose}` : ""}</span>
-                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.7)", flexShrink: 0 }}>{med.time}</span>
-                    <button onClick={() => startEditMed(med)} style={{ background: "none", border: "none", color: "rgba(251,191,36,0.4)", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: "pointer", padding: 0, flexShrink: 0 }}>✎</button>
-                    <button onClick={() => deleteMed(med.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.5)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", padding: 0, flexShrink: 0 }}>✕</button>
+                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#fbbf24", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{med.name}{med.dose ? ` · ${med.dose}` : ""}</span>
+                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.7)", flexShrink: 0 }}>{med.time}</span>
+                    <button onClick={() => startEditMed(med)} style={{ background: "none", border: "none", color: "rgba(251,191,36,0.4)", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, cursor: "pointer", padding: 0, flexShrink: 0 }}>✎</button>
+                    <button onClick={() => deleteMed(med.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.5)", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, cursor: "pointer", padding: 0, flexShrink: 0 }}>✕</button>
                   </div>
                 ))}
               </div>
@@ -659,14 +659,14 @@ export default function Dashboard() {
 
         <div>
           <SectionLabel>{t.aboutTokai}</SectionLabel>
-          <p style={{ fontSize: 13, color: "#5a8fa8", lineHeight: 1.6, margin: "0 0 12px 0" }}>{t.aboutText}</p>
+          <p style={{ fontSize: 14, color: "#5a8fa8", lineHeight: 1.6, margin: "0 0 12px 0" }}>{t.aboutText}</p>
           <a href="https://github.com/TokaiApp/Tokai-Pre-Alpha" target="_blank" rel="noopener noreferrer"
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5a8fa8", textDecoration: "none", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, letterSpacing: 1, transition: "color 0.2s" }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5a8fa8", textDecoration: "none", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 1, transition: "color 0.2s" }}
             onMouseEnter={e => (e.currentTarget.style.color = "#c084fc")}
             onMouseLeave={e => (e.currentTarget.style.color = "#5a8fa8")}>
             <Github size={20} />{t.sourceCode}
           </a>
-          <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5 }}>
+          <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5 }}>
             Developed by:{" "}
             <a href="https://austinhua.com" target="_blank" rel="noopener noreferrer"
               style={{ color: "rgba(90,143,168,0.5)", textDecoration: "none", transition: "color 0.2s" }}
