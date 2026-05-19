@@ -43,13 +43,14 @@ Neural data is **simulated** in this pre-alpha release. Integration with [Muse 2
 
 | | English | 中文 |
 |---|---|---|
-| 🧠 | **Real-time neural dashboard** — visualizes EEG and biometric data in a cyberpunk-style interface | **即時神經儀表板** — 在賽博朋克風介面中將 EEG 與生物識別數據具現化 |
-| 🤖 | **TokAgent** — AI assistant powered by Claude. Reads your brain data and helps you build and prioritize your to-do list based on your current cognitive state | **TokAgent** — 由 Claude 驅動的 AI 助手，讀取腦部數據並依認知狀態協助建立與排序待辦事項 |
-| 📝 | **TokTodo** — manage tasks directly alongside your live neural metrics | **TokTodo** — 直接在即時神經指標旁管理各項任務 |
-| 📊 | **Focus Stream** — real-time line chart tracking your focus index over time | **專注串流** — 即時追蹤專注指數變化的折線圖 |
-| 🌊 | **Neural Insights** — adaptive text recommendations based on your current focus, energy, and noise levels | **神經洞察** — 依據當前專注度、能量與噪訊水平生成的自適應建議 |
-| 🀄 | **Bilingual** — full English and Traditional Chinese support | **雙語支援** — 完整支援英文與繁體中文 |
-| 📱 | **Responsive** — works on desktop and mobile | **響應式設計** — 支援桌機與行動裝置 |
+| 🧠 | **Real-time neural dashboard** — five live metric cards (Focus Index, Bio Energy, Neural Noise, T/B Ratio, Focus Window), each with an icon and status badge, updating every second | **即時神經儀表板** — 五個即時指標卡片（專注指數、生理能量、神經噪訊、θ/β 比值、專注窗口），每秒更新，附圖示與狀態徽章 |
+| 📊 | **Focus Stream** — scrollable real-time line chart with ◀◀ / ◀ / ▶ / ▶▶ LIVE navigation buttons, an always-visible scrollbar, and reference lines for the 5-minute average, session average, and day average | **專注串流** — 可捲動的即時折線圖，含 ◀◀ / ◀ / ▶ / ▶▶ LIVE 導覽按鈕、常駐捲軸，以及 5 分鐘均值、本次均值與當日均值參考線 |
+| 🤖 | **TokAgent** — AI assistant powered by Claude. Reads your live brain data, full task list, and journal entries to give context-aware task planning advice. Bring your own Anthropic API key (stored locally, never on our servers) | **TokAgent** — 由 Claude 驅動的 AI 助手，整合即時腦部數據、任務清單與日誌，提供情境感知的任務規劃建議。使用您自己的 Anthropic API 金鑰（僅本機儲存） |
+| ✅ | **TokTodo** — full task manager with cognitive demand tags (Low / Medium / High / Very High), time estimates, creation timestamps, and a detail modal. Click any task to expand it | **TokTodo** — 完整任務管理器，含認知負荷標籤（低／中／高／極高）、預估時間、建立時間戳記，以及任務詳情彈窗 |
+| 📓 | **TokNote** — ADHD-friendly journal with multi-select mood tagging (10 moods: Hyperfocus, Flow, Focused, Restless, Scattered, Anxious, Fatigued, Zoned Out, Crashed, Low), Neural Insights embedded at the top, and click-to-edit / delete for past entries | **TokNote** — ADHD 友善日誌，支援多選情緒標籤（10 種：超專注、心流、專注、坐立難安、渙散、焦慮、疲憊、恍神、崩潰、低落），頂部嵌入神經洞察，可點擊既有條目進行編輯或刪除 |
+| 💊 | **TokMed** — medication sidebar with a scrollable list (capped at 4 visible items) for tracking supplements and medications alongside your neural state | **TokMed** — 藥物追蹤側欄，最多顯示 4 筆可捲動清單，與神經狀態並排呈現 |
+| 🀄 | **Bilingual** — full English and Traditional Chinese (繁體中文) support across all panels | **雙語支援** — 所有面板完整支援英文與繁體中文 |
+| 📱 | **Responsive** — single-column stacked layout on mobile, three-panel row (TokNote · TokAgent · TokTodo) on desktop | **響應式設計** — 行動裝置單欄堆疊，桌機三欄並排（TokNote · TokAgent · TokTodo） |
 
 ---
 
@@ -94,7 +95,7 @@ Tokai-Pre-Alpha/
 │   │   └── vite.config.ts
 │   └── api-server/             # Express.js API (serverless on Vercel)
 │       └── api/
-│           └── index.js        # /api/chat endpoint
+│           └── index.js        # /api/chat and /api/generate-description endpoints
 ├── pnpm-workspace.yaml
 └── README.md
 ```
@@ -176,17 +177,16 @@ The project deploys as two separate Vercel projects.
 
 | Metric | Description |
 |---|---|
-| **Focus Index** | Composite score (0–100) derived from EEG alpha/beta wave patterns |
-| **Bio Energy** | Simulated biological energy level (%) — will reflect HRV and other signals in future versions |
-| **Neural Noise** | Background EEG signal noise in μV² — lower is cleaner |
-| **A/B Wave Ratio** | Alpha-to-beta wave ratio; higher values correlate with relaxed alertness |
-| **Focus Window** | Predicted time remaining in your current focus state |
-| **Wave Breakdown** | Visual comparison of raw alpha and beta wave power |
+| **Focus Index** | Composite score (0–100) derived from EEG theta/beta wave patterns |
+| **Bio Energy** | Simulated biological energy level (%) — will reflect HRV and other biometric signals in future versions |
+| **Neural Noise** | Background EEG signal noise in μV² — lower is cleaner, higher values indicate distraction or arousal |
+| **T/B Ratio (Theta/Beta)** | Theta-to-beta wave ratio; elevated TBR (>3.0) is associated with ADHD inattention |
+| **Focus Window** | Predicted time remaining in your current focus state, based on recent trend |
 
-TokAgent uses these values in its system prompt to tailor task planning recommendations:
-- **High focus (>70):** deep work, complex problem-solving
-- **Moderate focus (40–70):** structured tasks, planning, communication
-- **Low focus (<40):** easy wins, breaks, administrative tasks
+TokAgent uses all five values in its system prompt to tailor task planning recommendations:
+- **High focus (>70):** deep work, complex problem-solving, demanding cognitive tasks
+- **Moderate focus (40–70):** structured tasks, planning, communication, reviewing
+- **Low focus (<40):** easy wins, breaks, physical movement, administrative tasks
 
 ---
 
