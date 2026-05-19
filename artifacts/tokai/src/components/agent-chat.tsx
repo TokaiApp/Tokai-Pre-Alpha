@@ -58,6 +58,7 @@ const UI = {
 };
 
 const STORAGE_KEY = "tokai_anthropic_key";
+const CHAT_KEY = "tokai_chat";
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
 export default function AgentChat({ neuralState, tasks, lang = "en", isMobile = false }: { neuralState: NeuralState; tasks: Task[]; lang?: "en" | "zh"; isMobile?: boolean }) {
@@ -65,9 +66,13 @@ export default function AgentChat({ neuralState, tasks, lang = "en", isMobile = 
 
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem(STORAGE_KEY) ?? "");
   const [keyInput, setKeyInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: t.greeting(neuralState.focusIndex.toFixed(1), String(Math.round(neuralState.bioEnergy))) },
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const s = localStorage.getItem(CHAT_KEY);
+      if (s) { const d = JSON.parse(s); if (d.lang === lang && Array.isArray(d.messages) && d.messages.length > 0) return d.messages; }
+    } catch {}
+    return [{ role: "assistant" as const, content: t.greeting(neuralState.focusIndex.toFixed(1), String(Math.round(neuralState.bioEnergy))) }];
+  });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -77,9 +82,15 @@ export default function AgentChat({ neuralState, tasks, lang = "en", isMobile = 
   useEffect(() => {
     if (prevLang.current !== lang) {
       prevLang.current = lang;
-      setMessages([{ role: "assistant", content: UI[lang].greeting(neuralState.focusIndex.toFixed(1), String(Math.round(neuralState.bioEnergy))) }]);
+      const greeting = [{ role: "assistant" as const, content: UI[lang].greeting(neuralState.focusIndex.toFixed(1), String(Math.round(neuralState.bioEnergy))) }];
+      setMessages(greeting);
+      try { localStorage.setItem(CHAT_KEY, JSON.stringify({ lang, messages: greeting })); } catch {}
     }
   }, [lang, neuralState.focusIndex, neuralState.bioEnergy]);
+
+  useEffect(() => {
+    try { localStorage.setItem(CHAT_KEY, JSON.stringify({ lang, messages })); } catch {}
+  }, [lang, messages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

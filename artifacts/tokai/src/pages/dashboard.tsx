@@ -237,15 +237,25 @@ export default function Dashboard() {
   // Internal focus target: drifts slowly, actual focus index pulls toward it
   const focusTargetRef = useRef(55);
 
-  const [focusHistory, setFocusHistory] = useState<FocusPoint[]>([
-    { time: formatTime(new Date()), value: 35.6 },
-  ]);
+  const [focusHistory, setFocusHistory] = useState<FocusPoint[]>(() => {
+    try {
+      const s = localStorage.getItem("tokai_focus_history");
+      if (s) { const parsed = JSON.parse(s); if (parsed.length > 0) return parsed; }
+    } catch {}
+    return [{ time: formatTime(new Date()), value: 35.6 }];
+  });
 
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: "1", title: "Review morning notes", description: "Scan yesterday's capture for open action items before the day's first focus block.", done: false, demand: "low", estimatedMinutes: 15 },
-    { id: "2", title: "Deep work block: project spec", description: null, done: false, demand: "high", estimatedMinutes: 90 },
-    { id: "3", title: "Reply to priority emails", description: null, done: false, demand: "medium", estimatedMinutes: 30 },
-  ]);
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    try {
+      const s = localStorage.getItem("tokai_tasks");
+      if (s) { const parsed = JSON.parse(s); if (parsed.length > 0) return parsed; }
+    } catch {}
+    return [
+      { id: "1", title: "Review morning notes", description: "Scan yesterday's capture for open action items before the day's first focus block.", done: false, demand: "low", estimatedMinutes: 15 },
+      { id: "2", title: "Deep work block: project spec", description: null, done: false, demand: "high", estimatedMinutes: 90 },
+      { id: "3", title: "Reply to priority emails", description: null, done: false, demand: "medium", estimatedMinutes: 30 },
+    ];
+  });
   const [newTask, setNewTask] = useState("");
   const [newTaskDesc, setNewTaskDesc] = useState("");
   const [newTaskDemand, setNewTaskDemand] = useState<Demand | null>(null);
@@ -265,6 +275,17 @@ export default function Dashboard() {
   useEffect(() => {
     try { localStorage.setItem("tokai_med_log", JSON.stringify(medLog)); } catch {}
   }, [medLog]);
+
+  useEffect(() => {
+    try { localStorage.setItem("tokai_tasks", JSON.stringify(tasks)); } catch {}
+  }, [tasks]);
+
+  useEffect(() => {
+    try {
+      // cap at 1800 samples (~30 min at 1s, ~90 min at 3s) to stay well within localStorage limits
+      localStorage.setItem("tokai_focus_history", JSON.stringify(focusHistory.slice(-1800)));
+    } catch {}
+  }, [focusHistory]);
 
   function getMedDelta(med: MedEntry) {
     const baseFocus = focusHistory[med.sampleIndex]?.value;
