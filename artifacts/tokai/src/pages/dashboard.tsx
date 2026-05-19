@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Github, Activity, BookOpen, ListChecks, Pill, Brain } from "lucide-react";
+import { Github, Activity, BookOpen, ListChecks, Pill, Brain, Crosshair, Zap, Waves, BarChart2, Clock } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, ReferenceLine, ReferenceArea,
 } from "recharts";
@@ -176,11 +176,14 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   );
 }
 
-function MetricCard({ title, children }: { title: string; children: React.ReactNode }) {
+function MetricCard({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.15)", borderRadius: 10, padding: "16px 20px", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: 0, left: 0, width: 3, height: "100%", background: "linear-gradient(180deg, #c084fc, #7c3aed)" }} />
-      <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 2, marginBottom: 8 }}>{title}</div>
+      <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 2, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+        {icon}
+        {title}
+      </div>
       {children}
     </div>
   );
@@ -742,14 +745,14 @@ export default function Dashboard() {
 
           {/* Metric cards — 2 cols on mobile, 5 on desktop */}
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(5, 1fr)", gap: isMobile ? 10 : 14 }}>
-            <MetricCard title={t.focusIndex}>
+            <MetricCard title={t.focusIndex} icon={<Crosshair size={12} color="#5a8fa8" />}>
               <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
                 {neural.focusIndex.toFixed(1)}<span style={{ fontSize: 16, color: "#5a8fa8" }}>/100</span>
               </div>
               <Badge color={focusInfo.color}>{focusInfo.label}</Badge>
             </MetricCard>
 
-            <MetricCard title={t.bioEnergy}>
+            <MetricCard title={t.bioEnergy} icon={<Zap size={12} color="#5a8fa8" />}>
               <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
                 {Math.round(neural.bioEnergy)}<span style={{ fontSize: 16, color: "#5a8fa8" }}>%</span>
               </div>
@@ -758,14 +761,14 @@ export default function Dashboard() {
               </div>
             </MetricCard>
 
-            <MetricCard title={t.neuralNoise}>
+            <MetricCard title={t.neuralNoise} icon={<Waves size={12} color="#5a8fa8" />}>
               <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
                 {Math.round(neural.neuralNoise)}<span style={{ fontSize: 14, color: "#5a8fa8" }}> μV²</span>
               </div>
               <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: noiseInfo.color, letterSpacing: 2 }}>{noiseInfo.label}</span>
             </MetricCard>
 
-            <MetricCard title={t.tbRatio}>
+            <MetricCard title={t.tbRatio} icon={<BarChart2 size={12} color="#5a8fa8" />}>
               <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>{neural.tbRatio}</div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Badge color={tbrInfo.color}>{tbrInfo.label}</Badge>
@@ -775,7 +778,7 @@ export default function Dashboard() {
               </div>
             </MetricCard>
 
-            <MetricCard title={t.focusWindow}>
+            <MetricCard title={t.focusWindow} icon={<Clock size={12} color="#5a8fa8" />}>
               <div style={{ fontSize: 15, fontWeight: 700, color: "#e8f4ff", marginBottom: 8, lineHeight: 1.4 }}>
                 {focusHistory.length < 6 ? t.collectingData : `~${Math.max(3, Math.round((80 - neural.focusIndex) / 2))} min`}
               </div>
