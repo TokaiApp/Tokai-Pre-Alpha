@@ -750,23 +750,6 @@ export default function Dashboard() {
               </span>
             }>
               <div ref={chartWrapRef} style={{ width: "100%", position: "relative" }}>
-                {/* Scroll controls */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6, marginBottom: 6 }}>
-                  {[
-                    { label: "◀◀", delta: -999999, title: "Scroll to start" },
-                    { label: "◀", delta: -200, title: "Scroll left" },
-                    { label: "▶", delta: 200, title: "Scroll right" },
-                  ].map(({ label, delta, title }) => (
-                    <button key={label} onClick={() => scrollChart(delta)} title={title}
-                      style={{ padding: "2px 10px", background: "rgba(192,132,252,0.07)", border: "1px solid rgba(192,132,252,0.25)", borderRadius: 4, color: "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, cursor: "pointer", lineHeight: 1.6 }}>
-                      {label}
-                    </button>
-                  ))}
-                  <button onClick={goToLive} title="Jump to live"
-                    style={{ padding: "2px 10px", background: isLive ? "rgba(192,132,252,0.2)" : "rgba(192,132,252,0.07)", border: `1px solid ${isLive ? "rgba(192,132,252,0.7)" : "rgba(192,132,252,0.25)"}`, borderRadius: 4, color: isLive ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, cursor: "pointer", letterSpacing: 1, lineHeight: 1.6, transition: "all 0.2s" }}>
-                    ▶▶ LIVE
-                  </button>
-                </div>
                 <div ref={chartScrollRef} style={{ width: chartWrapWidth, height: 168, overflowX: "scroll", overflowY: "hidden" }}
                   onScroll={e => {
                     const el = e.currentTarget;
@@ -797,6 +780,23 @@ export default function Dashboard() {
                 </div>
                 <div style={{ position: "absolute", right: 4, top: 8, fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc", pointerEvents: "none" }}>
                   {neural.focusIndex.toFixed(1)}
+                </div>
+                {/* Scroll controls */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6, marginTop: 6 }}>
+                  {[
+                    { label: "◀◀", delta: -999999, title: "Scroll to start" },
+                    { label: "◀", delta: -200, title: "Scroll left" },
+                    { label: "▶", delta: 200, title: "Scroll right" },
+                  ].map(({ label, delta, title }) => (
+                    <button key={label} onClick={() => scrollChart(delta)} title={title}
+                      style={{ padding: "2px 10px", background: "rgba(192,132,252,0.07)", border: "1px solid rgba(192,132,252,0.25)", borderRadius: 4, color: "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, cursor: "pointer", lineHeight: 1.6 }}>
+                      {label}
+                    </button>
+                  ))}
+                  <button onClick={goToLive} title="Jump to live"
+                    style={{ padding: "2px 10px", background: isLive ? "rgba(192,132,252,0.2)" : "rgba(192,132,252,0.07)", border: `1px solid ${isLive ? "rgba(192,132,252,0.7)" : "rgba(192,132,252,0.25)"}`, borderRadius: 4, color: isLive ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, cursor: "pointer", letterSpacing: 1, lineHeight: 1.6, transition: "all 0.2s" }}>
+                    ▶▶ LIVE
+                  </button>
                 </div>
               </div>
             </Panel>
