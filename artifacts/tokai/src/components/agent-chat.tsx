@@ -180,7 +180,7 @@ export default function AgentChat({ neuralState, tasks, lang = "en", isMobile = 
       ) : (
         <>
           {/* ── Messages ── */}
-          <div style={{ flex: 1, minHeight: 220, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ minHeight: 120, maxHeight: 360, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                 <div style={{ maxWidth: "72%", padding: "10px 14px", borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: msg.role === "user" ? "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(124,58,237,0.12))" : "rgba(192,132,252,0.06)", border: `1px solid ${msg.role === "user" ? "rgba(124,58,237,0.35)" : "rgba(192,132,252,0.18)"}`, fontSize: 16, color: "#d0e8f8", lineHeight: 1.6, fontFamily: "'Rajdhani', sans-serif" }}>
