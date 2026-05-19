@@ -137,7 +137,7 @@ interface NeuralState {
 
 interface FocusPoint { time: string; value: number; }
 type Demand = "low" | "medium" | "high";
-interface Task { id: string; title: string; description: string | null; done: boolean; demand: Demand | null; estimatedMinutes: number | null; }
+interface Task { id: string; title: string; description: string | null; done: boolean; demand: Demand | null; estimatedMinutes: number | null; createdAt?: string; }
 interface MedEntry { id: string; name: string; dose: string; time: string; sampleIndex: number; rating: number | null; }
 type Mood = "focused" | "scattered" | "hyperfocus" | "low";
 interface JournalEntry { id: string; text: string; time: string; focusIndex: number; mood: Mood | null; }
@@ -508,6 +508,7 @@ export default function Dashboard() {
         done: false,
         demand: newTaskDemand,
         estimatedMinutes: newTaskTime ? parseInt(newTaskTime) : null,
+        createdAt: formatTime(new Date()),
       }]);
       setNewTask("");
       setNewTaskDesc("");
@@ -1095,13 +1096,20 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Delete */}
-              <button
-                onClick={() => { setTasks(p => p.filter(tk => tk.id !== task.id)); setSelectedTaskId(null); }}
-                style={{ alignSelf: "flex-start", padding: "5px 12px", background: "transparent", border: "1px solid rgba(255,80,80,0.3)", borderRadius: 4, color: "rgba(255,80,80,0.6)", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: "pointer", letterSpacing: 1 }}
-              >
-                {t.deleteTask}
-              </button>
+              {/* Timestamp + Delete row */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                {task.createdAt && (
+                  <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.55)", letterSpacing: 1 }}>
+                    {lang === "en" ? "ADDED" : "新增於"} {task.createdAt}
+                  </span>
+                )}
+                <button
+                  onClick={() => { setTasks(p => p.filter(tk => tk.id !== task.id)); setSelectedTaskId(null); }}
+                  style={{ padding: "5px 12px", background: "transparent", border: "1px solid rgba(255,80,80,0.3)", borderRadius: 4, color: "rgba(255,80,80,0.6)", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: "pointer", letterSpacing: 1, marginLeft: "auto" }}
+                >
+                  {t.deleteTask}
+                </button>
+              </div>
 
             </div>
           </div>
