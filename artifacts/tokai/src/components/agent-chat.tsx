@@ -26,7 +26,11 @@ interface JournalEntry {
 interface Message {
   role: "user" | "assistant";
   content: string;
+  timestamp?: string;
 }
+
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function nowTime() { return new Date().toTimeString().slice(0, 5); }
 
 const UI = {
   en: {
@@ -68,19 +72,28 @@ const UI = {
 };
 
 const STORAGE_KEY = "tokai_anthropic_key";
-const CHAT_KEY = "tokai_chat";
+const CHAT_KEY_PREFIX = "tokai_chat";
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
-export default function AgentChat({ neuralState, tasks, journalEntries = [], lang = "en", isMobile = false }: { neuralState: NeuralState; tasks: Task[]; journalEntries?: JournalEntry[]; lang?: "en" | "zh"; isMobile?: boolean }) {
+export default function AgentChat({ neuralState, tasks, journalEntries = [], lang = "en", isMobile = false, selectedDate }: { neuralState: NeuralState; tasks: Task[]; journalEntries?: JournalEntry[]; lang?: "en" | "zh"; isMobile?: boolean; selectedDate?: string }) {
   const t = UI[lang];
+  const chatDate = selectedDate ?? todayStr();
+  const chatKey = `${CHAT_KEY_PREFIX}_${chatDate}`;
+  const isToday = chatDate === todayStr();
 
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem(STORAGE_KEY) ?? "");
   const [keyInput, setKeyInput] = useState("");
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
-      const s = localStorage.getItem(CHAT_KEY);
+      const s = localStorage.getItem(chatKey);
       if (s) { const d = JSON.parse(s); if (d.lang === lang && Array.isArray(d.messages) && d.messages.length > 0) return d.messages; }
+      // one-time migration from legacy key
+      if (isToday) {
+        const legacy = localStorage.getItem(CHAT_KEY_PREFIX);
+        if (legacy) { const d = JSON.parse(legacy); if (d.lang === lang && Array.isArray(d.messages) && d.messages.length > 0) { localStorage.setItem(chatKey, legacy); return d.messages; } }
+      }
     } catch {}
+    if (!isToday) return [];
     return [{ role: "assistant" as const, content: t.greeting(neuralState.focusIndex.toFixed(1), String(Math.round(neuralState.bioEnergy))) }];
   });
   const [input, setInput] = useState("");
@@ -92,14 +105,16 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
   useEffect(() => {
     if (prevLang.current !== lang) {
       prevLang.current = lang;
+      if (!isToday) return;
       const greeting = [{ role: "assistant" as const, content: UI[lang].greeting(neuralState.focusIndex.toFixed(1), String(Math.round(neuralState.bioEnergy))) }];
       setMessages(greeting);
-      try { localStorage.setItem(CHAT_KEY, JSON.stringify({ lang, messages: greeting })); } catch {}
+      try { localStorage.setItem(chatKey, JSON.stringify({ lang, messages: greeting })); } catch {}
     }
   }, [lang, neuralState.focusIndex, neuralState.bioEnergy]);
 
   useEffect(() => {
-    try { localStorage.setItem(CHAT_KEY, JSON.stringify({ lang, messages })); } catch {}
+    if (!isToday) return;
+    try { localStorage.setItem(chatKey, JSON.stringify({ lang, messages })); } catch {}
   }, [lang, messages]);
 
   useEffect(() => {
@@ -123,7 +138,7 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
     const text = input.trim();
     if (!text || loading) return;
 
-    const userMsg: Message = { role: "user", content: text };
+    const userMsg: Message = { role: "user", content: text, timestamp: nowTime() };
     const next = [...messages, userMsg];
     setMessages(next);
     setInput("");
@@ -137,7 +152,7 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
       });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
-      setMessages(prev => [...prev, { role: "assistant", content: data.content }]);
+      setMessages(prev => [...prev, { role: "assistant", content: data.content, timestamp: nowTime() }]);
     } catch {
       setMessages(prev => [...prev, { role: "assistant", content: t.error }]);
     } finally {
@@ -205,6 +220,11 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {/* ── Messages ── */}
           <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+            {!isToday && messages.length === 0 && (
+              <p style={{ margin: 0, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "rgba(90,143,168,0.5)", letterSpacing: 1 }}>
+                {lang === "en" ? "No session recorded for this day." : "此日無對話紀錄。"}
+              </p>
+            )}
             {messages.map((msg, i) => (
               <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                 <div style={{ maxWidth: "72%", padding: "10px 14px", borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: msg.role === "user" ? "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(124,58,237,0.12))" : "rgba(192,132,252,0.06)", border: `1px solid ${msg.role === "user" ? "rgba(124,58,237,0.35)" : "rgba(192,132,252,0.18)"}`, fontSize: 16, color: "#d0e8f8", lineHeight: 1.6, fontFamily: "'Rajdhani', sans-serif" }}>
@@ -212,6 +232,9 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
                     <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc", letterSpacing: 2, marginBottom: 5 }}>{t.label}</div>
                   )}
                   {msg.content}
+                  {msg.timestamp && (
+                    <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.5)", marginTop: 6, textAlign: msg.role === "user" ? "right" : "left", letterSpacing: 0.5 }}>{msg.timestamp}</div>
+                  )}
                 </div>
               </div>
             ))}
@@ -226,19 +249,25 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
             <div ref={bottomRef} />
           </div>
 
-          {/* ── Input ── */}
-          <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(192,132,252,0.15)", display: "flex", gap: 10, background: "rgba(0,0,0,0.15)" }}>
-            <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && send()} placeholder={t.placeholder}
-              style={{ flex: 1, padding: "9px 14px", background: "rgba(0,0,0,0.35)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 16, outline: "none", transition: "border-color 0.2s" }}
-              onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
-              onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
-            />
-            <button onClick={send} disabled={loading || !input.trim()}
-              style={{ padding: "9px 20px", background: loading || !input.trim() ? "rgba(192,132,252,0.05)" : "rgba(192,132,252,0.15)", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 6, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, cursor: loading || !input.trim() ? "not-allowed" : "pointer", letterSpacing: 1, transition: "background 0.2s" }}
-            >
-              {t.send}
-            </button>
-          </div>
+          {/* ── Input (today only) ── */}
+          {isToday ? (
+            <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(192,132,252,0.15)", display: "flex", gap: 10, background: "rgba(0,0,0,0.15)" }}>
+              <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && send()} placeholder={t.placeholder}
+                style={{ flex: 1, padding: "9px 14px", background: "rgba(0,0,0,0.35)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 16, outline: "none", transition: "border-color 0.2s" }}
+                onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
+                onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
+              />
+              <button onClick={send} disabled={loading || !input.trim()}
+                style={{ padding: "9px 20px", background: loading || !input.trim() ? "rgba(192,132,252,0.05)" : "rgba(192,132,252,0.15)", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 6, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, cursor: loading || !input.trim() ? "not-allowed" : "pointer", letterSpacing: 1, transition: "background 0.2s" }}
+              >
+                {t.send}
+              </button>
+            </div>
+          ) : (
+            <div style={{ padding: "10px 20px", borderTop: "1px solid rgba(192,132,252,0.1)", background: "rgba(0,0,0,0.15)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.5)", letterSpacing: 1 }}>
+              {lang === "en" ? "PAST SESSION · READ ONLY" : "歷史對話 · 唯讀"}
+            </div>
+          )}
         </div>
       )}
     </div>

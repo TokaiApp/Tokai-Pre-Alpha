@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Github, Activity, BookOpen, ListChecks, Pill, Brain, Crosshair, Zap, Waves, BarChart2, Clock } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, ReferenceLine, ReferenceArea,
@@ -137,10 +137,10 @@ interface NeuralState {
 
 interface FocusPoint { time: string; value: number; }
 type Demand = "low" | "medium" | "high";
-interface Task { id: string; title: string; description: string | null; done: boolean; demand: Demand | null; estimatedMinutes: number | null; createdAt?: string; }
+interface Task { id: string; title: string; description: string | null; done: boolean; demand: Demand | null; estimatedMinutes: number | null; createdAt?: string; deadline?: string; }
 interface MedEntry { id: string; name: string; dose: string; time: string; sampleIndex: number; rating: number | null; }
 type Mood = "hyperfocus" | "flow" | "focused" | "restless" | "scattered" | "anxious" | "fatigued" | "zoned-out" | "crashed" | "low";
-interface JournalEntry { id: string; text: string; time: string; focusIndex: number; mood: Mood[]; }
+interface JournalEntry { id: string; text: string; time: string; date: string; focusIndex: number; mood: Mood[]; }
 
 function demandColor(d: Demand) {
   if (d === "low") return "#4ade80";
@@ -151,7 +151,17 @@ function demandColor(d: Demand) {
 function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
-function formatTime(d: Date) { return d.toTimeString().slice(0, 8); }
+function formatTime(d: Date) { return d.toTimeString().slice(0, 5); }
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function formatDateTime(d: Date) { return `${todayStr()} ${d.toTimeString().slice(0, 5)}`; }
+function formatDayLabel(dateStr: string, lang: string): string {
+  const today = todayStr();
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (dateStr === today) return lang === "zh" ? "今天" : "TODAY";
+  if (dateStr === yesterday) return lang === "zh" ? "昨天" : "YESTERDAY";
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString(lang === "zh" ? "zh-TW" : "en-US", { month: "short", day: "numeric" });
+}
 
 function drift(val: number, amount: number, min: number, max: number) {
   return parseFloat(clamp(val + (Math.random() - 0.5) * amount, min, max).toFixed(2));
@@ -300,6 +310,20 @@ export default function Dashboard() {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editNoteText, setEditNoteText] = useState("");
   const journalBottomRef = useRef<HTMLDivElement>(null);
+  const [selectedDate, setSelectedDate] = useState(todayStr());
+  const [newTaskDeadline, setNewTaskDeadline] = useState("");
+
+  const availableDates = useMemo(() => {
+    const dates = new Set<string>([todayStr()]);
+    journal.forEach(e => { if (e.date) dates.add(e.date); });
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith("tokai_chat_") && /\d{4}-\d{2}-\d{2}$/.test(key)) dates.add(key.slice(-10));
+      }
+    } catch {}
+    return [...dates].sort().reverse();
+  }, [journal]);
 
   useEffect(() => {
     try { localStorage.setItem("tokai_med_log", JSON.stringify(medLog)); } catch {}
@@ -381,7 +405,7 @@ export default function Dashboard() {
   function addJournalEntry() {
     const text = journalInput.trim();
     if (!text) return;
-    setJournal(prev => [...prev, { id: Date.now().toString(), text, time: formatTime(new Date()), focusIndex: neural.focusIndex, mood: selectedMoods }]);
+    setJournal(prev => [...prev, { id: Date.now().toString(), text, time: formatTime(new Date()), date: todayStr(), focusIndex: neural.focusIndex, mood: selectedMoods }]);
     setJournalInput("");
     setSelectedMoods([]);
     setMoodDropdownOpen(false);
@@ -433,7 +457,7 @@ export default function Dashboard() {
     const el = chartScrollRef.current;
     if (!el || !isLive) return;
     el.scrollLeft = el.scrollWidth;
-  }, [focusHistory, isLive]);
+  }, [focusHistory, isLive, chartWrapWidth]);
 
   function scrollChart(delta: number) {
     const el = chartScrollRef.current;
@@ -526,12 +550,14 @@ export default function Dashboard() {
         done: false,
         demand: newTaskDemand,
         estimatedMinutes: newTaskTime ? parseInt(newTaskTime) : null,
-        createdAt: formatTime(new Date()),
+        createdAt: formatDateTime(new Date()),
+        deadline: newTaskDeadline || undefined,
       }]);
       setNewTask("");
       setNewTaskDesc("");
       setNewTaskDemand(null);
       setNewTaskTime("");
+      setNewTaskDeadline("");
     }
   }
 
@@ -794,9 +820,9 @@ export default function Dashboard() {
             <Panel title={
               <span style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Activity size={14} color="#c084fc" /><span>{t.focusStream}</span></span>
-                {avgFocus !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(192,132,252,0.6)", letterSpacing: 1, fontWeight: 400 }}>5m {avgFocus}</span>}
-                {sessionAvg !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(56,189,248,0.7)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "sess" : "階段"} {sessionAvg}</span>}
-                {dayAvg !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(74,222,128,0.7)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "day" : "日"} {dayAvg}</span>}
+                {avgFocus !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(192,132,252,0.6)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "5m avg" : "5分均值"} {avgFocus}</span>}
+                {sessionAvg !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(56,189,248,0.7)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "session avg" : "階段均值"} {sessionAvg}</span>}
+                {dayAvg !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(74,222,128,0.7)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "day avg" : "日均值"} {dayAvg}</span>}
               </span>
             }>
               <div ref={chartWrapRef} style={{ width: "100%", position: "relative" }}>
@@ -858,6 +884,16 @@ export default function Dashboard() {
             </Panel>
           </div>
 
+          {/* Day selector */}
+          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 2 }}>
+            {availableDates.map(date => (
+              <button key={date} onClick={() => setSelectedDate(date)}
+                style={{ padding: "5px 14px", background: selectedDate === date ? "rgba(192,132,252,0.2)" : "rgba(192,132,252,0.04)", border: `1px solid ${selectedDate === date ? "rgba(192,132,252,0.7)" : "rgba(192,132,252,0.2)"}`, borderRadius: 20, color: selectedDate === date ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", letterSpacing: 1, whiteSpace: "nowrap", transition: "all 0.15s", flexShrink: 0 }}>
+                {formatDayLabel(date, lang)}
+              </button>
+            ))}
+          </div>
+
           {/* TokNote · TokAgent · TokTodo */}
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 14 }}>
           <div style={{ background: "linear-gradient(135deg, #100a25, #120d28)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(192,132,252,0.07)", display: "flex", flexDirection: "column", height: 480 }}>
@@ -878,10 +914,14 @@ export default function Dashboard() {
             </div>
             {/* Entries */}
             <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-                {journal.length === 0 ? (
-                  <p style={{ margin: 0, fontSize: 13, color: "rgba(90,143,168,0.6)", fontFamily: "'Share Tech Mono', monospace", letterSpacing: 0.5, lineHeight: 1.5 }}>{t.noteEmpty}</p>
-                ) : (
-                  journal.map(entry => editingNoteId === entry.id ? (
+                {(() => {
+                  const filtered = journal.filter(e => (e.date ?? todayStr()) === selectedDate);
+                  if (filtered.length === 0) return (
+                    <p style={{ margin: 0, fontSize: 13, color: "rgba(90,143,168,0.6)", fontFamily: "'Share Tech Mono', monospace", letterSpacing: 0.5, lineHeight: 1.5 }}>
+                      {selectedDate === todayStr() ? t.noteEmpty : (lang === "en" ? "No entries for this day." : "此日無日誌條目。")}
+                    </p>
+                  );
+                  return filtered.map(entry => editingNoteId === entry.id ? (
                     <div key={entry.id} style={{ padding: "8px 12px", background: "rgba(192,132,252,0.06)", border: "1px solid rgba(192,132,252,0.35)", borderRadius: 8 }}>
                       <textarea
                         autoFocus
@@ -901,7 +941,7 @@ export default function Dashboard() {
                       onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(192,132,252,0.35)")}
                       onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(192,132,252,0.14)")}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8" }}>{entry.time}</span>
+                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8" }}>{entry.date ? `${entry.date} ${entry.time}` : entry.time}</span>
                         <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc" }}>{t.noteFocusLabel} {entry.focusIndex.toFixed(1)}</span>
                         {(() => {
                           const moodMap: Record<string, string> = { hyperfocus: t.moodHyperfocus, flow: t.moodFlow, focused: t.moodFocused, restless: t.moodRestless, scattered: t.moodScattered, anxious: t.moodAnxious, fatigued: t.moodFatigued, "zoned-out": t.moodZonedOut, crashed: t.moodCrashed, low: t.moodLow };
@@ -917,10 +957,15 @@ export default function Dashboard() {
                       <p style={{ margin: 0, fontSize: 15, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", lineHeight: 1.5 }}>{entry.text}</p>
                     </div>
                   ))
-                )}
+                })()}
                 <div ref={journalBottomRef} />
               </div>
-              {/* Input + mood tags */}
+              {/* Input + mood tags (today only) */}
+              {selectedDate !== todayStr() ? (
+                <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(192,132,252,0.1)", background: "rgba(0,0,0,0.15)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.5)", letterSpacing: 1, flexShrink: 0 }}>
+                  {lang === "en" ? "PAST DAY · READ ONLY" : "歷史日期 · 唯讀"}
+                </div>
+              ) : (
               <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(192,132,252,0.15)", display: "flex", gap: 8, alignItems: "center", background: "rgba(0,0,0,0.15)", flexShrink: 0 }}>
                 <input
                   value={journalInput}
@@ -967,9 +1012,10 @@ export default function Dashboard() {
                   LOG
                 </button>
               </div>
+              )}
             </div>
 
-          <AgentChat neuralState={neural} tasks={tasks.map(t => ({ title: t.title, description: t.description, done: t.done, demand: t.demand, estimatedMinutes: t.estimatedMinutes }))} journalEntries={journal.map(e => ({ text: e.text, time: e.time, focusIndex: e.focusIndex, mood: e.mood }))} lang={lang} isMobile={isMobile} />
+          <AgentChat key={selectedDate} selectedDate={selectedDate} neuralState={neural} tasks={tasks.map(t => ({ title: t.title, description: t.description, done: t.done, demand: t.demand, estimatedMinutes: t.estimatedMinutes }))} journalEntries={journal.map(e => ({ text: e.text, time: e.time, focusIndex: e.focusIndex, mood: e.mood }))} lang={lang} isMobile={isMobile} />
           <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)", height: 480, display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                   <ListChecks size={16} color="#c084fc" style={{ flexShrink: 0 }} />
@@ -1049,6 +1095,11 @@ export default function Dashboard() {
                         <p style={{ margin: 0, marginLeft: 22, fontSize: 13, color: "#5a8fa8", lineHeight: 1.5, fontStyle: "italic", fontFamily: "'Rajdhani', sans-serif", wordBreak: "break-word" }}>
                           {task.description}
                         </p>
+                      )}
+                      {task.deadline && (
+                        <span style={{ marginLeft: 22, fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(251,191,36,0.7)", letterSpacing: 1 }}>
+                          {lang === "en" ? "DUE" : "截止"} {task.deadline}
+                        </span>
                       )}
                     </div>
                   ))}
@@ -1140,6 +1191,20 @@ export default function Dashboard() {
                   />
                   <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "#5a8fa8" }}>{t.minUnit}</span>
                 </div>
+              </div>
+
+              {/* Deadline */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "#5a8fa8", letterSpacing: 1, flexShrink: 0 }}>{lang === "en" ? "DEADLINE:" : "截止日期:"}</span>
+                <input type="date"
+                  value={task.deadline ?? ""}
+                  onChange={e => setTasks(p => p.map(tk => tk.id === task.id ? { ...tk, deadline: e.target.value || undefined } : tk))}
+                  style={{ flex: 1, padding: "4px 8px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 4, color: task.deadline ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, outline: "none", colorScheme: "dark" }}
+                />
+                {task.deadline && (
+                  <button onClick={() => setTasks(p => p.map(tk => tk.id === task.id ? { ...tk, deadline: undefined } : tk))}
+                    style={{ background: "none", border: "none", color: "rgba(90,143,168,0.5)", cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
+                )}
               </div>
 
               {/* Timestamp + Delete row */}
