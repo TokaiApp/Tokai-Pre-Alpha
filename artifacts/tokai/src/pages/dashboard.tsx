@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Github } from "lucide-react";
+import { Github, Activity, BookOpen, ListChecks, Pill, Brain } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, ReferenceLine, ReferenceArea,
 } from "recharts";
@@ -597,7 +597,10 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <SectionLabel>TOKMED</SectionLabel>
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, letterSpacing: 3, marginBottom: 10, borderBottom: "1px solid rgba(192,132,252,0.2)", paddingBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+            <Pill size={13} color="#c084fc" />
+            <span><span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>MED</span></span>
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <input
               value={newMedName}
@@ -764,7 +767,7 @@ export default function Dashboard() {
           <div style={{ minWidth: 0 }}>
             <Panel title={
               <span style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <span>{t.focusStream}</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Activity size={14} color="#c084fc" /><span>{t.focusStream}</span></span>
                 {avgFocus !== null && (
                   <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(192,132,252,0.6)", letterSpacing: 1, fontWeight: 400 }}>
                     5m avg: {avgFocus}
@@ -829,14 +832,15 @@ export default function Dashboard() {
           <div style={{ background: "linear-gradient(135deg, #100a25, #120d28)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(192,132,252,0.07)", display: "flex", flexDirection: "column", height: 320 }}>
             {/* Header */}
             <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(192,132,252,0.03)", flexShrink: 0 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c084fc", boxShadow: "0 0 8px rgba(192,132,252,0.9)", flexShrink: 0 }} />
+              <BookOpen size={16} color="#c084fc" style={{ flexShrink: 0 }} />
               <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, fontWeight: 700, letterSpacing: 3 }}>
                 <span style={{ color: "#7c3aed" }}>TOK</span>
                 <span style={{ color: "#c084fc" }}>{lang === "en" ? "NOTE · JOURNAL" : "NOTE · 日誌"}</span>
               </span>
             </div>
             {/* Neural Insight — pinned, always visible */}
-            <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.1)", background: "rgba(192,132,252,0.02)", flexShrink: 0 }}>
+            <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.1)", background: "rgba(192,132,252,0.02)", flexShrink: 0, display: "flex", alignItems: "flex-start", gap: 8 }}>
+              <Brain size={14} color="rgba(192,132,252,0.5)" style={{ flexShrink: 0, marginTop: 3 }} />
               <p style={{ margin: 0, fontSize: 14, color: "rgba(200,216,232,0.7)", lineHeight: 1.6, fontStyle: "italic", fontFamily: "'Rajdhani', sans-serif" }}>
                 "{getInsight()}"
               </p>
@@ -920,7 +924,7 @@ export default function Dashboard() {
 
               <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)", height: 480, display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                  <div style={{ width: 3, height: 16, background: "#c084fc", borderRadius: 1, flexShrink: 0 }} />
+                  <ListChecks size={16} color="#c084fc" style={{ flexShrink: 0 }} />
                   <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, fontWeight: 700, letterSpacing: 3 }}>
                     {lang === "en"
                       ? <><span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>TODO · CHECKLIST</span></>

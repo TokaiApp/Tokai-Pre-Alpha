@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Bot } from "lucide-react";
 
 interface NeuralState {
   focusIndex: number;
@@ -152,7 +153,7 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
     <div style={S.wrap}>
       {/* Header */}
       <div style={S.header}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c084fc", boxShadow: "0 0 8px rgba(192,132,252,0.9)", flexShrink: 0 }} />
+        <Bot size={16} color="#c084fc" style={{ flexShrink: 0 }} />
         <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, fontWeight: 700, letterSpacing: 3 }}>
           <span style={{ color: "#7c3aed" }}>TOK</span>
           <span style={{ color: "#c084fc" }}>{lang === "en" ? "AGENT · TASK PLANNER" : "AGENT · 任務規劃"}</span>
