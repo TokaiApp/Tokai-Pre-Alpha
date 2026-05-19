@@ -145,16 +145,25 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
     setLoading(true);
 
     try {
+      // Anthropic requires messages to start with a user turn — strip any leading assistant messages (greeting)
+      const stripped = next.map(({ role, content }) => ({ role, content }));
+      const firstUser = stripped.findIndex(m => m.role === "user");
+      const apiMessages = firstUser > 0 ? stripped.slice(firstUser) : stripped;
+
       const res = await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next.map(({ role, content }) => ({ role, content })), neuralState, tasks, journalEntries, lang, userApiKey: apiKey }),
+        body: JSON.stringify({ messages: apiMessages, neuralState, tasks, journalEntries, lang, userApiKey: apiKey }),
       });
-      if (!res.ok) throw new Error(`${res.status}`);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        throw new Error(errBody?.content ?? `HTTP ${res.status}`);
+      }
       const data = await res.json();
       setMessages(prev => [...prev, { role: "assistant", content: data.content, timestamp: nowTime() }]);
-    } catch {
-      setMessages(prev => [...prev, { role: "assistant", content: t.error }]);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setMessages(prev => [...prev, { role: "assistant", content: `${t.error} [${msg}]` }]);
     } finally {
       setLoading(false);
       inputRef.current?.focus();
