@@ -36,7 +36,12 @@ Current neural and biological state:
 
 Current TokTodo task list:
 ${Array.isArray(tasks) && tasks.length > 0
-  ? tasks.map(t => `- [${t.done ? "DONE" : "TODO"}] ${t.text}`).join("\n")
+  ? tasks.map(t => {
+      let s = `- [${t.done ? "DONE" : "TODO"}] ${t.text}`;
+      if (t.demand) s += ` [Cognitive demand: ${t.demand}]`;
+      if (t.estimatedMinutes) s += ` [Estimated time: ${t.estimatedMinutes} min]`;
+      return s;
+    }).join("\n")
   : "- (no tasks added yet)"}
 
 Task planning guidelines based on cognitive state:

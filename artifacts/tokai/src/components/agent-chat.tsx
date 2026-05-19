@@ -10,6 +10,8 @@ interface NeuralState {
 interface Task {
   text: string;
   done: boolean;
+  demand?: string | null;
+  estimatedMinutes?: number | null;
 }
 
 interface Message {
