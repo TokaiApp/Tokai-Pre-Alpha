@@ -691,13 +691,13 @@ export default function Dashboard() {
           <Panel title={<span style={{ fontFamily: "'Share Tech Mono', monospace" }}><span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>MED · LOG</span></span>}>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {/* Input row */}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <input
                   value={newMedName}
                   onChange={e => setNewMedName(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && logMed()}
                   placeholder={t.medNamePlaceholder}
-                  style={{ flex: "1 1 200px", padding: "8px 12px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, outline: "none" }}
+                  style={{ width: 220, padding: "7px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, outline: "none" }}
                   onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
                   onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
                 />
@@ -706,7 +706,7 @@ export default function Dashboard() {
                   onChange={e => setNewMedDose(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && logMed()}
                   placeholder={t.medDosePlaceholder}
-                  style={{ flex: "0 1 160px", padding: "8px 12px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, outline: "none" }}
+                  style={{ width: 130, padding: "7px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, outline: "none" }}
                   onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
                   onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
                 />
