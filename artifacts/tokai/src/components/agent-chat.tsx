@@ -40,7 +40,8 @@ const UI = {
       `Neural sync established. I'm TokAgent, your task planning assistant. Based on your current state — Focus ${f}/100, Energy ${e}% — I can help you build and prioritize your to-do list. What are you trying to accomplish today?`,
     error: "Neural link disrupted. Check that your API key is valid and try again.",
     keyPromptTitle: "ANTHROPIC API KEY REQUIRED",
-    keyPromptDesc: "TokAgent runs on your own Anthropic API key. It is stored locally in your browser and sent only to this app's server to process your request — never stored.",
+    keyPromptDesc: "TokAgent runs on your own Anthropic API key. Your key is stored locally in your browser and never saved on our servers.",
+    keyPrivacy: "When you send a message, your neural metrics, tasks, and journal entries are transmitted to Anthropic's API to generate a response. Anthropic does not use API data to train its models. Nothing is stored on Tokai's servers. All local data lives in your browser only.",
     keyPlaceholder: "sk-ant-...",
     keySubmit: "CONNECT",
     keyGet: "Get a key at console.anthropic.com",
@@ -57,7 +58,8 @@ const UI = {
       `神經同步完成。我是 TokAgent，你的任務規劃助手。根據你當前的狀態——專注度 ${f}/100，能量 ${e}%——我可以幫你制定並優先排列今日任務清單。你今天需要完成什麼？`,
     error: "神經鏈路中斷。請確認 API 金鑰有效後重試。",
     keyPromptTitle: "需要 ANTHROPIC API 金鑰",
-    keyPromptDesc: "TokAgent 使用你自己的 Anthropic API 金鑰運作。金鑰僅儲存在你的瀏覽器本機，並只傳送至本應用伺服器以處理請求，絕不會被儲存。",
+    keyPromptDesc: "TokAgent 使用你自己的 Anthropic API 金鑰運作。金鑰僅儲存在你的瀏覽器本機，不會儲存於我們的伺服器。",
+    keyPrivacy: "當你發送訊息時，你的神經指標、任務與日誌條目將傳送至 Anthropic API 以生成回應。Anthropic 不會使用 API 資料訓練模型。Tokai 伺服器不儲存任何資料，所有本機資料僅存於你的瀏覽器。",
     keyPlaceholder: "sk-ant-...",
     keySubmit: "連線",
     keyGet: "前往 console.anthropic.com 取得金鑰",
@@ -195,6 +197,9 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
             </button>
           </div>
           <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "rgba(192,132,252,0.5)", fontFamily: "'Share Tech Mono', monospace", letterSpacing: 1 }}>{t.keyGet} →</a>
+          <div style={{ padding: "10px 12px", background: "rgba(192,132,252,0.04)", border: "1px solid rgba(192,132,252,0.15)", borderRadius: 6 }}>
+            <p style={{ margin: 0, fontSize: 11, color: "rgba(90,143,168,0.8)", lineHeight: 1.6, fontFamily: "'Share Tech Mono', monospace", letterSpacing: 0.3 }}>{t.keyPrivacy}</p>
+          </div>
         </div>
       ) : (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>

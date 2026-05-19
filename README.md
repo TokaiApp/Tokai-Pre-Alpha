@@ -190,6 +190,50 @@ TokAgent uses all five values in its system prompt to tailor task planning recom
 
 ---
 
+## Data Privacy & Neuroprivacy
+
+Brain data is among the most sensitive data a person can produce. Tokai is designed from the ground up to keep it under the user's control.
+
+### What data leaves your device — and where it goes
+
+When you send a message to TokAgent, the following is transmitted to Anthropic's API:
+- Your current neural metrics (Focus Index, Bio Energy, Neural Noise, T/B Ratio)
+- Your TokTodo task list (titles, descriptions, demand tags, completion status)
+- Your TokNote journal entries (text, timestamps, mood tags, focus index at time of writing)
+- The conversation history for that session
+
+**Nothing else is transmitted.** Your API key, your neural data, your tasks, and your journal entries are never sent to or stored on Tokai's own servers. Tokai's API server is a stateless relay — it receives the request, forwards it to Anthropic, and returns the response. It retains nothing.
+
+### Anthropic's no-training policy
+
+Anthropic explicitly does not use API customer data to train its models. This is a documented commitment that distinguishes the API from consumer products. You can verify this in [Anthropic's privacy policy](https://www.anthropic.com/privacy).
+
+### Local-first storage
+
+All user data — tasks, journal entries, API key, chat history — is stored exclusively in your browser's `localStorage`. It never leaves your device except via the TokAgent request described above. Clearing your browser data permanently deletes everything.
+
+### Open source auditability
+
+The full source code, including the API server and the exact system prompt sent to Claude, is publicly available in this repository. There are no hidden data flows.
+
+### Alignment with the NeuroRights Foundation's Five Ethical Neurorights
+
+| Neuroright | Tokai's implementation |
+|---|---|
+| **Mental Privacy** | BYOK architecture; local-only storage; Anthropic's no-training API policy; open-source auditability |
+| **Personal Identity** | No writing to the brain; TokAgent is strictly advisory and cannot alter your state or identity |
+| **Free Will / Agency** | TokAgent cannot add, complete, or delete tasks — every action requires explicit user input |
+| **Fair Access** | Web-based, subscription-free, open source, BYOK (free Anthropic tier available), bilingual (EN / 繁中) |
+| **Algorithmic Bias Protection** | No demographic data collected; recommendations based solely on the user's own metrics; system prompt is publicly auditable |
+
+### Known limitations
+
+- **Shared devices:** `localStorage` is device-local but not encrypted. If your device is shared or compromised, journal entries and tasks could be exposed. We recommend using a private browser profile.
+- **Real EEG (future):** When real EEG hardware integration ships, the privacy architecture will be re-evaluated. Raw EEG signals are significantly more sensitive than the simulated values used in this pre-alpha.
+- **Anthropic dependency:** TokAgent data handling is governed by Anthropic's privacy policy for the duration of each API call. Tokai does not control Anthropic's internal processing pipeline beyond what Anthropic publicly commits to.
+
+---
+
 ## Roadmap
 
 - [ ] **Real EEG integration** — Muse 2, OpenBCI, Neurosity
