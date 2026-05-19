@@ -11,8 +11,8 @@
   <p>
     <a href="https://tokai-pre-alpha-tokai.vercel.app/"><img src="https://img.shields.io/badge/Live%20Demo-Pre--Alpha-c084fc?style=flat-square&logo=vercel" alt="Live Demo" /></a>
     <a href="https://tokai.app"><img src="https://img.shields.io/badge/Website-tokai.app-7c3aed?style=flat-square" alt="Website" /></a>
-    <a href="https://github.com/TokaiApp/Tokai-Pre-Alpha/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square" alt="License" /></a>
-    <img src="https://img.shields.io/badge/Status-Pre--Alpha-f472b6?style=flat-square" alt="Status" />
+    <a href="https://github.com/TokaiApp/Tokai/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square" alt="License" /></a>
+    <img src="https://img.shields.io/badge/Version-0.1.0--pre--alpha-f472b6?style=flat-square" alt="Version" />
     <img src="https://img.shields.io/badge/AI-Claude%20(Anthropic)-orange?style=flat-square" alt="AI" />
   </p>
 
@@ -45,9 +45,10 @@ Neural data is **simulated** in this pre-alpha release. Integration with [Muse 2
 |---|---|---|
 | 🧠 | **Real-time neural dashboard** — five live metric cards (Focus Index, Bio Energy, Neural Noise, T/B Ratio, Focus Window), each with an icon and status badge, updating every second | **即時神經儀表板** — 五個即時指標卡片（專注指數、生理能量、神經噪訊、θ/β 比值、專注窗口），每秒更新，附圖示與狀態徽章 |
 | 📊 | **Focus Stream** — scrollable real-time line chart with ◀◀ / ◀ / ▶ / ▶▶ LIVE navigation buttons, an always-visible scrollbar, and reference lines for the 5-minute average, session average, and day average | **專注串流** — 可捲動的即時折線圖，含 ◀◀ / ◀ / ▶ / ▶▶ LIVE 導覽按鈕、常駐捲軸，以及 5 分鐘均值、本次均值與當日均值參考線 |
-| 🤖 | **TokAgent** — AI assistant powered by Claude. Reads your live brain data, full task list, and journal entries to give context-aware task planning advice. Bring your own Anthropic API key (stored locally, never on our servers) | **TokAgent** — 由 Claude 驅動的 AI 助手，整合即時腦部數據、任務清單與日誌，提供情境感知的任務規劃建議。使用您自己的 Anthropic API 金鑰（僅本機儲存） |
-| ✅ | **TokTodo** — full task manager with cognitive demand tags (Low / Medium / High / Very High), time estimates, creation timestamps, and a detail modal. Click any task to expand it | **TokTodo** — 完整任務管理器，含認知負荷標籤（低／中／高／極高）、預估時間、建立時間戳記，以及任務詳情彈窗 |
-| 📓 | **TokNote** — ADHD-friendly journal with multi-select mood tagging (10 moods: Hyperfocus, Flow, Focused, Restless, Scattered, Anxious, Fatigued, Zoned Out, Crashed, Low), Neural Insights embedded at the top, and click-to-edit / delete for past entries | **TokNote** — ADHD 友善日誌，支援多選情緒標籤（10 種：超專注、心流、專注、坐立難安、渙散、焦慮、疲憊、恍神、崩潰、低落），頂部嵌入神經洞察，可點擊既有條目進行編輯或刪除 |
+| 🤖 | **TokAgent** — AI assistant powered by Claude. Reads your live brain data, full task list, and journal entries to give context-aware task planning advice. Per-day sessions with timestamps. Bring your own Anthropic API key (stored locally, never on our servers) | **TokAgent** — 由 Claude 驅動的 AI 助手，整合即時腦部數據、任務清單與日誌，提供情境感知的任務規劃建議。按日分組對話，附時間戳記。使用您自己的 Anthropic API 金鑰（僅本機儲存） |
+| ✅ | **TokTodo** — full task manager with cognitive demand tags (Low / Med / High), emoji labels, time estimates, deadlines, creation timestamps, and a detail modal. Organized by day — past days are read-only | **TokTodo** — 完整任務管理器，含認知負荷標籤（低／中／高）、表情符號標籤、預估時間、截止日期、建立時間戳記，以及任務詳情彈窗。按日分組，歷史日期唯讀 |
+| 📓 | **TokNote** — ADHD-friendly journal with multi-select mood tagging (10 moods: Hyperfocus, Flow, Focused, Restless, Scattered, Anxious, Fatigued, Zoned Out, Crashed, Low), Neural Insights embedded at the top, date + time stamps, and click-to-edit / delete for past entries | **TokNote** — ADHD 友善日誌，支援多選情緒標籤（10 種），頂部嵌入神經洞察，附日期與時間戳記，可點擊既有條目進行編輯或刪除 |
+| 📅 | **Day selector** — dropdown menu to browse any past day. TokNote entries, TokAgent chat sessions, and TokTodo tasks are all filtered and displayed per selected day | **日期選擇器** — 下拉選單瀏覽歷史日期，TokNote、TokAgent 對話與 TokTodo 任務均按所選日期篩選顯示 |
 | 💊 | **TokMed** — medication sidebar with a scrollable list (capped at 4 visible items) for tracking supplements and medications alongside your neural state | **TokMed** — 藥物追蹤側欄，最多顯示 4 筆可捲動清單，與神經狀態並排呈現 |
 | 🀄 | **Bilingual** — full English and Traditional Chinese (繁體中文) support across all panels | **雙語支援** — 所有面板完整支援英文與繁體中文 |
 | 📱 | **Responsive** — single-column stacked layout on mobile, three-panel row (TokNote · TokAgent · TokTodo) on desktop | **響應式設計** — 行動裝置單欄堆疊，桌機三欄並排（TokNote · TokAgent · TokTodo） |
@@ -82,7 +83,7 @@ Neural data is **simulated** in this pre-alpha release. Integration with [Muse 2
 ## Architecture
 
 ```
-Tokai-Pre-Alpha/
+Tokai/
 ├── artifacts/
 │   ├── tokai/                  # React/Vite frontend
 │   │   ├── src/
@@ -115,8 +116,8 @@ The frontend proxies `/api` requests to the API server in development. In produc
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/TokaiApp/Tokai-Pre-Alpha.git
-cd Tokai-Pre-Alpha
+git clone https://github.com/TokaiApp/Tokai.git
+cd Tokai
 ```
 
 ### 2. Install dependencies
@@ -251,7 +252,7 @@ The full source code, including the API server and the exact system prompt sent 
 
 Tokai originated as a master's degree thesis project exploring the intersection of real-time neurofeedback, agentic AI, and ADHD management. The core hypothesis: **if an AI assistant has access to a user's live cognitive state, it can dramatically improve task planning outcomes for people with executive function challenges.**
 
-This repository represents the first public prototype. We are actively seeking collaborators, researchers, and neurodivergent users willing to provide feedback.
+This repository represents the first public prototype (v0.1.0). We are actively seeking collaborators, researchers, and neurodivergent users willing to provide feedback.
 
 ---
 
@@ -266,7 +267,7 @@ We welcome contributions — especially from people with ADHD or neurodiversity 
 
 For significant changes, please open an issue first to discuss the approach.
 
-**Feedback and bug reports:** [GitHub Issues](https://github.com/TokaiApp/Tokai-Pre-Alpha/issues)
+**Feedback and bug reports:** [GitHub Issues](https://github.com/TokaiApp/Tokai/issues)
 
 We especially want to hear from people who have tried the app. If you have ADHD, your experience matters most — this is built for you.
 我們特別期待 ADHD 使用者的回饋，這款產品正是為你們而打造的。
