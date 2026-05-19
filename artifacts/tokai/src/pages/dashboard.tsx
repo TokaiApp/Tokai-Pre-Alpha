@@ -52,6 +52,10 @@ const T = {
     medLogBtn: "LOG",
     medEmpty: "No entries logged yet. Log a medication or supplement to see how it affects your focus.",
     medAt: "at",
+    tokNote: "TOKNOTE · JOURNAL",
+    notePlaceholder: "Write a note... (Enter to save)",
+    noteEmpty: "No journal entries yet. Write a note to capture your thoughts alongside your focus data.",
+    noteFocusLabel: "Focus",
     planningInterface: "── PLANNING INTERFACE",
     focusLow: "LOW", focusMod: "MODERATE", focusHigh: "HIGH", focusOpt: "OPTIMAL",
     noiseClean: "CLEAN", noiseNom: "NOMINAL", noiseElev: "ELEVATED", noiseHigh: "HIGH",
@@ -104,6 +108,10 @@ const T = {
     medLogBtn: "紀錄",
     medEmpty: "尚無紀錄。記錄藥物或補充品以觀察其對專注度的影響。",
     medAt: "於",
+    tokNote: "TOKNOTE · 日誌",
+    notePlaceholder: "寫筆記... (Enter 儲存)",
+    noteEmpty: "尚無日誌紀錄。記下你的想法，與專注數據一起追蹤。",
+    noteFocusLabel: "專注",
     planningInterface: "── 規劃介面",
     focusLow: "低", focusMod: "中等", focusHigh: "高", focusOpt: "最佳",
     noiseClean: "清晰", noiseNom: "正常", noiseElev: "偏高", noiseHigh: "高",
@@ -129,6 +137,7 @@ interface FocusPoint { time: string; value: number; }
 type Demand = "low" | "medium" | "high";
 interface Task { id: string; title: string; description: string | null; done: boolean; demand: Demand | null; estimatedMinutes: number | null; }
 interface MedEntry { id: string; name: string; dose: string; time: string; sampleIndex: number; rating: number | null; }
+interface JournalEntry { id: string; text: string; time: string; focusIndex: number; }
 
 function demandColor(d: Demand) {
   if (d === "low") return "#4ade80";
@@ -272,9 +281,19 @@ export default function Dashboard() {
   const [editMedName, setEditMedName] = useState("");
   const [editMedDose, setEditMedDose] = useState("");
 
+  const [journal, setJournal] = useState<JournalEntry[]>(() => {
+    try { const s = localStorage.getItem("tokai_journal"); return s ? JSON.parse(s) : []; } catch { return []; }
+  });
+  const [journalInput, setJournalInput] = useState("");
+  const journalBottomRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     try { localStorage.setItem("tokai_med_log", JSON.stringify(medLog)); } catch {}
   }, [medLog]);
+
+  useEffect(() => {
+    try { localStorage.setItem("tokai_journal", JSON.stringify(journal)); } catch {}
+  }, [journal]);
 
   useEffect(() => {
     try { localStorage.setItem("tokai_tasks", JSON.stringify(tasks)); } catch {}
@@ -334,6 +353,17 @@ export default function Dashboard() {
   function setMedRating(id: string, rating: number) {
     setMedLog(prev => prev.map(m => m.id === id ? { ...m, rating: m.rating === rating ? null : rating } : m));
   }
+
+  function addJournalEntry() {
+    const text = journalInput.trim();
+    if (!text) return;
+    setJournal(prev => [...prev, { id: Date.now().toString(), text, time: formatTime(new Date()), focusIndex: neural.focusIndex }]);
+    setJournalInput("");
+  }
+
+  useEffect(() => {
+    journalBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [journal]);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -531,6 +561,64 @@ export default function Dashboard() {
         </div>
 
         <div>
+          <SectionLabel>TOKMED</SectionLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <input
+              value={newMedName}
+              onChange={e => setNewMedName(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && logMed()}
+              placeholder={t.medNamePlaceholder}
+              style={{ width: "100%", padding: "5px 8px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 5, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 13, outline: "none", boxSizing: "border-box" }}
+              onFocus={e => (e.target.style.borderColor = "rgba(251,191,36,0.5)")}
+              onBlur={e => (e.target.style.borderColor = "rgba(251,191,36,0.2)")}
+            />
+            <div style={{ display: "flex", gap: 5 }}>
+              <input
+                value={newMedDose}
+                onChange={e => setNewMedDose(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && logMed()}
+                placeholder={t.medDosePlaceholder}
+                style={{ flex: 1, padding: "5px 8px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 5, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 13, outline: "none", minWidth: 0 }}
+                onFocus={e => (e.target.style.borderColor = "rgba(251,191,36,0.5)")}
+                onBlur={e => (e.target.style.borderColor = "rgba(251,191,36,0.2)")}
+              />
+              <button
+                onClick={logMed}
+                disabled={!newMedName.trim()}
+                style={{ padding: "5px 10px", background: newMedName.trim() ? "rgba(251,191,36,0.12)" : "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.35)", borderRadius: 5, color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, letterSpacing: 1, cursor: newMedName.trim() ? "pointer" : "not-allowed", flexShrink: 0 }}
+              >
+                {t.medLogBtn}
+              </button>
+            </div>
+            {medLog.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 2 }}>
+                {medLog.map(med => editingMedId === med.id ? (
+                  <div key={med.id} style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 6px", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.4)", borderRadius: 5 }}>
+                    <input
+                      autoFocus
+                      value={editMedName}
+                      onChange={e => setEditMedName(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") saveMedEdit(med.id); if (e.key === "Escape") setEditingMedId(null); }}
+                      style={{ flex: 1, padding: "1px 4px", background: "transparent", border: "none", borderBottom: "1px solid rgba(251,191,36,0.5)", color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, outline: "none", minWidth: 0 }}
+                    />
+                    <button onClick={() => saveMedEdit(med.id)} style={{ background: "none", border: "none", color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: "pointer", padding: 0, flexShrink: 0 }}>OK</button>
+                    <button onClick={() => deleteMed(med.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.7)", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: "pointer", padding: 0, flexShrink: 0 }}>✕</button>
+                  </div>
+                ) : (
+                  <div key={med.id} style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 6px", background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.18)", borderRadius: 5 }}>
+                    <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#fbbf24", flexShrink: 0 }} />
+                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#fbbf24", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{med.name}{med.dose ? ` · ${med.dose}` : ""}</span>
+                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.7)", flexShrink: 0 }}>{med.time}</span>
+                    <button onClick={() => startEditMed(med)} style={{ background: "none", border: "none", color: "rgba(251,191,36,0.4)", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: "pointer", padding: 0, flexShrink: 0 }}>✎</button>
+                    <button onClick={() => deleteMed(med.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.5)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", padding: 0, flexShrink: 0 }}>✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div>
           <SectionLabel>{t.aboutTokai}</SectionLabel>
           <p style={{ fontSize: 13, color: "#5a8fa8", lineHeight: 1.6, margin: "0 0 12px 0" }}>{t.aboutText}</p>
           <a href="https://github.com/TokaiApp/Tokai-Pre-Alpha" target="_blank" rel="noopener noreferrer"
@@ -687,83 +775,53 @@ export default function Dashboard() {
             </Panel>
           </div>
 
-          {/* TokMed */}
-          <Panel title={<span style={{ fontFamily: "'Share Tech Mono', monospace" }}><span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>MED · LOG</span></span>}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {/* Input row */}
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <input
-                  value={newMedName}
-                  onChange={e => setNewMedName(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && logMed()}
-                  placeholder={t.medNamePlaceholder}
-                  style={{ width: 220, padding: "7px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, outline: "none" }}
-                  onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
-                  onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
-                />
-                <input
-                  value={newMedDose}
-                  onChange={e => setNewMedDose(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && logMed()}
-                  placeholder={t.medDosePlaceholder}
-                  style={{ width: 130, padding: "7px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, outline: "none" }}
-                  onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
-                  onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
-                />
-                <button
-                  onClick={logMed}
-                  disabled={!newMedName.trim()}
-                  style={{ padding: "8px 20px", background: newMedName.trim() ? "rgba(251,191,36,0.12)" : "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.35)", borderRadius: 6, color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, letterSpacing: 1, cursor: newMedName.trim() ? "pointer" : "not-allowed" }}
-                >
-                  {t.medLogBtn}
-                </button>
-              </div>
-              {/* Log entries */}
-              {medLog.length === 0 ? (
-                <p style={{ margin: 0, fontSize: 13, color: "rgba(90,143,168,0.6)", fontFamily: "'Share Tech Mono', monospace", letterSpacing: 0.5 }}>{t.medEmpty}</p>
-              ) : (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {medLog.map(med => editingMedId === med.id ? (
-                    <div key={med.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.5)", borderRadius: 20 }}>
-                      <input
-                        autoFocus
-                        value={editMedName}
-                        onChange={e => setEditMedName(e.target.value)}
-                        onKeyDown={e => { if (e.key === "Enter") saveMedEdit(med.id); if (e.key === "Escape") setEditingMedId(null); }}
-                        style={{ width: 120, padding: "2px 6px", background: "transparent", border: "none", borderBottom: "1px solid rgba(251,191,36,0.5)", color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, outline: "none" }}
-                      />
-                      <input
-                        value={editMedDose}
-                        onChange={e => setEditMedDose(e.target.value)}
-                        onKeyDown={e => { if (e.key === "Enter") saveMedEdit(med.id); if (e.key === "Escape") setEditingMedId(null); }}
-                        placeholder="dose"
-                        style={{ width: 70, padding: "2px 6px", background: "transparent", border: "none", borderBottom: "1px solid rgba(251,191,36,0.3)", color: "rgba(251,191,36,0.7)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, outline: "none" }}
-                      />
-                      <button onClick={() => saveMedEdit(med.id)} style={{ background: "none", border: "none", color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", padding: "0 2px" }}>SAVE</button>
-                      <button onClick={() => deleteMed(med.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.7)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", padding: "0 2px" }}>DEL</button>
-                    </div>
-                  ) : (
-                    <div key={med.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.25)", borderRadius: 20, cursor: "pointer" }}
-                      onClick={() => startEditMed(med)}>
-                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fbbf24", flexShrink: 0 }} />
-                      <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#fbbf24" }}>{med.name}</span>
-                      {med.dose && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(251,191,36,0.6)" }}>{med.dose}</span>}
-                      <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.7)" }}>{t.medAt} {med.time}</span>
-                      {(() => { const d = getMedDelta(med); return d ? <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: d.delta >= 0 ? "#4ade80" : "#f87171" }}>{d.delta >= 0 ? "+" : ""}{d.delta} in {d.minutes}m</span> : null; })()}
-                      {/* Rating — 5 dots, click without opening edit */}
-                      <div style={{ display: "flex", gap: 3 }} onClick={e => e.stopPropagation()}>
-                        {[1,2,3,4,5].map(n => (
-                          <div key={n} onClick={() => setMedRating(med.id, n)}
-                            style={{ width: 8, height: 8, borderRadius: "50%", cursor: "pointer", background: (med.rating ?? 0) >= n ? "#fbbf24" : "rgba(251,191,36,0.2)", transition: "background 0.15s" }} />
-                        ))}
-                      </div>
-                      <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(251,191,36,0.35)" }}>✎</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+          {/* TokNote */}
+          <div style={{ background: "linear-gradient(135deg, #100a25, #120d28)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(192,132,252,0.07)", display: "flex", flexDirection: "column", height: 280 }}>
+            {/* Header */}
+            <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(192,132,252,0.03)", flexShrink: 0 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c084fc", boxShadow: "0 0 8px rgba(192,132,252,0.9)", flexShrink: 0 }} />
+              <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, fontWeight: 700, letterSpacing: 3 }}>
+                <span style={{ color: "#7c3aed" }}>TOK</span>
+                <span style={{ color: "#c084fc" }}>{lang === "en" ? "NOTE · JOURNAL" : "NOTE · 日誌"}</span>
+              </span>
             </div>
-          </Panel>
+            {/* Entries */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+              {journal.length === 0 ? (
+                <p style={{ margin: 0, fontSize: 13, color: "rgba(90,143,168,0.6)", fontFamily: "'Share Tech Mono', monospace", letterSpacing: 0.5, lineHeight: 1.5 }}>{t.noteEmpty}</p>
+              ) : (
+                journal.map(entry => (
+                  <div key={entry.id} style={{ padding: "8px 12px", background: "rgba(192,132,252,0.04)", border: "1px solid rgba(192,132,252,0.14)", borderRadius: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                      <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8" }}>{entry.time}</span>
+                      <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc" }}>{t.noteFocusLabel} {entry.focusIndex.toFixed(1)}</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: 15, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", lineHeight: 1.5 }}>{entry.text}</p>
+                  </div>
+                ))
+              )}
+              <div ref={journalBottomRef} />
+            </div>
+            {/* Input */}
+            <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(192,132,252,0.15)", display: "flex", gap: 8, background: "rgba(0,0,0,0.15)", flexShrink: 0 }}>
+              <input
+                value={journalInput}
+                onChange={e => setJournalInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && addJournalEntry()}
+                placeholder={t.notePlaceholder}
+                style={{ flex: 1, padding: "8px 12px", background: "rgba(0,0,0,0.35)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, outline: "none", transition: "border-color 0.2s" }}
+                onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
+                onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
+              />
+              <button
+                onClick={addJournalEntry}
+                disabled={!journalInput.trim()}
+                style={{ padding: "8px 18px", background: journalInput.trim() ? "rgba(192,132,252,0.15)" : "rgba(192,132,252,0.05)", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 6, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, letterSpacing: 1, cursor: journalInput.trim() ? "pointer" : "not-allowed", transition: "background 0.2s" }}
+              >
+                LOG
+              </button>
+            </div>
+          </div>
 
           {/* Planning interface */}
           <div style={{ borderTop: "1px solid rgba(192,132,252,0.25)", paddingTop: 20 }}>
