@@ -915,7 +915,7 @@ export default function Dashboard() {
                   onChange={e => setSelectedMood((e.target.value as Mood) || null)}
                   style={{ padding: "8px 10px", background: "rgba(0,0,0,0.35)", border: `1px solid ${selectedMood ? "rgba(192,132,252,0.6)" : "rgba(192,132,252,0.2)"}`, borderRadius: 6, color: selectedMood ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, cursor: "pointer", outline: "none", flexShrink: 0, transition: "border-color 0.15s" }}
                 >
-                  <option value="">{lang === "en" ? "MOOD" : "狀態"}</option>
+                  <option value="" disabled>{lang === "en" ? "Focus (self-report)" : "自評專注"}</option>
                   <option value="hyperfocus">{t.moodHyperfocus}</option>
                   <option value="focused">{t.moodFocused}</option>
                   <option value="scattered">{t.moodScattered}</option>
