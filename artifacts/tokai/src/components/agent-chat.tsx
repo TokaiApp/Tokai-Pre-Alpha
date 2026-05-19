@@ -20,7 +20,7 @@ interface JournalEntry {
   text: string;
   time: string;
   focusIndex: number;
-  mood: string | null;
+  mood: string[];
 }
 
 interface Message {

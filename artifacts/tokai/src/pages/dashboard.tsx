@@ -140,7 +140,7 @@ type Demand = "low" | "medium" | "high";
 interface Task { id: string; title: string; description: string | null; done: boolean; demand: Demand | null; estimatedMinutes: number | null; createdAt?: string; }
 interface MedEntry { id: string; name: string; dose: string; time: string; sampleIndex: number; rating: number | null; }
 type Mood = "hyperfocus" | "flow" | "focused" | "restless" | "scattered" | "anxious" | "fatigued" | "zoned-out" | "crashed" | "low";
-interface JournalEntry { id: string; text: string; time: string; focusIndex: number; mood: Mood | null; }
+interface JournalEntry { id: string; text: string; time: string; focusIndex: number; mood: Mood[]; }
 
 function demandColor(d: Demand) {
   if (d === "low") return "#4ade80";
@@ -291,7 +291,7 @@ export default function Dashboard() {
     try { const s = localStorage.getItem("tokai_journal"); return s ? JSON.parse(s) : []; } catch { return []; }
   });
   const [journalInput, setJournalInput] = useState("");
-  const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
+  const [selectedMoods, setSelectedMoods] = useState<Mood[]>([]);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editNoteText, setEditNoteText] = useState("");
   const journalBottomRef = useRef<HTMLDivElement>(null);
@@ -366,9 +366,9 @@ export default function Dashboard() {
   function addJournalEntry() {
     const text = journalInput.trim();
     if (!text) return;
-    setJournal(prev => [...prev, { id: Date.now().toString(), text, time: formatTime(new Date()), focusIndex: neural.focusIndex, mood: selectedMood }]);
+    setJournal(prev => [...prev, { id: Date.now().toString(), text, time: formatTime(new Date()), focusIndex: neural.focusIndex, mood: selectedMoods }]);
     setJournalInput("");
-    setSelectedMood(null);
+    setSelectedMoods([]);
   }
 
   function startEditNote(entry: JournalEntry) {
@@ -886,11 +886,15 @@ export default function Dashboard() {
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                         <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8" }}>{entry.time}</span>
                         <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc" }}>{t.noteFocusLabel} {entry.focusIndex.toFixed(1)}</span>
-                        {entry.mood && (
-                          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, padding: "1px 6px", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 3, color: "#c084fc", letterSpacing: 1 }}>
-                            {({ hyperfocus: t.moodHyperfocus, flow: t.moodFlow, focused: t.moodFocused, restless: t.moodRestless, scattered: t.moodScattered, anxious: t.moodAnxious, fatigued: t.moodFatigued, "zoned-out": t.moodZonedOut, crashed: t.moodCrashed, low: t.moodLow } as Record<string, string>)[entry.mood] ?? entry.mood}
-                          </span>
-                        )}
+                        {(() => {
+                          const moodMap: Record<string, string> = { hyperfocus: t.moodHyperfocus, flow: t.moodFlow, focused: t.moodFocused, restless: t.moodRestless, scattered: t.moodScattered, anxious: t.moodAnxious, fatigued: t.moodFatigued, "zoned-out": t.moodZonedOut, crashed: t.moodCrashed, low: t.moodLow };
+                          const moods = Array.isArray(entry.mood) ? entry.mood : (entry.mood ? [entry.mood as string] : []);
+                          return moods.map(m => (
+                            <span key={m} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, padding: "1px 6px", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 3, color: "#c084fc", letterSpacing: 1 }}>
+                              {moodMap[m] ?? m}
+                            </span>
+                          ));
+                        })()}
                         <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(192,132,252,0.3)", marginLeft: "auto" }}>✎</span>
                       </div>
                       <p style={{ margin: 0, fontSize: 15, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", lineHeight: 1.5 }}>{entry.text}</p>
@@ -910,23 +914,18 @@ export default function Dashboard() {
                   onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
                   onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
                 />
-                <select
-                  value={selectedMood ?? ""}
-                  onChange={e => setSelectedMood((e.target.value as Mood) || null)}
-                  style={{ padding: "8px 10px", background: "rgba(0,0,0,0.35)", border: `1px solid ${selectedMood ? "rgba(192,132,252,0.6)" : "rgba(192,132,252,0.2)"}`, borderRadius: 6, color: selectedMood ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, cursor: "pointer", outline: "none", flexShrink: 0, transition: "border-color 0.15s" }}
-                >
-                  <option value="" disabled>{lang === "en" ? "Focus (self-report)" : "自評專注"}</option>
-                  <option value="hyperfocus">{t.moodHyperfocus}</option>
-                  <option value="flow">{t.moodFlow}</option>
-                  <option value="focused">{t.moodFocused}</option>
-                  <option value="restless">{t.moodRestless}</option>
-                  <option value="scattered">{t.moodScattered}</option>
-                  <option value="anxious">{t.moodAnxious}</option>
-                  <option value="fatigued">{t.moodFatigued}</option>
-                  <option value="zoned-out">{t.moodZonedOut}</option>
-                  <option value="crashed">{t.moodCrashed}</option>
-                  <option value="low">{t.moodLow}</option>
-                </select>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 3, maxWidth: 164, flexShrink: 0, alignContent: "center" }}>
+                  {(["hyperfocus", "flow", "focused", "restless", "scattered", "anxious", "fatigued", "zoned-out", "crashed", "low"] as Mood[]).map(m => {
+                    const label: Record<string, string> = { hyperfocus: t.moodHyperfocus, flow: t.moodFlow, focused: t.moodFocused, restless: t.moodRestless, scattered: t.moodScattered, anxious: t.moodAnxious, fatigued: t.moodFatigued, "zoned-out": t.moodZonedOut, crashed: t.moodCrashed, low: t.moodLow };
+                    const active = selectedMoods.includes(m);
+                    return (
+                      <button key={m} onClick={() => setSelectedMoods(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])}
+                        style={{ padding: "2px 6px", background: active ? "rgba(192,132,252,0.2)" : "rgba(192,132,252,0.04)", border: `1px solid ${active ? "rgba(192,132,252,0.65)" : "rgba(192,132,252,0.18)"}`, borderRadius: 3, color: active ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: "pointer", letterSpacing: 0.5, transition: "all 0.12s", whiteSpace: "nowrap" }}>
+                        {label[m]}
+                      </button>
+                    );
+                  })}
+                </div>
                 <button
                   onClick={addJournalEntry}
                   disabled={!journalInput.trim()}

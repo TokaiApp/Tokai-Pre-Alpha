@@ -48,7 +48,8 @@ ${Array.isArray(tasks) && tasks.length > 0
 User's TokNote journal entries (most recent first):
 ${Array.isArray(journalEntries) && journalEntries.length > 0
   ? [...journalEntries].reverse().slice(0, 10).map(e => {
-      let s = `- [${e.time}] Focus ${e.focusIndex?.toFixed(1) ?? "?"} ${e.mood ? `· ${e.mood}` : ""}: ${e.text}`;
+      const moods = Array.isArray(e.mood) ? e.mood : (e.mood ? [e.mood] : []);
+      let s = `- [${e.time}] Focus ${e.focusIndex?.toFixed(1) ?? "?"} ${moods.length ? `· ${moods.join(", ")}` : ""}: ${e.text}`;
       return s;
     }).join("\n")
   : "- (no journal entries yet)"}
