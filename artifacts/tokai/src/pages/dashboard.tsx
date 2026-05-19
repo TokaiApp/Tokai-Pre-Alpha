@@ -843,7 +843,7 @@ export default function Dashboard() {
           </div>
 
           {/* TokNote (with Neural Insights embedded) */}
-          <div style={{ background: "linear-gradient(135deg, #100a25, #120d28)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(192,132,252,0.07)", display: "flex", flexDirection: "column", height: 320 }}>
+          <div style={{ background: "linear-gradient(135deg, #100a25, #120d28)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(192,132,252,0.07)", display: "flex", flexDirection: "column", height: 420 }}>
             {/* Header */}
             <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(192,132,252,0.03)", flexShrink: 0 }}>
               <BookOpen size={16} color="#c084fc" style={{ flexShrink: 0 }} />
@@ -899,30 +899,29 @@ export default function Dashboard() {
                 )}
                 <div ref={journalBottomRef} />
               </div>
-              {/* Mood tags */}
-              <div style={{ padding: "6px 16px", borderTop: "1px solid rgba(192,132,252,0.1)", display: "flex", gap: 6, background: "rgba(0,0,0,0.1)", flexShrink: 0 }}>
-                {(["focused", "scattered", "hyperfocus", "low"] as Mood[]).map(m => (
-                  <button key={m} onClick={() => setSelectedMood(selectedMood === m ? null : m)}
-                    style={{ padding: "2px 10px", background: selectedMood === m ? "rgba(192,132,252,0.2)" : "rgba(192,132,252,0.05)", border: `1px solid ${selectedMood === m ? "rgba(192,132,252,0.6)" : "rgba(192,132,252,0.2)"}`, borderRadius: 4, color: selectedMood === m ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", letterSpacing: 0.5, transition: "all 0.15s" }}>
-                    {m === "focused" ? t.moodFocused : m === "scattered" ? t.moodScattered : m === "hyperfocus" ? t.moodHyperfocus : t.moodLow}
-                  </button>
-                ))}
-              </div>
-              {/* Input */}
-              <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(192,132,252,0.15)", display: "flex", gap: 8, background: "rgba(0,0,0,0.15)", flexShrink: 0 }}>
+              {/* Input + mood tags */}
+              <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(192,132,252,0.15)", display: "flex", gap: 8, alignItems: "center", background: "rgba(0,0,0,0.15)", flexShrink: 0 }}>
                 <input
                   value={journalInput}
                   onChange={e => setJournalInput(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && addJournalEntry()}
                   placeholder={t.notePlaceholder}
-                  style={{ flex: 1, padding: "8px 12px", background: "rgba(0,0,0,0.35)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, outline: "none", transition: "border-color 0.2s" }}
+                  style={{ flex: 1, padding: "8px 12px", background: "rgba(0,0,0,0.35)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, outline: "none", transition: "border-color 0.2s", minWidth: 0 }}
                   onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
                   onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
                 />
+                <div style={{ display: "flex", flexDirection: "column", gap: 3, flexShrink: 0 }}>
+                  {(["focused", "scattered", "hyperfocus", "low"] as Mood[]).map(m => (
+                    <button key={m} onClick={() => setSelectedMood(selectedMood === m ? null : m)}
+                      style={{ padding: "2px 8px", background: selectedMood === m ? "rgba(192,132,252,0.2)" : "rgba(192,132,252,0.05)", border: `1px solid ${selectedMood === m ? "rgba(192,132,252,0.6)" : "rgba(192,132,252,0.2)"}`, borderRadius: 3, color: selectedMood === m ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: "pointer", letterSpacing: 0.5, transition: "all 0.15s", textAlign: "left", whiteSpace: "nowrap" }}>
+                      {m === "focused" ? t.moodFocused : m === "scattered" ? t.moodScattered : m === "hyperfocus" ? t.moodHyperfocus : t.moodLow}
+                    </button>
+                  ))}
+                </div>
                 <button
                   onClick={addJournalEntry}
                   disabled={!journalInput.trim()}
-                  style={{ padding: "8px 18px", background: journalInput.trim() ? "rgba(192,132,252,0.15)" : "rgba(192,132,252,0.05)", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 6, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, letterSpacing: 1, cursor: journalInput.trim() ? "pointer" : "not-allowed", transition: "background 0.2s" }}
+                  style={{ padding: "8px 14px", background: journalInput.trim() ? "rgba(192,132,252,0.15)" : "rgba(192,132,252,0.05)", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 6, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, letterSpacing: 1, cursor: journalInput.trim() ? "pointer" : "not-allowed", transition: "background 0.2s", flexShrink: 0, alignSelf: "stretch" }}
                 >
                   LOG
                 </button>
