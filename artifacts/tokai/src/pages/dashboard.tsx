@@ -221,6 +221,9 @@ export default function Dashboard() {
   const neuralRef = useRef(neural);
   useEffect(() => { neuralRef.current = neural; }, [neural]);
 
+  // Internal focus target: drifts slowly, actual focus index pulls toward it
+  const focusTargetRef = useRef(55);
+
   const [focusHistory, setFocusHistory] = useState<FocusPoint[]>([
     { time: formatTime(new Date()), value: 35.6 },
   ]);
@@ -252,8 +255,17 @@ export default function Dashboard() {
     const prev = neuralRef.current;
     const newAlpha = drift(prev.alpha, 18, 10, 180);
     const newBeta = drift(prev.beta, 18, 10, 180);
+
+    // Mean-reverting focus simulation: target drifts slowly, focus pulls toward it
+    focusTargetRef.current = clamp(
+      focusTargetRef.current + (Math.random() - 0.5) * 10,
+      5, 95
+    );
+    const focusPull = (focusTargetRef.current - prev.focusIndex) * 0.2;
+    const newFocus = parseFloat(clamp(prev.focusIndex + focusPull + (Math.random() - 0.5) * 10, 0, 100).toFixed(1));
+
     const next: NeuralState = {
-      focusIndex: drift(prev.focusIndex, 4, 0, 100),
+      focusIndex: newFocus,
       bioEnergy: drift(prev.bioEnergy, 2, 0, 100),
       neuralNoise: drift(prev.neuralNoise, 3, 0, 80),
       abRatio: parseFloat((newAlpha / newBeta).toFixed(2)),
