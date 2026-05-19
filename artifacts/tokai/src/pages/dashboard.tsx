@@ -493,7 +493,7 @@ export default function Dashboard() {
             <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc", letterSpacing: 3, marginBottom: 14 }}>{t.planningInterface}</div>
             {/* Agent + Todo — stacked on mobile */}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
-              <AgentChat neuralState={neural} tasks={tasks.map(t => ({ text: t.text, done: t.done, demand: t.demand, estimatedMinutes: t.estimatedMinutes }))} lang={lang} />
+              <AgentChat neuralState={neural} tasks={tasks.map(t => ({ text: t.text, done: t.done, demand: t.demand, estimatedMinutes: t.estimatedMinutes }))} lang={lang} isMobile={isMobile} />
 
               <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>

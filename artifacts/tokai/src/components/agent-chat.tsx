@@ -59,7 +59,7 @@ const UI = {
 const STORAGE_KEY = "tokai_anthropic_key";
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
-export default function AgentChat({ neuralState, tasks, lang = "en" }: { neuralState: NeuralState; tasks: Task[]; lang?: "en" | "zh" }) {
+export default function AgentChat({ neuralState, tasks, lang = "en", isMobile = false }: { neuralState: NeuralState; tasks: Task[]; lang?: "en" | "zh"; isMobile?: boolean }) {
   const t = UI[lang];
 
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem(STORAGE_KEY) ?? "");
@@ -139,9 +139,11 @@ export default function AgentChat({ neuralState, tasks, lang = "en" }: { neuralS
           <span style={{ color: "#c084fc" }}>{lang === "en" ? "AGENT · TASK PLANNER" : "AGENT · 任務規劃"}</span>
         </span>
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 16, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8" }}>
-          <span>{t.focus} {neuralState.focusIndex.toFixed(1)}/100</span>
-          <span>{t.energy} {Math.round(neuralState.bioEnergy)}%</span>
-          <span>{t.noise} {Math.round(neuralState.neuralNoise)} μV²</span>
+          {isMobile && <>
+            <span>{t.focus} {neuralState.focusIndex.toFixed(1)}/100</span>
+            <span>{t.energy} {Math.round(neuralState.bioEnergy)}%</span>
+            <span>{t.noise} {Math.round(neuralState.neuralNoise)} μV²</span>
+          </>}
           {apiKey && (
             <button onClick={clearKey} style={{ background: "none", border: "1px solid rgba(192,132,252,0.25)", borderRadius: 4, color: "#5a8fa8", cursor: "pointer", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, padding: "2px 7px", letterSpacing: 1 }}>
               {t.clearKey}
