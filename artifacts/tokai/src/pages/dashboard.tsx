@@ -242,6 +242,7 @@ export default function Dashboard() {
   const chartScrollRef = useRef<HTMLDivElement>(null);
   const chartWrapRef = useRef<HTMLDivElement>(null);
   const [chartWrapWidth, setChartWrapWidth] = useState(600);
+  const [isLive, setIsLive] = useState(true);
 
   // Internal focus target: drifts slowly, actual focus index pulls toward it
   const focusTargetRef = useRef(55);
@@ -385,14 +386,25 @@ export default function Dashboard() {
     return () => ro.disconnect();
   }, []);
 
-  // Auto-scroll chart to right edge when new data arrives, unless user has scrolled left to review history
+  // Auto-scroll chart to right edge when live mode is active
   useEffect(() => {
     const el = chartScrollRef.current;
+    if (!el || !isLive) return;
+    el.scrollLeft = el.scrollWidth;
+  }, [focusHistory, isLive]);
+
+  function scrollChart(delta: number) {
+    const el = chartScrollRef.current;
     if (!el) return;
-    if (el.scrollWidth - el.scrollLeft - el.clientWidth < 80) {
-      el.scrollLeft = el.scrollWidth;
-    }
-  }, [focusHistory]);
+    el.scrollLeft += delta;
+  }
+
+  function goToLive() {
+    const el = chartScrollRef.current;
+    if (!el) return;
+    el.scrollLeft = el.scrollWidth;
+    setIsLive(true);
+  }
 
   const tick = useCallback(() => {
     const prev = neuralRef.current;
@@ -738,7 +750,29 @@ export default function Dashboard() {
               </span>
             }>
               <div ref={chartWrapRef} style={{ width: "100%", position: "relative" }}>
-                <div ref={chartScrollRef} style={{ width: chartWrapWidth, height: 168, overflowX: "auto", overflowY: "hidden" }}>
+                {/* Scroll controls */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6, marginBottom: 6 }}>
+                  {[
+                    { label: "◀◀", delta: -999999, title: "Scroll to start" },
+                    { label: "◀", delta: -200, title: "Scroll left" },
+                    { label: "▶", delta: 200, title: "Scroll right" },
+                  ].map(({ label, delta, title }) => (
+                    <button key={label} onClick={() => scrollChart(delta)} title={title}
+                      style={{ padding: "2px 10px", background: "rgba(192,132,252,0.07)", border: "1px solid rgba(192,132,252,0.25)", borderRadius: 4, color: "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, cursor: "pointer", lineHeight: 1.6 }}>
+                      {label}
+                    </button>
+                  ))}
+                  <button onClick={goToLive} title="Jump to live"
+                    style={{ padding: "2px 10px", background: isLive ? "rgba(192,132,252,0.2)" : "rgba(192,132,252,0.07)", border: `1px solid ${isLive ? "rgba(192,132,252,0.7)" : "rgba(192,132,252,0.25)"}`, borderRadius: 4, color: isLive ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, cursor: "pointer", letterSpacing: 1, lineHeight: 1.6, transition: "all 0.2s" }}>
+                    ▶▶ LIVE
+                  </button>
+                </div>
+                <div ref={chartScrollRef} style={{ width: chartWrapWidth, height: 168, overflowX: "scroll", overflowY: "hidden" }}
+                  onScroll={e => {
+                    const el = e.currentTarget;
+                    const atRight = el.scrollWidth - el.scrollLeft - el.clientWidth < 80;
+                    if (!atRight) setIsLive(false);
+                  }}>
                   <LineChart width={chartWidth} height={168} data={focusHistory} margin={{ top: 8, right: 16, bottom: 18, left: 0 }}>
                     <XAxis dataKey="time" tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval={xInterval} />
                     <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} width={32} />
