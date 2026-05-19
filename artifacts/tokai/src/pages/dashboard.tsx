@@ -337,6 +337,9 @@ export default function Dashboard() {
 
   const completedCount = tasks.filter(t => t.done).length;
   const sessionDuration = Math.floor((now.getTime() - sessionStart.current.getTime()) / 60000);
+  const avgFocus = focusHistory.length > 1
+    ? Math.round(focusHistory.reduce((s, p) => s + p.value, 0) / focusHistory.length)
+    : null;
   const waveData = [
     { name: "Alpha (8-11 Hz)", value: neural.alpha },
     { name: "Beta (11-70 Hz)", value: neural.beta },
@@ -506,17 +509,25 @@ export default function Dashboard() {
 
           {/* Charts row — stacked on mobile */}
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 360px", gap: 14 }}>
-            <Panel title={t.focusStream}>
+            <Panel title={
+              <span style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <span>{t.focusStream}</span>
+                {avgFocus !== null && (
+                  <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(192,132,252,0.6)", letterSpacing: 1, fontWeight: 400 }}>
+                    5m avg: {avgFocus}
+                  </span>
+                )}
+              </span>
+            }>
               <div style={{ position: "relative", height: 150 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={focusHistory} margin={{ top: 8, right: 48, bottom: 0, left: 0 }}>
                     <XAxis dataKey="time" tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval={focusHistory.length <= 6 ? 0 : Math.ceil((focusHistory.length - 1) / 5) - 1} />
                     <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} />
                     <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
-                    {focusHistory.length > 1 && (() => {
-                      const avg = Math.round(focusHistory.reduce((s, p) => s + p.value, 0) / focusHistory.length);
-                      return <ReferenceLine y={avg} stroke="rgba(192,132,252,0.55)" strokeDasharray="6 3" label={{ value: `avg ${avg}`, position: "insideTopRight", fill: "#c084fc", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} />;
-                    })()}
+                    {avgFocus !== null && (
+                      <ReferenceLine y={avgFocus} stroke="rgba(192,132,252,0.55)" strokeDasharray="6 3" />
+                    )}
                     <Line type="monotone" dataKey="value" stroke="#c084fc" strokeWidth={2} dot={false} isAnimationActive={false} />
                   </LineChart>
                 </ResponsiveContainer>
