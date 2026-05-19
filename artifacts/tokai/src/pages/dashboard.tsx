@@ -534,7 +534,7 @@ export default function Dashboard() {
               </span>
             }>
               <div style={{ position: "relative", height: 150 }}>
-                <div ref={chartScrollRef} style={{ overflowX: "auto", overflowY: "hidden", height: 150, width: "100%" }}>
+                <div ref={chartScrollRef} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, overflowX: "auto", overflowY: "hidden" }}>
                   <LineChart width={chartWidth} height={150} data={focusHistory} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
                     <XAxis dataKey="time" tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval={xInterval} />
                     <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} width={32} />
