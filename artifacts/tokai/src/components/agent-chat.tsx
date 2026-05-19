@@ -15,6 +15,13 @@ interface Task {
   estimatedMinutes?: number | null;
 }
 
+interface JournalEntry {
+  text: string;
+  time: string;
+  focusIndex: number;
+  mood: string | null;
+}
+
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -61,7 +68,7 @@ const STORAGE_KEY = "tokai_anthropic_key";
 const CHAT_KEY = "tokai_chat";
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
-export default function AgentChat({ neuralState, tasks, lang = "en", isMobile = false }: { neuralState: NeuralState; tasks: Task[]; lang?: "en" | "zh"; isMobile?: boolean }) {
+export default function AgentChat({ neuralState, tasks, journalEntries = [], lang = "en", isMobile = false }: { neuralState: NeuralState; tasks: Task[]; journalEntries?: JournalEntry[]; lang?: "en" | "zh"; isMobile?: boolean }) {
   const t = UI[lang];
 
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem(STORAGE_KEY) ?? "");
@@ -123,7 +130,7 @@ export default function AgentChat({ neuralState, tasks, lang = "en", isMobile = 
       const res = await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next, neuralState, tasks, lang, userApiKey: apiKey }),
+        body: JSON.stringify({ messages: next, neuralState, tasks, journalEntries, lang, userApiKey: apiKey }),
       });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();

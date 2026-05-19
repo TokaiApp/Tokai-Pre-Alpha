@@ -12,7 +12,7 @@ app.get("/api/health", (_req, res) => {
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const { messages, neuralState, tasks, lang, userApiKey } = req.body;
+    const { messages, neuralState, tasks, journalEntries, lang, userApiKey } = req.body;
 
     const apiKey = userApiKey || process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
@@ -45,13 +45,21 @@ ${Array.isArray(tasks) && tasks.length > 0
     }).join("\n")
   : "- (no tasks added yet)"}
 
+User's TokNote journal entries (most recent first):
+${Array.isArray(journalEntries) && journalEntries.length > 0
+  ? [...journalEntries].reverse().slice(0, 10).map(e => {
+      let s = `- [${e.time}] Focus ${e.focusIndex?.toFixed(1) ?? "?"} ${e.mood ? `· ${e.mood}` : ""}: ${e.text}`;
+      return s;
+    }).join("\n")
+  : "- (no journal entries yet)"}
+
 Task planning guidelines based on cognitive state:
 - Focus HIGH (>70): Suggest tackling the hardest, most cognitively demanding tasks first
 - Focus MODERATE (40-70): Suggest structured tasks, planning, communication, reviewing
 - Focus LOW (<40): Suggest easy wins, breaks, physical movement, or administrative tasks
 
 Your behavior:
-- You can see the user's current TokTodo task list above — reference it directly when answering questions about their tasks
+- You can see the user's current TokTodo task list and TokNote journal entries above — reference them directly when relevant
 - Help the user decide what to add to their to-do list and in what order to tackle it
 - If the task list is empty, ask what they need to get done today
 - Recommend task sequencing based on their brain data and the actual tasks listed

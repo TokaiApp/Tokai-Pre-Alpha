@@ -56,6 +56,7 @@ const T = {
     notePlaceholder: "Write a note... (Enter to save)",
     noteEmpty: "No journal entries yet. Write a note to capture your thoughts alongside your focus data.",
     noteFocusLabel: "Focus",
+    moodFocused: "Focused", moodScattered: "Scattered", moodHyperfocus: "Hyperfocus", moodLow: "Low",
     planningInterface: "── PLANNING INTERFACE",
     focusLow: "LOW", focusMod: "MODERATE", focusHigh: "HIGH", focusOpt: "OPTIMAL",
     noiseClean: "CLEAN", noiseNom: "NOMINAL", noiseElev: "ELEVATED", noiseHigh: "HIGH",
@@ -112,6 +113,7 @@ const T = {
     notePlaceholder: "寫筆記... (Enter 儲存)",
     noteEmpty: "尚無日誌紀錄。記下你的想法，與專注數據一起追蹤。",
     noteFocusLabel: "專注",
+    moodFocused: "專注", moodScattered: "渙散", moodHyperfocus: "超專注", moodLow: "低落",
     planningInterface: "── 規劃介面",
     focusLow: "低", focusMod: "中等", focusHigh: "高", focusOpt: "最佳",
     noiseClean: "清晰", noiseNom: "正常", noiseElev: "偏高", noiseHigh: "高",
@@ -137,7 +139,8 @@ interface FocusPoint { time: string; value: number; }
 type Demand = "low" | "medium" | "high";
 interface Task { id: string; title: string; description: string | null; done: boolean; demand: Demand | null; estimatedMinutes: number | null; }
 interface MedEntry { id: string; name: string; dose: string; time: string; sampleIndex: number; rating: number | null; }
-interface JournalEntry { id: string; text: string; time: string; focusIndex: number; }
+type Mood = "focused" | "scattered" | "hyperfocus" | "low";
+interface JournalEntry { id: string; text: string; time: string; focusIndex: number; mood: Mood | null; }
 
 function demandColor(d: Demand) {
   if (d === "low") return "#4ade80";
@@ -286,6 +289,9 @@ export default function Dashboard() {
     try { const s = localStorage.getItem("tokai_journal"); return s ? JSON.parse(s) : []; } catch { return []; }
   });
   const [journalInput, setJournalInput] = useState("");
+  const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editNoteText, setEditNoteText] = useState("");
   const journalBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -358,8 +364,26 @@ export default function Dashboard() {
   function addJournalEntry() {
     const text = journalInput.trim();
     if (!text) return;
-    setJournal(prev => [...prev, { id: Date.now().toString(), text, time: formatTime(new Date()), focusIndex: neural.focusIndex }]);
+    setJournal(prev => [...prev, { id: Date.now().toString(), text, time: formatTime(new Date()), focusIndex: neural.focusIndex, mood: selectedMood }]);
     setJournalInput("");
+    setSelectedMood(null);
+  }
+
+  function startEditNote(entry: JournalEntry) {
+    setEditingNoteId(entry.id);
+    setEditNoteText(entry.text);
+  }
+
+  function saveNoteEdit(id: string) {
+    const text = editNoteText.trim();
+    if (!text) { deleteNote(id); return; }
+    setJournal(prev => prev.map(e => e.id === id ? { ...e, text } : e));
+    setEditingNoteId(null);
+  }
+
+  function deleteNote(id: string) {
+    setJournal(prev => prev.filter(e => e.id !== id));
+    setEditingNoteId(null);
   }
 
   useEffect(() => {
@@ -736,9 +760,8 @@ export default function Dashboard() {
 
           </div>
 
-          {/* Charts row — stacked on mobile */}
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 360px", gap: 14 }}>
-            <div style={{ minWidth: 0 }}>
+          {/* Focus stream — full width */}
+          <div style={{ minWidth: 0 }}>
             <Panel title={
               <span style={{ display: "flex", alignItems: "center", gap: 14 }}>
                 <span>{t.focusStream}</span>
@@ -800,61 +823,98 @@ export default function Dashboard() {
                 </div>
               </div>
             </Panel>
+          </div>
+
+          {/* TokNote + Neural Insights row */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 360px", gap: 14, alignItems: "start" }}>
+
+            {/* TokNote */}
+            <div style={{ background: "linear-gradient(135deg, #100a25, #120d28)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(192,132,252,0.07)", display: "flex", flexDirection: "column", height: 280 }}>
+              {/* Header */}
+              <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(192,132,252,0.03)", flexShrink: 0 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c084fc", boxShadow: "0 0 8px rgba(192,132,252,0.9)", flexShrink: 0 }} />
+                <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, fontWeight: 700, letterSpacing: 3 }}>
+                  <span style={{ color: "#7c3aed" }}>TOK</span>
+                  <span style={{ color: "#c084fc" }}>{lang === "en" ? "NOTE · JOURNAL" : "NOTE · 日誌"}</span>
+                </span>
+              </div>
+              {/* Entries */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+                {journal.length === 0 ? (
+                  <p style={{ margin: 0, fontSize: 13, color: "rgba(90,143,168,0.6)", fontFamily: "'Share Tech Mono', monospace", letterSpacing: 0.5, lineHeight: 1.5 }}>{t.noteEmpty}</p>
+                ) : (
+                  journal.map(entry => editingNoteId === entry.id ? (
+                    <div key={entry.id} style={{ padding: "8px 12px", background: "rgba(192,132,252,0.06)", border: "1px solid rgba(192,132,252,0.35)", borderRadius: 8 }}>
+                      <textarea
+                        autoFocus
+                        value={editNoteText}
+                        onChange={e => setEditNoteText(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); saveNoteEdit(entry.id); } if (e.key === "Escape") setEditingNoteId(null); }}
+                        style={{ width: "100%", minHeight: 60, padding: "4px 0", background: "transparent", border: "none", borderBottom: "1px solid rgba(192,132,252,0.4)", color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, outline: "none", resize: "none", boxSizing: "border-box" }}
+                      />
+                      <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+                        <button onClick={() => saveNoteEdit(entry.id)} style={{ background: "none", border: "none", color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", padding: 0, letterSpacing: 1 }}>SAVE</button>
+                        <button onClick={() => deleteNote(entry.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.7)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", padding: 0, letterSpacing: 1 }}>DELETE</button>
+                        <button onClick={() => setEditingNoteId(null)} style={{ background: "none", border: "none", color: "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", padding: 0, letterSpacing: 1 }}>CANCEL</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div key={entry.id} onClick={() => startEditNote(entry)} style={{ padding: "8px 12px", background: "rgba(192,132,252,0.04)", border: "1px solid rgba(192,132,252,0.14)", borderRadius: 8, cursor: "pointer", transition: "border-color 0.15s" }}
+                      onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(192,132,252,0.35)")}
+                      onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(192,132,252,0.14)")}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8" }}>{entry.time}</span>
+                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc" }}>{t.noteFocusLabel} {entry.focusIndex.toFixed(1)}</span>
+                        {entry.mood && (
+                          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, padding: "1px 6px", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 3, color: "#c084fc", letterSpacing: 1 }}>
+                            {entry.mood === "focused" ? t.moodFocused : entry.mood === "scattered" ? t.moodScattered : entry.mood === "hyperfocus" ? t.moodHyperfocus : t.moodLow}
+                          </span>
+                        )}
+                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(192,132,252,0.3)", marginLeft: "auto" }}>✎</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: 15, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", lineHeight: 1.5 }}>{entry.text}</p>
+                    </div>
+                  ))
+                )}
+                <div ref={journalBottomRef} />
+              </div>
+              {/* Mood tags */}
+              <div style={{ padding: "6px 16px", borderTop: "1px solid rgba(192,132,252,0.1)", display: "flex", gap: 6, background: "rgba(0,0,0,0.1)", flexShrink: 0 }}>
+                {(["focused", "scattered", "hyperfocus", "low"] as Mood[]).map(m => (
+                  <button key={m} onClick={() => setSelectedMood(selectedMood === m ? null : m)}
+                    style={{ padding: "2px 10px", background: selectedMood === m ? "rgba(192,132,252,0.2)" : "rgba(192,132,252,0.05)", border: `1px solid ${selectedMood === m ? "rgba(192,132,252,0.6)" : "rgba(192,132,252,0.2)"}`, borderRadius: 4, color: selectedMood === m ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", letterSpacing: 0.5, transition: "all 0.15s" }}>
+                    {m === "focused" ? t.moodFocused : m === "scattered" ? t.moodScattered : m === "hyperfocus" ? t.moodHyperfocus : t.moodLow}
+                  </button>
+                ))}
+              </div>
+              {/* Input */}
+              <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(192,132,252,0.15)", display: "flex", gap: 8, background: "rgba(0,0,0,0.15)", flexShrink: 0 }}>
+                <input
+                  value={journalInput}
+                  onChange={e => setJournalInput(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && addJournalEntry()}
+                  placeholder={t.notePlaceholder}
+                  style={{ flex: 1, padding: "8px 12px", background: "rgba(0,0,0,0.35)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, outline: "none", transition: "border-color 0.2s" }}
+                  onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
+                  onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
+                />
+                <button
+                  onClick={addJournalEntry}
+                  disabled={!journalInput.trim()}
+                  style={{ padding: "8px 18px", background: journalInput.trim() ? "rgba(192,132,252,0.15)" : "rgba(192,132,252,0.05)", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 6, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, letterSpacing: 1, cursor: journalInput.trim() ? "pointer" : "not-allowed", transition: "background 0.2s" }}
+                >
+                  LOG
+                </button>
+              </div>
             </div>
 
+            {/* Neural Insights */}
             <Panel title={t.neuralInsights}>
               <p style={{ fontSize: 15, color: "#c8d8e8", lineHeight: 1.65, fontStyle: "italic", margin: 0 }}>
                 "{getInsight()}"
               </p>
             </Panel>
-          </div>
 
-          {/* TokNote */}
-          <div style={{ background: "linear-gradient(135deg, #100a25, #120d28)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(192,132,252,0.07)", display: "flex", flexDirection: "column", height: 280 }}>
-            {/* Header */}
-            <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(192,132,252,0.03)", flexShrink: 0 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c084fc", boxShadow: "0 0 8px rgba(192,132,252,0.9)", flexShrink: 0 }} />
-              <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, fontWeight: 700, letterSpacing: 3 }}>
-                <span style={{ color: "#7c3aed" }}>TOK</span>
-                <span style={{ color: "#c084fc" }}>{lang === "en" ? "NOTE · JOURNAL" : "NOTE · 日誌"}</span>
-              </span>
-            </div>
-            {/* Entries */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-              {journal.length === 0 ? (
-                <p style={{ margin: 0, fontSize: 13, color: "rgba(90,143,168,0.6)", fontFamily: "'Share Tech Mono', monospace", letterSpacing: 0.5, lineHeight: 1.5 }}>{t.noteEmpty}</p>
-              ) : (
-                journal.map(entry => (
-                  <div key={entry.id} style={{ padding: "8px 12px", background: "rgba(192,132,252,0.04)", border: "1px solid rgba(192,132,252,0.14)", borderRadius: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                      <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8" }}>{entry.time}</span>
-                      <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc" }}>{t.noteFocusLabel} {entry.focusIndex.toFixed(1)}</span>
-                    </div>
-                    <p style={{ margin: 0, fontSize: 15, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", lineHeight: 1.5 }}>{entry.text}</p>
-                  </div>
-                ))
-              )}
-              <div ref={journalBottomRef} />
-            </div>
-            {/* Input */}
-            <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(192,132,252,0.15)", display: "flex", gap: 8, background: "rgba(0,0,0,0.15)", flexShrink: 0 }}>
-              <input
-                value={journalInput}
-                onChange={e => setJournalInput(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && addJournalEntry()}
-                placeholder={t.notePlaceholder}
-                style={{ flex: 1, padding: "8px 12px", background: "rgba(0,0,0,0.35)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, outline: "none", transition: "border-color 0.2s" }}
-                onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
-                onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
-              />
-              <button
-                onClick={addJournalEntry}
-                disabled={!journalInput.trim()}
-                style={{ padding: "8px 18px", background: journalInput.trim() ? "rgba(192,132,252,0.15)" : "rgba(192,132,252,0.05)", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 6, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, letterSpacing: 1, cursor: journalInput.trim() ? "pointer" : "not-allowed", transition: "background 0.2s" }}
-              >
-                LOG
-              </button>
-            </div>
           </div>
 
           {/* Planning interface */}
@@ -862,7 +922,7 @@ export default function Dashboard() {
             <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc", letterSpacing: 3, marginBottom: 14 }}>{t.planningInterface}</div>
             {/* Agent + Todo — stacked on mobile */}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
-              <AgentChat neuralState={neural} tasks={tasks.map(t => ({ title: t.title, description: t.description, done: t.done, demand: t.demand, estimatedMinutes: t.estimatedMinutes }))} lang={lang} isMobile={isMobile} />
+              <AgentChat neuralState={neural} tasks={tasks.map(t => ({ title: t.title, description: t.description, done: t.done, demand: t.demand, estimatedMinutes: t.estimatedMinutes }))} journalEntries={journal.map(e => ({ text: e.text, time: e.time, focusIndex: e.focusIndex, mood: e.mood }))} lang={lang} isMobile={isMobile} />
 
               <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)", height: 480, display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
