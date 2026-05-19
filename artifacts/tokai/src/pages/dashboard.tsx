@@ -381,9 +381,9 @@ export default function Dashboard() {
   const avgFocus = recentSlice.length > 1
     ? Math.round(recentSlice.reduce((s, p) => s + p.value, 0) / recentSlice.length)
     : null;
-  const chartPxPerSample = Math.max(4, Math.round(800 / fiveMinSamples));
-  const chartWidth = Math.max(600, focusHistory.length * chartPxPerSample);
-  const xInterval = Math.max(0, Math.ceil(fiveMinSamples / 6) - 1);
+  const chartPxPerSample = Math.max(4, Math.round(chartWrapWidth / fiveMinSamples) * 2);
+  const chartWidth = Math.max(chartWrapWidth, focusHistory.length * chartPxPerSample);
+  const xInterval = Math.max(0, Math.round(60 / refreshRate) - 1);
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "linear-gradient(135deg, #0c0818 0%, #100a25 50%, #080614 100%)", fontFamily: "'Rajdhani', sans-serif", color: "#c8d8e8" }}>
@@ -545,9 +545,9 @@ export default function Dashboard() {
                 )}
               </span>
             }>
-              <div ref={chartWrapRef} style={{ width: "100%" }}>
-                <div ref={chartScrollRef} style={{ width: chartWrapWidth, height: 150, overflowX: "auto", overflowY: "hidden" }}>
-                  <LineChart width={Math.max(chartWidth, chartWrapWidth)} height={150} data={focusHistory} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+              <div ref={chartWrapRef} style={{ width: "100%", position: "relative" }}>
+                <div ref={chartScrollRef} style={{ width: chartWrapWidth, height: 168, overflowX: "auto", overflowY: "hidden" }}>
+                  <LineChart width={chartWidth} height={168} data={focusHistory} margin={{ top: 8, right: 16, bottom: 18, left: 0 }}>
                     <XAxis dataKey="time" tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval={xInterval} />
                     <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} width={32} />
                     <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
@@ -556,6 +556,9 @@ export default function Dashboard() {
                     )}
                     <Line type="monotone" dataKey="value" stroke="#c084fc" strokeWidth={2} dot={false} isAnimationActive={false} />
                   </LineChart>
+                </div>
+                <div style={{ position: "absolute", right: 4, top: 8, fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc", pointerEvents: "none" }}>
+                  {neural.focusIndex.toFixed(1)}
                 </div>
               </div>
             </Panel>
