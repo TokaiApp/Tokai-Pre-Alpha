@@ -256,6 +256,9 @@ export default function Dashboard() {
   const [medLog, setMedLog] = useState<MedEntry[]>([]);
   const [newMedName, setNewMedName] = useState("");
   const [newMedDose, setNewMedDose] = useState("");
+  const [editingMedId, setEditingMedId] = useState<string | null>(null);
+  const [editMedName, setEditMedName] = useState("");
+  const [editMedDose, setEditMedDose] = useState("");
 
   function logMed() {
     const name = newMedName.trim();
@@ -269,6 +272,24 @@ export default function Dashboard() {
     }]);
     setNewMedName("");
     setNewMedDose("");
+  }
+
+  function startEditMed(med: MedEntry) {
+    setEditingMedId(med.id);
+    setEditMedName(med.name);
+    setEditMedDose(med.dose);
+  }
+
+  function saveMedEdit(id: string) {
+    const name = editMedName.trim();
+    if (!name) { deleteMed(id); return; }
+    setMedLog(prev => prev.map(m => m.id === id ? { ...m, name, dose: editMedDose.trim() } : m));
+    setEditingMedId(null);
+  }
+
+  function deleteMed(id: string) {
+    setMedLog(prev => prev.filter(m => m.id !== id));
+    setEditingMedId(null);
   }
 
   useEffect(() => {
@@ -651,12 +672,33 @@ export default function Dashboard() {
                 <p style={{ margin: 0, fontSize: 13, color: "rgba(90,143,168,0.6)", fontFamily: "'Share Tech Mono', monospace", letterSpacing: 0.5 }}>{t.medEmpty}</p>
               ) : (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {medLog.map(med => (
-                    <div key={med.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.25)", borderRadius: 20 }}>
+                  {medLog.map(med => editingMedId === med.id ? (
+                    <div key={med.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.5)", borderRadius: 20 }}>
+                      <input
+                        autoFocus
+                        value={editMedName}
+                        onChange={e => setEditMedName(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter") saveMedEdit(med.id); if (e.key === "Escape") setEditingMedId(null); }}
+                        style={{ width: 120, padding: "2px 6px", background: "transparent", border: "none", borderBottom: "1px solid rgba(251,191,36,0.5)", color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, outline: "none" }}
+                      />
+                      <input
+                        value={editMedDose}
+                        onChange={e => setEditMedDose(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter") saveMedEdit(med.id); if (e.key === "Escape") setEditingMedId(null); }}
+                        placeholder="dose"
+                        style={{ width: 70, padding: "2px 6px", background: "transparent", border: "none", borderBottom: "1px solid rgba(251,191,36,0.3)", color: "rgba(251,191,36,0.7)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, outline: "none" }}
+                      />
+                      <button onClick={() => saveMedEdit(med.id)} style={{ background: "none", border: "none", color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", padding: "0 2px" }}>SAVE</button>
+                      <button onClick={() => deleteMed(med.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.7)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", padding: "0 2px" }}>DEL</button>
+                    </div>
+                  ) : (
+                    <div key={med.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.25)", borderRadius: 20, cursor: "pointer" }}
+                      onClick={() => startEditMed(med)}>
                       <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fbbf24", flexShrink: 0 }} />
                       <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#fbbf24" }}>{med.name}</span>
                       {med.dose && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(251,191,36,0.6)" }}>{med.dose}</span>}
                       <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.7)" }}>{t.medAt} {med.time}</span>
+                      <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(251,191,36,0.35)", marginLeft: 2 }}>✎</span>
                     </div>
                   ))}
                 </div>
