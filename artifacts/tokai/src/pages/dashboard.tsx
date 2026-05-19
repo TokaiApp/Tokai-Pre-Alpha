@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Github } from "lucide-react";
 import {
-  LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine,
+  LineChart, Line, XAxis, YAxis, ReferenceLine,
 } from "recharts";
 import AgentChat from "@/components/agent-chat";
 
@@ -217,6 +217,7 @@ export default function Dashboard() {
   });
   const neuralRef = useRef(neural);
   useEffect(() => { neuralRef.current = neural; }, [neural]);
+  const chartScrollRef = useRef<HTMLDivElement>(null);
 
   // Internal focus target: drifts slowly, actual focus index pulls toward it
   const focusTargetRef = useRef(55);
@@ -248,6 +249,15 @@ export default function Dashboard() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Auto-scroll chart to right edge when new data arrives, unless user has scrolled left to review history
+  useEffect(() => {
+    const el = chartScrollRef.current;
+    if (!el) return;
+    if (el.scrollWidth - el.scrollLeft - el.clientWidth < 80) {
+      el.scrollLeft = el.scrollWidth;
+    }
+  }, [focusHistory]);
+
   const tick = useCallback(() => {
     const prev = neuralRef.current;
     const newTheta = drift(prev.theta, 18, 10, 180);
@@ -270,7 +280,7 @@ export default function Dashboard() {
     };
     setNeural(next);
     neuralRef.current = next;
-    const maxSamples = Math.round(5 * 60 / refreshRate);
+    const maxSamples = Math.round(30 * 60 / refreshRate);
     setFocusHistory(h => [...h, { time: formatTime(new Date()), value: next.focusIndex }].slice(-maxSamples));
     setSamples(s => s + 1);
   }, [refreshRate]);
@@ -354,9 +364,14 @@ export default function Dashboard() {
 
   const completedCount = tasks.filter(t => t.done).length;
   const sessionDuration = Math.floor((now.getTime() - sessionStart.current.getTime()) / 60000);
-  const avgFocus = focusHistory.length > 1
-    ? Math.round(focusHistory.reduce((s, p) => s + p.value, 0) / focusHistory.length)
+  const fiveMinSamples = Math.round(5 * 60 / refreshRate);
+  const recentSlice = focusHistory.slice(-fiveMinSamples);
+  const avgFocus = recentSlice.length > 1
+    ? Math.round(recentSlice.reduce((s, p) => s + p.value, 0) / recentSlice.length)
     : null;
+  const chartPxPerSample = Math.max(4, Math.round(800 / fiveMinSamples));
+  const chartWidth = Math.max(600, focusHistory.length * chartPxPerSample);
+  const xInterval = Math.max(0, Math.ceil(fiveMinSamples / 6) - 1);
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "linear-gradient(135deg, #0c0818 0%, #100a25 50%, #080614 100%)", fontFamily: "'Rajdhani', sans-serif", color: "#c8d8e8" }}>
@@ -418,9 +433,6 @@ export default function Dashboard() {
           </a>
         </div>
 
-        <div style={{ marginTop: "auto", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(192,132,252,0.3)", letterSpacing: 1 }}>
-          {t.sessionLabel} {sessionDuration}m
-        </div>
       </aside>
 
       {/* ── Main ── */}
@@ -517,21 +529,24 @@ export default function Dashboard() {
                     5m avg: {avgFocus}
                   </span>
                 )}
+                <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.7)", letterSpacing: 1, fontWeight: 400 }}>
+                  {t.sessionLabel} {sessionDuration}m
+                </span>
               </span>
             }>
               <div style={{ position: "relative", height: 150 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={focusHistory} margin={{ top: 8, right: 48, bottom: 0, left: 0 }}>
-                    <XAxis dataKey="time" tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval={focusHistory.length <= 6 ? 0 : Math.ceil((focusHistory.length - 1) / 5) - 1} />
-                    <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} />
+                <div ref={chartScrollRef} style={{ overflowX: "auto", overflowY: "hidden", height: 150 }}>
+                  <LineChart width={chartWidth} height={150} data={focusHistory} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+                    <XAxis dataKey="time" tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval={xInterval} />
+                    <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} width={32} />
                     <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
                     {avgFocus !== null && (
                       <ReferenceLine y={avgFocus} stroke="rgba(192,132,252,0.55)" strokeDasharray="6 3" />
                     )}
                     <Line type="monotone" dataKey="value" stroke="#c084fc" strokeWidth={2} dot={false} isAnimationActive={false} />
                   </LineChart>
-                </ResponsiveContainer>
-                <div style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc" }}>
+                </div>
+                <div style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc", pointerEvents: "none" }}>
                   {neural.focusIndex.toFixed(1)}
                 </div>
               </div>
@@ -647,7 +662,6 @@ export default function Dashboard() {
               <div style={{ display: "flex", justifyContent: "space-between", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8" }}>
                 <span>{t.samples} {samples}</span>
                 <span>{t.status}: {liveStream ? <span style={{ color: "#c084fc" }}>{t.active}</span> : <span style={{ color: "#ffa040" }}>{t.paused}</span>}</span>
-                <span>{t.sessionLabel} {sessionDuration}m</span>
               </div>
               <a href="https://github.com/TokaiApp/Tokai-Pre-Alpha" target="_blank" rel="noopener noreferrer"
                 style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5a8fa8", textDecoration: "none", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, letterSpacing: 1 }}>
