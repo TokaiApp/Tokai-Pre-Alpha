@@ -855,8 +855,9 @@ export default function Dashboard() {
             </Panel>
           </div>
 
-          {/* TokNote (with Neural Insights embedded) */}
-          <div style={{ background: "linear-gradient(135deg, #100a25, #120d28)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(192,132,252,0.07)", display: "flex", flexDirection: "column", height: 420 }}>
+          {/* TokNote · TokAgent · TokTodo */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "35% 1fr 1fr", gap: 14 }}>
+          <div style={{ background: "linear-gradient(135deg, #100a25, #120d28)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(192,132,252,0.07)", display: "flex", flexDirection: "column", height: 480 }}>
             {/* Header */}
             <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(192,132,252,0.03)", flexShrink: 0 }}>
               <BookOpen size={16} color="#c084fc" style={{ flexShrink: 0 }} />
@@ -965,14 +966,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-          {/* Planning interface */}
-          <div style={{ borderTop: "1px solid rgba(192,132,252,0.25)", paddingTop: 20 }}>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc", letterSpacing: 3, marginBottom: 14 }}>{t.planningInterface}</div>
-            {/* Agent + Todo — stacked on mobile */}
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
-              <AgentChat neuralState={neural} tasks={tasks.map(t => ({ title: t.title, description: t.description, done: t.done, demand: t.demand, estimatedMinutes: t.estimatedMinutes }))} journalEntries={journal.map(e => ({ text: e.text, time: e.time, focusIndex: e.focusIndex, mood: e.mood }))} lang={lang} isMobile={isMobile} />
-
-              <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)", height: 480, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <AgentChat neuralState={neural} tasks={tasks.map(t => ({ title: t.title, description: t.description, done: t.done, demand: t.demand, estimatedMinutes: t.estimatedMinutes }))} journalEntries={journal.map(e => ({ text: e.text, time: e.time, focusIndex: e.focusIndex, mood: e.mood }))} lang={lang} isMobile={isMobile} />
+          <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)", height: 480, display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                   <ListChecks size={16} color="#c084fc" style={{ flexShrink: 0 }} />
                   <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, fontWeight: 700, letterSpacing: 3 }}>
@@ -1059,7 +1054,6 @@ export default function Dashboard() {
                   {t.progress} {completedCount}/{tasks.length} {completedCount > 0 && completedCount === tasks.length ? t.complete : ""}
                 </div>
               </div>
-            </div>
           </div>
 
           {/* Mobile footer with session info + links */}
