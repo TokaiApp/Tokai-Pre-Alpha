@@ -246,6 +246,8 @@ export default function Dashboard() {
   const chartWrapRef = useRef<HTMLDivElement>(null);
   const [chartWrapWidth, setChartWrapWidth] = useState(600);
   const [isLive, setIsLive] = useState(true);
+  const sessionStartSampleCount = useRef(0);
+  useEffect(() => { sessionStartSampleCount.current = focusHistory.length; }, []);
 
   // Internal focus target: drifts slowly, actual focus index pulls toward it
   const focusTargetRef = useRef(55);
@@ -543,6 +545,13 @@ export default function Dashboard() {
   const avgFocus = recentSlice.length > 1
     ? Math.round(recentSlice.reduce((s, p) => s + p.value, 0) / recentSlice.length)
     : null;
+  const sessionSlice = focusHistory.slice(sessionStartSampleCount.current);
+  const sessionAvg = sessionSlice.length > 1
+    ? Math.round(sessionSlice.reduce((s, p) => s + p.value, 0) / sessionSlice.length)
+    : null;
+  const dayAvg = focusHistory.length > 1
+    ? Math.round(focusHistory.reduce((s, p) => s + p.value, 0) / focusHistory.length)
+    : null;
   const chartPxPerSample = Math.max(4, Math.round(chartWrapWidth / fiveMinSamples) * 2);
   const chartWidth = Math.max(chartWrapWidth, focusHistory.length * chartPxPerSample);
   const xInterval = Math.max(0, Math.round(60 / refreshRate) - 1);
@@ -767,13 +776,11 @@ export default function Dashboard() {
           {/* Focus stream — full width */}
           <div style={{ minWidth: 0 }}>
             <Panel title={
-              <span style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Activity size={14} color="#c084fc" /><span>{t.focusStream}</span></span>
-                {avgFocus !== null && (
-                  <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(192,132,252,0.6)", letterSpacing: 1, fontWeight: 400 }}>
-                    5m avg: {avgFocus}
-                  </span>
-                )}
+                {avgFocus !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(192,132,252,0.6)", letterSpacing: 1, fontWeight: 400 }}>5m {avgFocus}</span>}
+                {sessionAvg !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(56,189,248,0.7)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "sess" : "階段"} {sessionAvg}</span>}
+                {dayAvg !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(74,222,128,0.7)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "day" : "日"} {dayAvg}</span>}
               </span>
             }>
               <div ref={chartWrapRef} style={{ width: "100%", position: "relative" }}>
@@ -789,6 +796,12 @@ export default function Dashboard() {
                     <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
                     {avgFocus !== null && (
                       <ReferenceLine y={avgFocus} stroke="rgba(192,132,252,0.55)" strokeDasharray="6 3" />
+                    )}
+                    {sessionAvg !== null && (
+                      <ReferenceLine y={sessionAvg} stroke="rgba(56,189,248,0.5)" strokeDasharray="6 3" />
+                    )}
+                    {dayAvg !== null && dayAvg !== sessionAvg && (
+                      <ReferenceLine y={dayAvg} stroke="rgba(74,222,128,0.5)" strokeDasharray="6 3" />
                     )}
                     {medLog.map(med => {
                       if (!focusHistory[med.sampleIndex]) return null;
