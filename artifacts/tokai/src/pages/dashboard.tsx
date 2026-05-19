@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Github } from "lucide-react";
 import {
-  LineChart, Line, XAxis, YAxis, ReferenceLine,
+  LineChart, Line, XAxis, YAxis, ReferenceLine, ReferenceArea,
 } from "recharts";
 import AgentChat from "@/components/agent-chat";
 
@@ -128,7 +128,7 @@ interface NeuralState {
 interface FocusPoint { time: string; value: number; }
 type Demand = "low" | "medium" | "high";
 interface Task { id: string; title: string; description: string | null; done: boolean; demand: Demand | null; estimatedMinutes: number | null; }
-interface MedEntry { id: string; name: string; dose: string; time: string; sampleIndex: number; }
+interface MedEntry { id: string; name: string; dose: string; time: string; sampleIndex: number; rating: number | null; }
 
 function demandColor(d: Demand) {
   if (d === "low") return "#4ade80";
@@ -253,12 +253,29 @@ export default function Dashboard() {
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
-  const [medLog, setMedLog] = useState<MedEntry[]>([]);
+  const [medLog, setMedLog] = useState<MedEntry[]>(() => {
+    try { const s = localStorage.getItem("tokai_med_log"); return s ? JSON.parse(s) : []; } catch { return []; }
+  });
   const [newMedName, setNewMedName] = useState("");
   const [newMedDose, setNewMedDose] = useState("");
   const [editingMedId, setEditingMedId] = useState<string | null>(null);
   const [editMedName, setEditMedName] = useState("");
   const [editMedDose, setEditMedDose] = useState("");
+
+  useEffect(() => {
+    try { localStorage.setItem("tokai_med_log", JSON.stringify(medLog)); } catch {}
+  }, [medLog]);
+
+  function getMedDelta(med: MedEntry) {
+    const baseFocus = focusHistory[med.sampleIndex]?.value;
+    if (baseFocus == null || focusHistory.length <= med.sampleIndex + 1) return null;
+    const windowSamples = Math.round(15 * 60 / refreshRate);
+    const endIdx = Math.min(med.sampleIndex + windowSamples, focusHistory.length - 1);
+    if (endIdx <= med.sampleIndex) return null;
+    const delta = Math.round(focusHistory[endIdx].value - baseFocus);
+    const minutes = Math.round((endIdx - med.sampleIndex) * refreshRate / 60);
+    return { delta, minutes };
+  }
 
   function logMed() {
     const name = newMedName.trim();
@@ -269,6 +286,7 @@ export default function Dashboard() {
       dose: newMedDose.trim(),
       time: formatTime(new Date()),
       sampleIndex: focusHistory.length - 1,
+      rating: null,
     }]);
     setNewMedName("");
     setNewMedDose("");
@@ -290,6 +308,10 @@ export default function Dashboard() {
   function deleteMed(id: string) {
     setMedLog(prev => prev.filter(m => m.id !== id));
     setEditingMedId(null);
+  }
+
+  function setMedRating(id: string, rating: number) {
+    setMedLog(prev => prev.map(m => m.id === id ? { ...m, rating: m.rating === rating ? null : rating } : m));
   }
 
   useEffect(() => {
@@ -615,10 +637,18 @@ export default function Dashboard() {
                     {avgFocus !== null && (
                       <ReferenceLine y={avgFocus} stroke="rgba(192,132,252,0.55)" strokeDasharray="6 3" />
                     )}
-                    {medLog.map(med => focusHistory[med.sampleIndex] && (
-                      <ReferenceLine key={med.id} x={focusHistory[med.sampleIndex].time} stroke="rgba(251,191,36,0.7)" strokeDasharray="3 3"
-                        label={{ value: med.name.length > 10 ? med.name.slice(0, 10) + "…" : med.name, position: "insideTopLeft", fill: "#fbbf24", fontSize: 9, fontFamily: "'Share Tech Mono', monospace" }} />
-                    ))}
+                    {medLog.map(med => {
+                      if (!focusHistory[med.sampleIndex]) return null;
+                      const peakSamples = Math.round(90 * 60 / refreshRate);
+                      const endIdx = Math.min(med.sampleIndex + peakSamples, focusHistory.length - 1);
+                      const x1 = focusHistory[med.sampleIndex].time;
+                      const x2 = focusHistory[endIdx]?.time;
+                      return [
+                        x2 && x2 !== x1 && <ReferenceArea key={med.id + "_area"} x1={x1} x2={x2} fill="rgba(251,191,36,0.06)" />,
+                        <ReferenceLine key={med.id} x={x1} stroke="rgba(251,191,36,0.7)" strokeDasharray="3 3"
+                          label={{ value: med.name.length > 10 ? med.name.slice(0, 10) + "…" : med.name, position: "insideTopLeft", fill: "#fbbf24", fontSize: 9, fontFamily: "'Share Tech Mono', monospace" }} />,
+                      ];
+                    })}
                     <Line type="monotone" dataKey="value" stroke="#c084fc" strokeWidth={2} dot={false} isAnimationActive={false} />
                   </LineChart>
                 </div>
@@ -698,7 +728,15 @@ export default function Dashboard() {
                       <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#fbbf24" }}>{med.name}</span>
                       {med.dose && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(251,191,36,0.6)" }}>{med.dose}</span>}
                       <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.7)" }}>{t.medAt} {med.time}</span>
-                      <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(251,191,36,0.35)", marginLeft: 2 }}>✎</span>
+                      {(() => { const d = getMedDelta(med); return d ? <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: d.delta >= 0 ? "#4ade80" : "#f87171" }}>{d.delta >= 0 ? "+" : ""}{d.delta} in {d.minutes}m</span> : null; })()}
+                      {/* Rating — 5 dots, click without opening edit */}
+                      <div style={{ display: "flex", gap: 3 }} onClick={e => e.stopPropagation()}>
+                        {[1,2,3,4,5].map(n => (
+                          <div key={n} onClick={() => setMedRating(med.id, n)}
+                            style={{ width: 8, height: 8, borderRadius: "50%", cursor: "pointer", background: (med.rating ?? 0) >= n ? "#fbbf24" : "rgba(251,191,36,0.2)", transition: "background 0.15s" }} />
+                        ))}
+                      </div>
+                      <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(251,191,36,0.35)" }}>✎</span>
                     </div>
                   ))}
                 </div>
