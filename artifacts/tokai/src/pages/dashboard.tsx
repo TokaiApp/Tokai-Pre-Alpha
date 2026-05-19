@@ -825,21 +825,24 @@ export default function Dashboard() {
             </Panel>
           </div>
 
-          {/* TokNote + Neural Insights row */}
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 360px", gap: 14 }}>
-
-            {/* TokNote */}
-            <div style={{ background: "linear-gradient(135deg, #100a25, #120d28)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(192,132,252,0.07)", display: "flex", flexDirection: "column", height: 280 }}>
-              {/* Header */}
-              <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(192,132,252,0.03)", flexShrink: 0 }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c084fc", boxShadow: "0 0 8px rgba(192,132,252,0.9)", flexShrink: 0 }} />
-                <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, fontWeight: 700, letterSpacing: 3 }}>
-                  <span style={{ color: "#7c3aed" }}>TOK</span>
-                  <span style={{ color: "#c084fc" }}>{lang === "en" ? "NOTE · JOURNAL" : "NOTE · 日誌"}</span>
-                </span>
-              </div>
-              {/* Entries */}
-              <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+          {/* TokNote (with Neural Insights embedded) */}
+          <div style={{ background: "linear-gradient(135deg, #100a25, #120d28)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(192,132,252,0.07)", display: "flex", flexDirection: "column", height: 320 }}>
+            {/* Header */}
+            <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(192,132,252,0.03)", flexShrink: 0 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c084fc", boxShadow: "0 0 8px rgba(192,132,252,0.9)", flexShrink: 0 }} />
+              <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, fontWeight: 700, letterSpacing: 3 }}>
+                <span style={{ color: "#7c3aed" }}>TOK</span>
+                <span style={{ color: "#c084fc" }}>{lang === "en" ? "NOTE · JOURNAL" : "NOTE · 日誌"}</span>
+              </span>
+            </div>
+            {/* Neural Insight — pinned, always visible */}
+            <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.1)", background: "rgba(192,132,252,0.02)", flexShrink: 0 }}>
+              <p style={{ margin: 0, fontSize: 14, color: "rgba(200,216,232,0.7)", lineHeight: 1.6, fontStyle: "italic", fontFamily: "'Rajdhani', sans-serif" }}>
+                "{getInsight()}"
+              </p>
+            </div>
+            {/* Entries */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
                 {journal.length === 0 ? (
                   <p style={{ margin: 0, fontSize: 13, color: "rgba(90,143,168,0.6)", fontFamily: "'Share Tech Mono', monospace", letterSpacing: 0.5, lineHeight: 1.5 }}>{t.noteEmpty}</p>
                 ) : (
@@ -907,15 +910,6 @@ export default function Dashboard() {
                 </button>
               </div>
             </div>
-
-            {/* Neural Insights */}
-            <Panel title={t.neuralInsights}>
-              <p style={{ fontSize: 15, color: "#c8d8e8", lineHeight: 1.65, fontStyle: "italic", margin: 0 }}>
-                "{getInsight()}"
-              </p>
-            </Panel>
-
-          </div>
 
           {/* Planning interface */}
           <div style={{ borderTop: "1px solid rgba(192,132,252,0.25)", paddingTop: 20 }}>
