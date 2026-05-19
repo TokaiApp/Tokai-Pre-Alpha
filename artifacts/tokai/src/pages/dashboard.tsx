@@ -137,7 +137,9 @@ interface NeuralState {
 
 interface FocusPoint { time: string; value: number; }
 type Demand = "low" | "medium" | "high";
-interface Task { id: string; title: string; description: string | null; done: boolean; demand: Demand | null; estimatedMinutes: number | null; createdAt?: string; deadline?: string; }
+interface Task { id: string; title: string; description: string | null; done: boolean; demand: Demand | null; estimatedMinutes: number | null; createdAt?: string; deadline?: string; emoji?: string; }
+
+const TASK_EMOJIS = ["📚", "✍️", "💻", "📧", "💪", "🍳", "🧹", "🎯", "🔬", "📞", "🛒", "🎨"];
 interface MedEntry { id: string; name: string; dose: string; time: string; sampleIndex: number; rating: number | null; }
 type Mood = "hyperfocus" | "flow" | "focused" | "restless" | "scattered" | "anxious" | "fatigued" | "zoned-out" | "crashed" | "low";
 interface JournalEntry { id: string; text: string; time: string; date: string; focusIndex: number; mood: Mood[]; }
@@ -288,6 +290,7 @@ export default function Dashboard() {
   const [newTaskDesc, setNewTaskDesc] = useState("");
   const [newTaskDemand, setNewTaskDemand] = useState<Demand | null>(null);
   const [newTaskTime, setNewTaskTime] = useState("");
+  const [newTaskEmoji, setNewTaskEmoji] = useState("");
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
@@ -552,12 +555,14 @@ export default function Dashboard() {
         estimatedMinutes: newTaskTime ? parseInt(newTaskTime) : null,
         createdAt: formatDateTime(new Date()),
         deadline: newTaskDeadline || undefined,
+        emoji: newTaskEmoji || undefined,
       }]);
       setNewTask("");
       setNewTaskDesc("");
       setNewTaskDemand(null);
       setNewTaskTime("");
       setNewTaskDeadline("");
+      setNewTaskEmoji("");
     }
   }
 
@@ -1040,6 +1045,15 @@ export default function Dashboard() {
                   placeholder={t.descPlaceholder}
                   style={{ width: "100%", padding: "5px 10px", background: "rgba(0,0,0,0.2)", border: "1px solid rgba(192,132,252,0.2)", borderTop: "none", borderRadius: "0 0 4px 4px", color: "#7a9ab8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, marginBottom: 8, boxSizing: "border-box", outline: "none", fontStyle: "italic" }}
                 />
+                {/* Emoji quick-pick */}
+                <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 8, flexWrap: "wrap" }}>
+                  {TASK_EMOJIS.map(e => (
+                    <button key={e} onClick={() => setNewTaskEmoji(newTaskEmoji === e ? "" : e)}
+                      style={{ fontSize: 18, lineHeight: 1, padding: "3px 5px", background: newTaskEmoji === e ? "rgba(192,132,252,0.2)" : "transparent", border: `1px solid ${newTaskEmoji === e ? "rgba(192,132,252,0.5)" : "rgba(192,132,252,0.12)"}`, borderRadius: 4, cursor: "pointer", transition: "all 0.12s" }}>
+                      {e}
+                    </button>
+                  ))}
+                </div>
                 {/* Demand + time selectors */}
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
                   <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 1, flexShrink: 0 }}>{t.demandLabel}:</span>
@@ -1076,6 +1090,7 @@ export default function Dashboard() {
                             onChange={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
                             style={{ accentColor: "#c084fc", cursor: "pointer", flexShrink: 0, marginTop: 3 }} />
                         </div>
+                        {task.emoji && <span style={{ fontSize: 16, flexShrink: 0, lineHeight: 1, opacity: task.done ? 0.5 : 1 }}>{task.emoji}</span>}
                         <span style={{ flex: 1, fontSize: 16, fontWeight: 600, color: task.done ? "#5a8fa8" : "#c8d8e8", textDecoration: task.done ? "line-through" : "none", minWidth: 0, wordBreak: "break-word" }}>
                           {task.title}
                         </span>
@@ -1152,6 +1167,16 @@ export default function Dashboard() {
                   onChange={e => setTasks(p => p.map(t => t.id === task.id ? { ...t, title: e.target.value } : t))}
                   style={{ flex: 1, padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.25)", borderRadius: 6, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", fontSize: 20, fontWeight: 600, boxSizing: "border-box", outline: "none", textDecoration: task.done ? "line-through" : "none" }}
                 />
+              </div>
+
+              {/* Emoji picker */}
+              <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+                {TASK_EMOJIS.map(e => (
+                  <button key={e} onClick={() => setTasks(p => p.map(tk => tk.id === task.id ? { ...tk, emoji: tk.emoji === e ? undefined : e } : tk))}
+                    style={{ fontSize: 20, lineHeight: 1, padding: "4px 6px", background: task.emoji === e ? "rgba(192,132,252,0.2)" : "transparent", border: `1px solid ${task.emoji === e ? "rgba(192,132,252,0.5)" : "rgba(192,132,252,0.12)"}`, borderRadius: 5, cursor: "pointer", transition: "all 0.12s" }}>
+                    {e}
+                  </button>
+                ))}
               </div>
 
               {/* Description */}
