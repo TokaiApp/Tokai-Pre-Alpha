@@ -144,6 +144,56 @@ interface MedEntry { id: string; name: string; dose: string; time: string; sampl
 type Mood = "hyperfocus" | "flow" | "focused" | "restless" | "scattered" | "anxious" | "fatigued" | "zoned-out" | "crashed" | "low";
 interface JournalEntry { id: string; text: string; time: string; date: string; focusIndex: number; mood: Mood[]; }
 
+;(() => {
+  try {
+    if (localStorage.getItem("tokai_demo_seeded")) return;
+
+    const existingJournal = (() => { try { const s = localStorage.getItem("tokai_journal"); return s ? JSON.parse(s) : []; } catch { return []; } })();
+    const demoJournal = [
+      { id: "demo-j1", text: "Starting the week with a plan. Reviewed my thesis outline over coffee — feels manageable today.", time: "08:12", date: "2026-05-18", focusIndex: 52.3, mood: ["focused"] },
+      { id: "demo-j2", text: "Deep work block finished. Got through the methodology section. Brain is tired now but satisfied.", time: "12:45", date: "2026-05-18", focusIndex: 38.7, mood: ["fatigued"] },
+      { id: "demo-j3", text: "Short walk helped reset. Back at it — data analysis scripts are making more sense now.", time: "15:20", date: "2026-05-18", focusIndex: 61.2, mood: ["flow"] },
+      { id: "demo-j4", text: "Slow start to Sunday. Tried to work but kept getting distracted. Focus feels very scattered.", time: "10:05", date: "2026-05-16", focusIndex: 28.4, mood: ["scattered", "restless"] },
+      { id: "demo-j5", text: "Took a proper break and watched something. Feel a bit better. Going to try one light session before the day ends.", time: "14:30", date: "2026-05-16", focusIndex: 41.8, mood: ["low"] },
+    ];
+    const mergedJournal = [...existingJournal, ...demoJournal.filter((d: { id: string }) => !existingJournal.some((e: { id: string }) => e.id === d.id))];
+    localStorage.setItem("tokai_journal", JSON.stringify(mergedJournal));
+
+    const existingTasks = (() => { try { const s = localStorage.getItem("tokai_tasks"); return s ? JSON.parse(s) : []; } catch { return []; } })();
+    const demoTasks = [
+      { id: "demo-t1", title: "Write methodology section", description: "Draft the research methodology chapter for the thesis.", done: true, demand: "high", estimatedMinutes: 90, createdAt: "2026-05-18 08:45", emoji: "✍️" },
+      { id: "demo-t2", title: "Review data analysis scripts", description: "Check the Python scripts for data processing and output errors.", done: true, demand: "medium", estimatedMinutes: 60, createdAt: "2026-05-18 08:45", emoji: "💻" },
+      { id: "demo-t3", title: "Email supervisor — weekly update", description: null, done: true, demand: "low", estimatedMinutes: 20, createdAt: "2026-05-18 08:45", emoji: "📧" },
+      { id: "demo-t4", title: "Read 2 papers for lit review", description: null, done: false, demand: "high", estimatedMinutes: 120, createdAt: "2026-05-18 14:00", emoji: "📚" },
+      { id: "demo-t5", title: "Organize research notes", description: "Sort and label notes from the past two weeks of reading.", done: true, demand: "low", estimatedMinutes: 20, createdAt: "2026-05-16 10:30", emoji: "📚" },
+      { id: "demo-t6", title: "Rest and recharge", description: "Take the afternoon off. Watch something, go for a walk.", done: true, demand: "low", estimatedMinutes: null, createdAt: "2026-05-16 13:00", emoji: undefined },
+    ];
+    const mergedTasks = [...existingTasks, ...demoTasks.filter((d: { id: string }) => !existingTasks.some((e: { id: string }) => e.id === d.id))];
+    localStorage.setItem("tokai_tasks", JSON.stringify(mergedTasks));
+
+    if (!localStorage.getItem("tokai_chat_2026-05-18")) {
+      localStorage.setItem("tokai_chat_2026-05-18", JSON.stringify({ messages: [
+        { role: "assistant", content: "Your neural data is streaming. I can see your tasks and today's journal. What would you like to work on first?" },
+        { role: "user", content: "Good morning! What should I tackle first today?", timestamp: "08:15" },
+        { role: "assistant", content: "Your focus is moderate (52.3/100) — a solid window for structured planning. Start with the methodology section (high demand) while your brain is fresh. Save the paper reading for after lunch. The email to your supervisor can close out the day as a low-demand win.", timestamp: "08:15" },
+        { role: "user", content: "I finished the methodology section. Now what?", timestamp: "12:50" },
+        { role: "assistant", content: "Strong progress. Your focus has dipped to 38.7 — that's expected after a high-demand block. Move to the data analysis scripts (medium demand) and if you feel cognitive drag after 30 minutes, switch to the supervisor email to close out cleanly.", timestamp: "12:50" },
+      ]}));
+    }
+    if (!localStorage.getItem("tokai_chat_2026-05-16")) {
+      localStorage.setItem("tokai_chat_2026-05-16", JSON.stringify({ messages: [
+        { role: "assistant", content: "Your neural data is streaming. I can see your tasks and today's journal. What would you like to work on first?" },
+        { role: "user", content: "It's Sunday and I can't focus at all. What should I do?", timestamp: "10:10" },
+        { role: "assistant", content: "Your brain is signaling low focus (28.4/100) and elevated neural noise — this is your nervous system asking for rest. On a Sunday, that's completely appropriate. Try organizing your notes (low demand, 20 min) or simply rest. Recovery is productive.", timestamp: "10:10" },
+        { role: "user", content: "OK I'll try to just organize my notes then", timestamp: "10:12" },
+        { role: "assistant", content: "That's the right call. Set a 20-minute timer and don't push past it. Organizing notes is low cognitive load and can feel satisfying when your brain needs a gentler pace.", timestamp: "10:12" },
+      ]}));
+    }
+
+    localStorage.setItem("tokai_demo_seeded", "1");
+  } catch {}
+})();
+
 function demandColor(d: Demand) {
   if (d === "low") return "#4ade80";
   if (d === "medium") return "#ffa040";
@@ -319,6 +369,7 @@ export default function Dashboard() {
   const availableDates = useMemo(() => {
     const dates = new Set<string>([todayStr()]);
     journal.forEach(e => { if (e.date) dates.add(e.date); });
+    tasks.forEach(t => { if (t.createdAt) dates.add(t.createdAt.slice(0, 10)); });
     try {
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -326,7 +377,7 @@ export default function Dashboard() {
       }
     } catch {}
     return [...dates].sort().reverse();
-  }, [journal]);
+  }, [journal, tasks]);
 
   useEffect(() => {
     try { localStorage.setItem("tokai_med_log", JSON.stringify(medLog)); } catch {}
@@ -584,7 +635,10 @@ export default function Dashboard() {
     setGeneratingId(null);
   }
 
-  const completedCount = tasks.filter(t => t.done).length;
+  const visibleTasks = selectedDate === todayStr()
+    ? tasks
+    : tasks.filter(task => task.createdAt?.startsWith(selectedDate));
+  const visibleCompleted = visibleTasks.filter(t => t.done).length;
   const sessionElapsed = Math.floor((now.getTime() - sessionStart.current.getTime()) / 1000);
   const sessionDuration = `${Math.floor(sessionElapsed / 3600)}:${String(Math.floor((sessionElapsed % 3600) / 60)).padStart(2, "0")}:${String(sessionElapsed % 60).padStart(2, "0")}`;
   const fiveMinSamples = Math.round(5 * 60 / refreshRate);
@@ -890,13 +944,17 @@ export default function Dashboard() {
           </div>
 
           {/* Day selector */}
-          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 2 }}>
-            {availableDates.map(date => (
-              <button key={date} onClick={() => setSelectedDate(date)}
-                style={{ padding: "5px 14px", background: selectedDate === date ? "rgba(192,132,252,0.2)" : "rgba(192,132,252,0.04)", border: `1px solid ${selectedDate === date ? "rgba(192,132,252,0.7)" : "rgba(192,132,252,0.2)"}`, borderRadius: 20, color: selectedDate === date ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, cursor: "pointer", letterSpacing: 1, whiteSpace: "nowrap", transition: "all 0.15s", flexShrink: 0 }}>
-                {formatDayLabel(date, lang)}
-              </button>
-            ))}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", letterSpacing: 2, flexShrink: 0 }}>{lang === "en" ? "VIEWING" : "檢視"}</span>
+            <select
+              value={selectedDate}
+              onChange={e => setSelectedDate(e.target.value)}
+              style={{ padding: "5px 14px", background: "#120d28", border: "1px solid rgba(192,132,252,0.4)", borderRadius: 6, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, letterSpacing: 1, cursor: "pointer", outline: "none", colorScheme: "dark" }}
+            >
+              {availableDates.map(date => (
+                <option key={date} value={date}>{formatDayLabel(date, lang)}</option>
+              ))}
+            </select>
           </div>
 
           {/* TokNote · TokAgent · TokTodo */}
@@ -1030,7 +1088,8 @@ export default function Dashboard() {
                       : <><span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>TODO · {t.tokTodo}</span></>}
                   </span>
                 </div>
-                {/* Task title input */}
+                {/* Task creation form (today only) */}
+                {selectedDate === todayStr() ? (<>
                 <input
                   value={newTask}
                   onChange={e => setNewTask(e.target.value)}
@@ -1038,14 +1097,12 @@ export default function Dashboard() {
                   placeholder={t.taskPlaceholder}
                   style={{ width: "100%", padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: "4px 4px 0 0", color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", fontSize: 16, boxSizing: "border-box", outline: "none" }}
                 />
-                {/* Task description input */}
                 <input
                   value={newTaskDesc}
                   onChange={e => setNewTaskDesc(e.target.value)}
                   placeholder={t.descPlaceholder}
                   style={{ width: "100%", padding: "5px 10px", background: "rgba(0,0,0,0.2)", border: "1px solid rgba(192,132,252,0.2)", borderTop: "none", borderRadius: "0 0 4px 4px", color: "#7a9ab8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, marginBottom: 8, boxSizing: "border-box", outline: "none", fontStyle: "italic" }}
                 />
-                {/* Emoji quick-pick */}
                 <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 8, flexWrap: "wrap" }}>
                   {TASK_EMOJIS.map(e => (
                     <button key={e} onClick={() => setNewTaskEmoji(newTaskEmoji === e ? "" : e)}
@@ -1054,7 +1111,6 @@ export default function Dashboard() {
                     </button>
                   ))}
                 </div>
-                {/* Demand + time selectors */}
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
                   <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 1, flexShrink: 0 }}>{t.demandLabel}:</span>
                   {(["low", "medium", "high"] as Demand[]).map(d => (
@@ -1074,9 +1130,14 @@ export default function Dashboard() {
                     <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8" }}>{t.minUnit}</span>
                   </div>
                 </div>
+                </>) : (
+                <div style={{ padding: "8px 12px", marginBottom: 10, border: "1px solid rgba(192,132,252,0.12)", borderRadius: 4, fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.5)", letterSpacing: 1 }}>
+                  {lang === "en" ? "PAST DAY · READ ONLY" : "歷史日期 · 唯讀"}
+                </div>
+                )}
                 {/* Task list */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, overflowY: "auto", overflowX: "hidden" }}>
-                  {tasks.map(task => (
+                  {visibleTasks.map(task => (
                     <div key={task.id}
                       onClick={() => setSelectedTaskId(task.id)}
                       style={{ display: "flex", flexDirection: "column", padding: "8px 10px", background: "rgba(0,0,0,0.2)", borderRadius: 4, border: "1px solid rgba(192,132,252,0.1)", gap: 5, minWidth: 0, cursor: "pointer", transition: "border-color 0.15s, background 0.15s" }}
@@ -1120,7 +1181,7 @@ export default function Dashboard() {
                   ))}
                 </div>
                 <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 1 }}>
-                  {t.progress} {completedCount}/{tasks.length} {completedCount > 0 && completedCount === tasks.length ? t.complete : ""}
+                  {t.progress} {visibleCompleted}/{visibleTasks.length} {visibleCompleted > 0 && visibleCompleted === visibleTasks.length ? t.complete : ""}
                 </div>
               </div>
           </div>
