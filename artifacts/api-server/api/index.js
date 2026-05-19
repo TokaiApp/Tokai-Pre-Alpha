@@ -62,13 +62,26 @@ ${lang === "zh" ? "- Respond in Traditional Chinese (繁體中文)" : "- Respond
       messages,
     });
 
+    if (response.stop_reason === "content_filtered" || !response.content.length) {
+      res.json({ content: "TokAgent's response was blocked by Anthropic's content policy. Try rephrasing your message." });
+      return;
+    }
+
     const block = response.content[0];
-    if (block.type !== "text") throw new Error("Unexpected content type");
+    if (block.type !== "text") {
+      res.json({ content: "Received an unexpected response from the AI. Please try again." });
+      return;
+    }
 
     res.json({ content: block.text });
   } catch (err) {
     console.error("Chat route error:", err);
-    res.status(500).json({ content: "Neural link failure. Please retry." });
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.toLowerCase().includes("content") && msg.toLowerCase().includes("filter")) {
+      res.json({ content: "TokAgent's response was blocked by Anthropic's content policy. Try rephrasing your message." });
+    } else {
+      res.status(500).json({ content: "Neural link failure. Please retry." });
+    }
   }
 });
 
