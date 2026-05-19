@@ -8,7 +8,8 @@ interface NeuralState {
 }
 
 interface Task {
-  text: string;
+  title: string;
+  description?: string | null;
   done: boolean;
   demand?: string | null;
   estimatedMinutes?: number | null;

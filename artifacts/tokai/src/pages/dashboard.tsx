@@ -6,6 +6,8 @@ import {
 } from "recharts";
 import AgentChat from "@/components/agent-chat";
 
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+
 type Lang = "en" | "zh";
 
 const T = {
@@ -35,7 +37,10 @@ const T = {
     focusStream: "REAL-TIME FOCUS STREAM",
     neuralInsights: "TOKAI · NEURAL INSIGHTS",
     tokTodo: "TOKTODO",
-    taskPlaceholder: "Add a task and press Enter...",
+    taskPlaceholder: "Task title — press Enter to add...",
+    descPlaceholder: "Description (optional)...",
+    generateDesc: "✦ GENERATE DESCRIPTION",
+    generating: "GENERATING...",
     demandLabel: "DEMAND",
     demandLow: "LOW", demandMed: "MED", demandHigh: "HIGH",
     estTime: "Est. time", minUnit: "m",
@@ -77,7 +82,10 @@ const T = {
     focusStream: "即時專注串流",
     neuralInsights: "TOKAI · 神經洞察",
     tokTodo: "任務清單",
-    taskPlaceholder: "輸入任務，按 Enter 新增...",
+    taskPlaceholder: "任務標題 — 按 Enter 新增...",
+    descPlaceholder: "描述（選填）...",
+    generateDesc: "✦ 生成描述",
+    generating: "生成中...",
     demandLabel: "認知負荷",
     demandLow: "低", demandMed: "中", demandHigh: "高",
     estTime: "預估時間", minUnit: "分",
@@ -106,7 +114,7 @@ interface NeuralState {
 
 interface FocusPoint { time: string; value: number; }
 type Demand = "low" | "medium" | "high";
-interface Task { id: string; text: string; done: boolean; demand: Demand | null; estimatedMinutes: number | null; }
+interface Task { id: string; title: string; description: string | null; done: boolean; demand: Demand | null; estimatedMinutes: number | null; }
 
 function demandColor(d: Demand) {
   if (d === "low") return "#4ade80";
@@ -214,13 +222,15 @@ export default function Dashboard() {
   ]);
 
   const [tasks, setTasks] = useState<Task[]>([
-    { id: "1", text: "Review morning notes", done: false, demand: "low", estimatedMinutes: 15 },
-    { id: "2", text: "Deep work block: project spec", done: false, demand: "high", estimatedMinutes: 90 },
-    { id: "3", text: "Reply to priority emails", done: false, demand: "medium", estimatedMinutes: 30 },
+    { id: "1", title: "Review morning notes", description: "Scan yesterday's capture for open action items before the day's first focus block.", done: false, demand: "low", estimatedMinutes: 15 },
+    { id: "2", title: "Deep work block: project spec", description: null, done: false, demand: "high", estimatedMinutes: 90 },
+    { id: "3", title: "Reply to priority emails", description: null, done: false, demand: "medium", estimatedMinutes: 30 },
   ]);
   const [newTask, setNewTask] = useState("");
+  const [newTaskDesc, setNewTaskDesc] = useState("");
   const [newTaskDemand, setNewTaskDemand] = useState<Demand | null>(null);
   const [newTaskTime, setNewTaskTime] = useState("");
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -283,15 +293,35 @@ export default function Dashboard() {
     if (e.key === "Enter" && newTask.trim()) {
       setTasks(prev => [...prev, {
         id: Date.now().toString(),
-        text: newTask.trim(),
+        title: newTask.trim(),
+        description: newTaskDesc.trim() || null,
         done: false,
         demand: newTaskDemand,
         estimatedMinutes: newTaskTime ? parseInt(newTaskTime) : null,
       }]);
       setNewTask("");
+      setNewTaskDesc("");
       setNewTaskDemand(null);
       setNewTaskTime("");
     }
+  }
+
+  async function generateDescription(task: Task) {
+    const apiKey = localStorage.getItem("tokai_anthropic_key") ?? "";
+    if (!apiKey || generatingId) return;
+    setGeneratingId(task.id);
+    try {
+      const res = await fetch(`${API_BASE}/api/generate-description`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: task.title, neuralState: neural, lang, userApiKey: apiKey }),
+      });
+      const data = await res.json();
+      if (data.description) {
+        setTasks(p => p.map(t => t.id === task.id ? { ...t, description: data.description } : t));
+      }
+    } catch { /* silent */ }
+    setGeneratingId(null);
   }
 
   const completedCount = tasks.filter(t => t.done).length;
@@ -497,7 +527,7 @@ export default function Dashboard() {
             <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc", letterSpacing: 3, marginBottom: 14 }}>{t.planningInterface}</div>
             {/* Agent + Todo — stacked on mobile */}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
-              <AgentChat neuralState={neural} tasks={tasks.map(t => ({ text: t.text, done: t.done, demand: t.demand, estimatedMinutes: t.estimatedMinutes }))} lang={lang} isMobile={isMobile} />
+              <AgentChat neuralState={neural} tasks={tasks.map(t => ({ title: t.title, description: t.description, done: t.done, demand: t.demand, estimatedMinutes: t.estimatedMinutes }))} lang={lang} isMobile={isMobile} />
 
               <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
@@ -506,13 +536,20 @@ export default function Dashboard() {
                     {lang === "en" ? <><span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>TODO</span></> : <span style={{ color: "#c084fc" }}>{t.tokTodo}</span>}
                   </span>
                 </div>
-                {/* Task text input */}
+                {/* Task title input */}
                 <input
                   value={newTask}
                   onChange={e => setNewTask(e.target.value)}
                   onKeyDown={addTask}
                   placeholder={t.taskPlaceholder}
-                  style={{ width: "100%", padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 4, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", fontSize: 16, marginBottom: 8, boxSizing: "border-box", outline: "none" }}
+                  style={{ width: "100%", padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: "4px 4px 0 0", color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", fontSize: 16, boxSizing: "border-box", outline: "none" }}
+                />
+                {/* Task description input */}
+                <input
+                  value={newTaskDesc}
+                  onChange={e => setNewTaskDesc(e.target.value)}
+                  placeholder={t.descPlaceholder}
+                  style={{ width: "100%", padding: "5px 10px", background: "rgba(0,0,0,0.2)", border: "1px solid rgba(192,132,252,0.2)", borderTop: "none", borderRadius: "0 0 4px 4px", color: "#7a9ab8", fontFamily: "'Rajdhani', sans-serif", fontSize: 13, marginBottom: 8, boxSizing: "border-box", outline: "none", fontStyle: "italic" }}
                 />
                 {/* Demand + time selectors */}
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
@@ -535,27 +572,44 @@ export default function Dashboard() {
                   </div>
                 </div>
                 {/* Task list */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 240, overflowY: "auto" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 320, overflowY: "auto" }}>
                   {tasks.map(task => (
-                    <div key={task.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 8px", background: "rgba(0,0,0,0.2)", borderRadius: 4, border: "1px solid rgba(192,132,252,0.1)" }}>
-                      <input type="checkbox" checked={task.done}
-                        onChange={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
-                        style={{ accentColor: "#c084fc", cursor: "pointer", flexShrink: 0 }} />
-                      <span style={{ flex: 1, fontSize: 16, color: task.done ? "#5a8fa8" : "#c8d8e8", textDecoration: task.done ? "line-through" : "none", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {task.text}
-                      </span>
-                      {task.demand && (
-                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, padding: "1px 5px", border: `1px solid ${demandColor(task.demand)}`, color: demandColor(task.demand), borderRadius: 3, flexShrink: 0, letterSpacing: 1 }}>
-                          {task.demand === "low" ? t.demandLow : task.demand === "medium" ? t.demandMed : t.demandHigh}
+                    <div key={task.id} style={{ display: "flex", flexDirection: "column", padding: "8px 10px", background: "rgba(0,0,0,0.2)", borderRadius: 4, border: "1px solid rgba(192,132,252,0.1)", gap: 5 }}>
+                      {/* Top row: checkbox + title + badges + delete */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <input type="checkbox" checked={task.done}
+                          onChange={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
+                          style={{ accentColor: "#c084fc", cursor: "pointer", flexShrink: 0 }} />
+                        <span style={{ flex: 1, fontSize: 16, fontWeight: 600, color: task.done ? "#5a8fa8" : "#c8d8e8", textDecoration: task.done ? "line-through" : "none", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {task.title}
                         </span>
+                        {task.demand && (
+                          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, padding: "1px 5px", border: `1px solid ${demandColor(task.demand)}`, color: demandColor(task.demand), borderRadius: 3, flexShrink: 0, letterSpacing: 1 }}>
+                            {task.demand === "low" ? t.demandLow : task.demand === "medium" ? t.demandMed : t.demandHigh}
+                          </span>
+                        )}
+                        {task.estimatedMinutes && (
+                          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", flexShrink: 0 }}>
+                            {task.estimatedMinutes}{t.minUnit}
+                          </span>
+                        )}
+                        <button onClick={() => setTasks(p => p.filter(t => t.id !== task.id))}
+                          style={{ background: "none", border: "none", color: "#5a8fa8", cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
+                      </div>
+                      {/* Description or generate button */}
+                      {task.description ? (
+                        <p style={{ margin: 0, marginLeft: 22, fontSize: 13, color: "#5a8fa8", lineHeight: 1.5, fontStyle: "italic", fontFamily: "'Rajdhani', sans-serif" }}>
+                          {task.description}
+                        </p>
+                      ) : !task.done && (
+                        <button
+                          onClick={() => generateDescription(task)}
+                          disabled={generatingId === task.id}
+                          style={{ alignSelf: "flex-start", marginLeft: 22, background: "none", border: "none", color: generatingId === task.id ? "#5a8fa8" : "rgba(192,132,252,0.5)", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: generatingId === task.id ? "default" : "pointer", letterSpacing: 1, padding: 0 }}
+                        >
+                          {generatingId === task.id ? t.generating : t.generateDesc}
+                        </button>
                       )}
-                      {task.estimatedMinutes && (
-                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", flexShrink: 0 }}>
-                          {task.estimatedMinutes}{t.minUnit}
-                        </span>
-                      )}
-                      <button onClick={() => setTasks(p => p.filter(t => t.id !== task.id))}
-                        style={{ background: "none", border: "none", color: "#5a8fa8", cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
                     </div>
                   ))}
                 </div>

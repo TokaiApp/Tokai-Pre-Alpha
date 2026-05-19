@@ -37,7 +37,8 @@ Current neural and biological state:
 Current TokTodo task list:
 ${Array.isArray(tasks) && tasks.length > 0
   ? tasks.map(t => {
-      let s = `- [${t.done ? "DONE" : "TODO"}] ${t.text}`;
+      let s = `- [${t.done ? "DONE" : "TODO"}] ${t.title}`;
+      if (t.description) s += `\n  Description: ${t.description}`;
       if (t.demand) s += ` [Cognitive demand: ${t.demand}]`;
       if (t.estimatedMinutes) s += ` [Estimated time: ${t.estimatedMinutes} min]`;
       return s;
@@ -87,6 +88,33 @@ ${lang === "zh" ? "- Respond in Traditional Chinese (繁體中文)" : "- Respond
     } else {
       res.status(500).json({ content: "Neural link failure. Please retry." });
     }
+  }
+});
+
+app.post("/api/generate-description", async (req, res) => {
+  try {
+    const { title, neuralState, lang, userApiKey } = req.body;
+    const apiKey = userApiKey || process.env.ANTHROPIC_API_KEY;
+    if (!apiKey || !title) { res.json({ description: null }); return; }
+
+    const client = new Anthropic({ apiKey });
+    const { focusIndex, bioEnergy } = neuralState ?? {};
+
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-5",
+      max_tokens: 80,
+      system: `You are TokAgent, an AI task assistant for people with ADHD. Write exactly one concise sentence (max 20 words) describing the concrete, observable outcome of completing a task. Be specific and actionable. No emojis. No quotation marks. ${lang === "zh" ? "Respond in Traditional Chinese (繁體中文)." : "Respond in English."}`,
+      messages: [{
+        role: "user",
+        content: `Task: "${title}"\nFocus: ${focusIndex?.toFixed(1) ?? "?"}/100, Energy: ${Math.round(bioEnergy ?? 0)}%\n\nWrite one sentence describing the concrete outcome of completing this task.`,
+      }],
+    });
+
+    const block = response.content[0];
+    res.json({ description: block?.type === "text" ? block.text.trim() : null });
+  } catch (err) {
+    console.error("Generate description error:", err);
+    res.status(500).json({ description: null });
   }
 });
 
