@@ -910,14 +910,17 @@ export default function Dashboard() {
                   onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
                   onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
                 />
-                <div style={{ display: "flex", flexDirection: "column", gap: 3, flexShrink: 0 }}>
-                  {(["focused", "scattered", "hyperfocus", "low"] as Mood[]).map(m => (
-                    <button key={m} onClick={() => setSelectedMood(selectedMood === m ? null : m)}
-                      style={{ padding: "2px 8px", background: selectedMood === m ? "rgba(192,132,252,0.2)" : "rgba(192,132,252,0.05)", border: `1px solid ${selectedMood === m ? "rgba(192,132,252,0.6)" : "rgba(192,132,252,0.2)"}`, borderRadius: 3, color: selectedMood === m ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: "pointer", letterSpacing: 0.5, transition: "all 0.15s", textAlign: "left", whiteSpace: "nowrap" }}>
-                      {m === "focused" ? t.moodFocused : m === "scattered" ? t.moodScattered : m === "hyperfocus" ? t.moodHyperfocus : t.moodLow}
-                    </button>
-                  ))}
-                </div>
+                <select
+                  value={selectedMood ?? ""}
+                  onChange={e => setSelectedMood((e.target.value as Mood) || null)}
+                  style={{ padding: "8px 10px", background: "rgba(0,0,0,0.35)", border: `1px solid ${selectedMood ? "rgba(192,132,252,0.6)" : "rgba(192,132,252,0.2)"}`, borderRadius: 6, color: selectedMood ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, cursor: "pointer", outline: "none", flexShrink: 0, transition: "border-color 0.15s" }}
+                >
+                  <option value="">{lang === "en" ? "MOOD" : "狀態"}</option>
+                  <option value="hyperfocus">{t.moodHyperfocus}</option>
+                  <option value="focused">{t.moodFocused}</option>
+                  <option value="scattered">{t.moodScattered}</option>
+                  <option value="low">{t.moodLow}</option>
+                </select>
                 <button
                   onClick={addJournalEntry}
                   disabled={!journalInput.trim()}
