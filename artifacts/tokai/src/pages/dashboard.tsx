@@ -779,7 +779,7 @@ export default function Dashboard() {
             </MetricCard>
 
             <MetricCard title={t.focusWindow} icon={<Clock size={12} color="#5a8fa8" />}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#e8f4ff", marginBottom: 8, lineHeight: 1.4 }}>
+              <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8, lineHeight: 1.2 }}>
                 {focusHistory.length < 6 ? t.collectingData : `~${Math.max(3, Math.round((80 - neural.focusIndex) / 2))} min`}
               </div>
               <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", letterSpacing: 1 }}>
