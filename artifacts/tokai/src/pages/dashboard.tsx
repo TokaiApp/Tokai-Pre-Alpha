@@ -225,9 +225,10 @@ export default function Dashboard() {
     };
     setNeural(next);
     neuralRef.current = next;
-    setFocusHistory(h => [...h, { time: formatTime(new Date()), value: next.focusIndex }].slice(-40));
+    const maxSamples = Math.round(5 * 60 / refreshRate);
+    setFocusHistory(h => [...h, { time: formatTime(new Date()), value: next.focusIndex }].slice(-maxSamples));
     setSamples(s => s + 1);
-  }, []);
+  }, [refreshRate]);
 
   useEffect(() => {
     if (!liveStream) return;
