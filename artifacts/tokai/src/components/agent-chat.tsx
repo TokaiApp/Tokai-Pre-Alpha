@@ -137,7 +137,7 @@ export default function AgentChat({ neuralState, tasks, lang = "en", isMobile = 
   }
 
   const S = {
-    wrap: { background: "linear-gradient(135deg, #100a25, #120d28)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(192,132,252,0.07)", display: "flex", flexDirection: "column" } as React.CSSProperties,
+    wrap: { background: "linear-gradient(135deg, #100a25, #120d28)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 24px rgba(192,132,252,0.07)", display: "flex", flexDirection: "column", height: 480 } as React.CSSProperties,
     header: { padding: "12px 20px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(192,132,252,0.03)" } as React.CSSProperties,
   };
 
@@ -166,7 +166,7 @@ export default function AgentChat({ neuralState, tasks, lang = "en", isMobile = 
 
       {!apiKey ? (
         /* ── Key entry prompt ── */
-        <div style={{ padding: "28px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ flex: 1, padding: "28px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#c084fc", letterSpacing: 2 }}>{t.keyPromptTitle}</div>
           <p style={{ fontSize: 15, color: "#5a8fa8", lineHeight: 1.6, margin: 0 }}>{t.keyPromptDesc}</p>
           <div style={{ display: "flex", gap: 8 }}>
@@ -189,9 +189,9 @@ export default function AgentChat({ neuralState, tasks, lang = "en", isMobile = 
           <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "rgba(192,132,252,0.5)", fontFamily: "'Share Tech Mono', monospace", letterSpacing: 1 }}>{t.keyGet} →</a>
         </div>
       ) : (
-        <>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {/* ── Messages ── */}
-          <div style={{ minHeight: 120, maxHeight: 360, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                 <div style={{ maxWidth: "72%", padding: "10px 14px", borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: msg.role === "user" ? "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(124,58,237,0.12))" : "rgba(192,132,252,0.06)", border: `1px solid ${msg.role === "user" ? "rgba(124,58,237,0.35)" : "rgba(192,132,252,0.18)"}`, fontSize: 16, color: "#d0e8f8", lineHeight: 1.6, fontFamily: "'Rajdhani', sans-serif" }}>
@@ -226,7 +226,7 @@ export default function AgentChat({ neuralState, tasks, lang = "en", isMobile = 
               {t.send}
             </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
