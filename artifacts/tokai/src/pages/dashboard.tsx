@@ -218,6 +218,8 @@ export default function Dashboard() {
   const neuralRef = useRef(neural);
   useEffect(() => { neuralRef.current = neural; }, [neural]);
   const chartScrollRef = useRef<HTMLDivElement>(null);
+  const chartWrapRef = useRef<HTMLDivElement>(null);
+  const [chartWrapWidth, setChartWrapWidth] = useState(600);
 
   // Internal focus target: drifts slowly, actual focus index pulls toward it
   const focusTargetRef = useRef(55);
@@ -247,6 +249,15 @@ export default function Dashboard() {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setSelectedTaskId(null); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Measure the chart wrapper's pixel width so the scroll container can be set to an explicit px value
+  useEffect(() => {
+    const el = chartWrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setChartWrapWidth(el.clientWidth));
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   // Auto-scroll chart to right edge when new data arrives, unless user has scrolled left to review history
@@ -534,9 +545,9 @@ export default function Dashboard() {
                 )}
               </span>
             }>
-              <div style={{ position: "relative", height: 150 }}>
-                <div ref={chartScrollRef} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, overflowX: "auto", overflowY: "hidden" }}>
-                  <LineChart width={chartWidth} height={150} data={focusHistory} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+              <div ref={chartWrapRef} style={{ width: "100%" }}>
+                <div ref={chartScrollRef} style={{ width: chartWrapWidth, height: 150, overflowX: "auto", overflowY: "hidden" }}>
+                  <LineChart width={Math.max(chartWidth, chartWrapWidth)} height={150} data={focusHistory} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
                     <XAxis dataKey="time" tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval={xInterval} />
                     <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} width={32} />
                     <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
@@ -545,9 +556,6 @@ export default function Dashboard() {
                     )}
                     <Line type="monotone" dataKey="value" stroke="#c084fc" strokeWidth={2} dot={false} isAnimationActive={false} />
                   </LineChart>
-                </div>
-                <div style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc", pointerEvents: "none" }}>
-                  {neural.focusIndex.toFixed(1)}
                 </div>
               </div>
             </Panel>
