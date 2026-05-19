@@ -292,6 +292,8 @@ export default function Dashboard() {
   });
   const [journalInput, setJournalInput] = useState("");
   const [selectedMoods, setSelectedMoods] = useState<Mood[]>([]);
+  const [moodDropdownOpen, setMoodDropdownOpen] = useState(false);
+  const moodDropdownRef = useRef<HTMLDivElement>(null);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editNoteText, setEditNoteText] = useState("");
   const journalBottomRef = useRef<HTMLDivElement>(null);
@@ -363,12 +365,23 @@ export default function Dashboard() {
     setMedLog(prev => prev.map(m => m.id === id ? { ...m, rating: m.rating === rating ? null : rating } : m));
   }
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (moodDropdownRef.current && !moodDropdownRef.current.contains(e.target as Node)) {
+        setMoodDropdownOpen(false);
+      }
+    }
+    if (moodDropdownOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [moodDropdownOpen]);
+
   function addJournalEntry() {
     const text = journalInput.trim();
     if (!text) return;
     setJournal(prev => [...prev, { id: Date.now().toString(), text, time: formatTime(new Date()), focusIndex: neural.focusIndex, mood: selectedMoods }]);
     setJournalInput("");
     setSelectedMoods([]);
+    setMoodDropdownOpen(false);
   }
 
   function startEditNote(entry: JournalEntry) {
@@ -914,17 +927,33 @@ export default function Dashboard() {
                   onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
                   onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
                 />
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 3, maxWidth: 164, flexShrink: 0, alignContent: "center" }}>
-                  {(["hyperfocus", "flow", "focused", "restless", "scattered", "anxious", "fatigued", "zoned-out", "crashed", "low"] as Mood[]).map(m => {
-                    const label: Record<string, string> = { hyperfocus: t.moodHyperfocus, flow: t.moodFlow, focused: t.moodFocused, restless: t.moodRestless, scattered: t.moodScattered, anxious: t.moodAnxious, fatigued: t.moodFatigued, "zoned-out": t.moodZonedOut, crashed: t.moodCrashed, low: t.moodLow };
-                    const active = selectedMoods.includes(m);
-                    return (
-                      <button key={m} onClick={() => setSelectedMoods(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])}
-                        style={{ padding: "2px 6px", background: active ? "rgba(192,132,252,0.2)" : "rgba(192,132,252,0.04)", border: `1px solid ${active ? "rgba(192,132,252,0.65)" : "rgba(192,132,252,0.18)"}`, borderRadius: 3, color: active ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: "pointer", letterSpacing: 0.5, transition: "all 0.12s", whiteSpace: "nowrap" }}>
-                        {label[m]}
-                      </button>
-                    );
-                  })}
+                <div ref={moodDropdownRef} style={{ position: "relative", flexShrink: 0 }}>
+                  <button
+                    onClick={() => setMoodDropdownOpen(o => !o)}
+                    style={{ padding: "8px 12px", background: moodDropdownOpen ? "rgba(192,132,252,0.15)" : "rgba(192,132,252,0.06)", border: `1px solid ${moodDropdownOpen ? "rgba(192,132,252,0.5)" : "rgba(192,132,252,0.25)"}`, borderRadius: 6, color: selectedMoods.length ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, cursor: "pointer", letterSpacing: 1, whiteSpace: "nowrap", transition: "all 0.15s" }}
+                  >
+                    {selectedMoods.length === 0 ? (lang === "zh" ? "專注 (自評) ▾" : "FOCUS (SELF-REPORT) ▾") : `${selectedMoods.length} SELECTED ▾`}
+                  </button>
+                  {moodDropdownOpen && (
+                    <div style={{ position: "absolute", bottom: "calc(100% + 6px)", left: 0, background: "#120d28", border: "1px solid rgba(192,132,252,0.35)", borderRadius: 8, padding: "6px 0", zIndex: 50, minWidth: 200, boxShadow: "0 4px 24px rgba(0,0,0,0.5)" }}>
+                      {(["hyperfocus", "flow", "focused", "restless", "scattered", "anxious", "fatigued", "zoned-out", "crashed", "low"] as Mood[]).map(m => {
+                        const label: Record<string, string> = { hyperfocus: t.moodHyperfocus, flow: t.moodFlow, focused: t.moodFocused, restless: t.moodRestless, scattered: t.moodScattered, anxious: t.moodAnxious, fatigued: t.moodFatigued, "zoned-out": t.moodZonedOut, crashed: t.moodCrashed, low: t.moodLow };
+                        const active = selectedMoods.includes(m);
+                        return (
+                          <div key={m} onClick={() => setSelectedMoods(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])}
+                            style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 16px", cursor: "pointer", background: active ? "rgba(192,132,252,0.1)" : "transparent", transition: "background 0.1s" }}
+                            onMouseEnter={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = "rgba(192,132,252,0.05)"; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = active ? "rgba(192,132,252,0.1)" : "transparent"; }}
+                          >
+                            <div style={{ width: 14, height: 14, border: `1px solid ${active ? "#c084fc" : "rgba(192,132,252,0.35)"}`, borderRadius: 3, background: active ? "rgba(192,132,252,0.25)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                              {active && <div style={{ width: 8, height: 8, background: "#c084fc", borderRadius: 1 }} />}
+                            </div>
+                            <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: active ? "#c084fc" : "#d0e8f8", letterSpacing: 0.5 }}>{label[m]}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={addJournalEntry}
