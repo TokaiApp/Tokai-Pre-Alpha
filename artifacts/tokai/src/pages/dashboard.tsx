@@ -10,7 +10,7 @@ type Lang = "en" | "zh";
 
 const T = {
   en: {
-    version: "Tokai Pre-Alpha v0.1",
+    version: "Tokai Pre-Alpha",
     systemControl: "SYSTEM CONTROL",
     liveStream: "Live Stream",
     refreshRate: "Refresh Rate (s)",
@@ -38,7 +38,7 @@ const T = {
     taskPlaceholder: "Add a task and press Enter...",
     progress: "PROGRESS",
     complete: "✓ COMPLETE",
-    planningInterface: "── PLANNING INTERFACE ──────────────────────────────",
+    planningInterface: "── PLANNING INTERFACE",
     focusLow: "LOW", focusMod: "MODERATE", focusHigh: "HIGH", focusOpt: "OPTIMAL",
     noiseClean: "CLEAN", noiseNom: "NOMINAL", noiseElev: "ELEVATED", noiseHigh: "HIGH",
     insightOptimal: (f: string, e: string) =>
@@ -49,7 +49,7 @@ const T = {
       `Focus index is low (${f}/100). Neural noise is elevated. Recommend switching to low-cognitive tasks — organizing, reviewing notes, or short breaks. Energy at ${e}%. Allow your neural state to recover before tackling demanding work.`,
   },
   zh: {
-    version: "Tokai 預覽版 v0.1",
+    version: "Tokai 預覽版",
     systemControl: "系統控制",
     liveStream: "即時串流",
     refreshRate: "更新頻率（秒）",
@@ -77,7 +77,7 @@ const T = {
     taskPlaceholder: "輸入任務，按 Enter 新增...",
     progress: "進度",
     complete: "✓ 全部完成",
-    planningInterface: "── 規劃介面 ──────────────────────────────────────",
+    planningInterface: "── 規劃介面",
     focusLow: "低", focusMod: "中等", focusHigh: "高", focusOpt: "最佳",
     noiseClean: "清晰", noiseNom: "正常", noiseElev: "偏高", noiseHigh: "高",
     insightOptimal: (f: string, e: string) =>
@@ -159,9 +159,29 @@ function Badge({ children, color }: { children: React.ReactNode; color: string }
   );
 }
 
+function LangToggle({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
+  return (
+    <button
+      onClick={() => setLang(lang === "en" ? "zh" : "en")}
+      style={{ display: "flex", alignItems: "center", gap: 0, background: "rgba(192,132,252,0.06)", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 6, overflow: "hidden", cursor: "pointer", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 1 }}
+    >
+      <span style={{ width: 48, textAlign: "center", padding: "6px 0", display: "inline-block", color: lang === "en" ? "#c084fc" : "#5a8fa8", fontWeight: lang === "en" ? 700 : 400, background: lang === "en" ? "rgba(192,132,252,0.15)" : "transparent", transition: "all 0.2s" }}>EN</span>
+      <span style={{ color: "rgba(192,132,252,0.3)", padding: "6px 0" }}>|</span>
+      <span style={{ width: 48, textAlign: "center", padding: "6px 0", display: "inline-block", color: lang === "zh" ? "#c084fc" : "#5a8fa8", fontWeight: lang === "zh" ? 700 : 400, background: lang === "zh" ? "rgba(192,132,252,0.15)" : "transparent", transition: "all 0.2s" }}>中文</span>
+    </button>
+  );
+}
+
 export default function Dashboard() {
   const [lang, setLang] = useState<Lang>("en");
   const t = T[lang];
+
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const [liveStream, setLiveStream] = useState(true);
   const [refreshRate, setRefreshRate] = useState(3);
@@ -237,7 +257,7 @@ export default function Dashboard() {
     const e = neural.bioEnergy;
     if (f > 70 && e > 70) return t.insightOptimal(f.toFixed(1), String(Math.round(e)));
     if (f > 50) {
-      const eLevel = lang === "en" ? (e > 60 ? "high" : "moderate") : (e > 60 ? "高" : "中等"); // trad/simp same here
+      const eLevel = lang === "en" ? (e > 60 ? "high" : "moderate") : (e > 60 ? "高" : "中等");
       return t.insightMod(f.toFixed(1), noiseInfo.label.toLowerCase(), String(Math.round(e)), eLevel);
     }
     return t.insightLow(f.toFixed(1), String(Math.round(e)));
@@ -259,8 +279,9 @@ export default function Dashboard() {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "linear-gradient(135deg, #0c0818 0%, #100a25 50%, #080614 100%)", fontFamily: "'Rajdhani', sans-serif", color: "#c8d8e8" }}>
-      {/* ── Sidebar ── */}
-      <aside style={{ width: 200, minWidth: 200, padding: "24px 16px", borderRight: "1px solid rgba(192,132,252,0.15)", display: "flex", flexDirection: "column", gap: 24, position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
+
+      {/* ── Sidebar (desktop only) ── */}
+      <aside style={{ width: 200, minWidth: 200, padding: "24px 16px", borderRight: "1px solid rgba(192,132,252,0.15)", display: isMobile ? "none" : "flex", flexDirection: "column", gap: 24, position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
         <a href="https://tokai.app" target="_blank" rel="noopener noreferrer" style={{ display: "flex", flexDirection: "column", alignItems: "center", textDecoration: "none" }}>
           <img src="/tokai_logo.png" alt="Tokai" style={{ width: 110, display: "block", marginBottom: 6 }} />
           <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", letterSpacing: 2, textAlign: "center" }}>{t.version}</div>
@@ -322,146 +343,184 @@ export default function Dashboard() {
       </aside>
 
       {/* ── Main ── */}
-      <main style={{ flex: 1, padding: "24px 28px", display: "flex", flexDirection: "column", gap: 20, overflowX: "hidden" }}>
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-          <div>
-            <h1 style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 52, fontWeight: 700, letterSpacing: 14, textShadow: "0 0 30px rgba(192,132,252,0.4), 0 0 60px rgba(192,132,252,0.15)", margin: "0 0 4px 0" }}>
-              <span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>AI</span>
-            </h1>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 4 }}>{t.subtitle}</div>
-          </div>
-          {/* Language toggle */}
-          <button
-            onClick={() => setLang(l => l === "en" ? "zh" : "en")}
-            style={{ display: "flex", alignItems: "center", gap: 0, background: "rgba(192,132,252,0.06)", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 6, overflow: "hidden", cursor: "pointer", marginTop: 8, fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 1 }}
-          >
-            <span style={{ width: 48, textAlign: "center", padding: "6px 0", display: "inline-block", color: lang === "en" ? "#c084fc" : "#5a8fa8", fontWeight: lang === "en" ? 700 : 400, background: lang === "en" ? "rgba(192,132,252,0.15)" : "transparent", transition: "all 0.2s" }}>EN</span>
-            <span style={{ color: "rgba(192,132,252,0.3)", padding: "6px 0" }}>|</span>
-            <span style={{ width: 48, textAlign: "center", padding: "6px 0", display: "inline-block", color: lang === "zh" ? "#c084fc" : "#5a8fa8", fontWeight: lang === "zh" ? 700 : 400, background: lang === "zh" ? "rgba(192,132,252,0.15)" : "transparent", transition: "all 0.2s" }}>中文</span>
-          </button>
-        </div>
+      <main style={{ flex: 1, display: "flex", flexDirection: "column", overflowX: "hidden", minWidth: 0 }}>
 
-        {/* Metric cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 14 }}>
-          <MetricCard title={t.focusIndex}>
-            <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
-              {neural.focusIndex.toFixed(1)}<span style={{ fontSize: 16, color: "#5a8fa8" }}>/100</span>
-            </div>
-            <Badge color={focusInfo.color}>{focusInfo.label}</Badge>
-          </MetricCard>
-
-          <MetricCard title={t.bioEnergy}>
-            <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
-              {Math.round(neural.bioEnergy)}<span style={{ fontSize: 16, color: "#5a8fa8" }}>%</span>
-            </div>
-            <div style={{ height: 4, background: "rgba(192,132,252,0.1)", borderRadius: 2 }}>
-              <div style={{ height: "100%", width: `${neural.bioEnergy}%`, background: "linear-gradient(90deg, #c084fc, #7c3aed)", borderRadius: 2, transition: "width 0.5s ease" }} />
-            </div>
-          </MetricCard>
-
-          <MetricCard title={t.neuralNoise}>
-            <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
-              {Math.round(neural.neuralNoise)}<span style={{ fontSize: 14, color: "#5a8fa8" }}> μV²</span>
-            </div>
-            <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: noiseInfo.color, letterSpacing: 2 }}>{noiseInfo.label}</span>
-          </MetricCard>
-
-          <MetricCard title={t.abRatio}>
-            <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>{neural.abRatio}</div>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 1 }}>
-              α:{neural.alpha.toFixed(2)}  β:{neural.beta.toFixed(2)}
-            </div>
-          </MetricCard>
-
-          <MetricCard title={t.focusWindow}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#e8f4ff", marginBottom: 8, lineHeight: 1.4 }}>
-              {focusHistory.length < 6 ? t.collectingData : `~${Math.max(3, Math.round((80 - neural.focusIndex) / 2))} min`}
-            </div>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", letterSpacing: 1 }}>
-              {focusHistory.length < 6 ? t.streamMoreSamples : `${t.confidence} ${Math.min(99, Math.round(50 + samples * 1.2))}%`}
-            </div>
-          </MetricCard>
-
-          <MetricCard title={t.waveBreakdown}>
-            <div style={{ height: 82 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={waveData} margin={{ top: 0, right: 4, bottom: 22, left: 4 }}>
-                  <XAxis dataKey="name" tick={{ fill: "#5a8fa8", fontSize: 8, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} />
-                  <YAxis hide domain={[0, 200]} />
-                  <Bar dataKey="value" radius={[3, 3, 0, 0]} isAnimationActive={false}>
-                    <Cell fill="#c084fc" /><Cell fill="#7c3aed" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </MetricCard>
-        </div>
-
-        {/* Charts row */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 14 }}>
-          <Panel title={t.focusStream}>
-            <div style={{ position: "relative", height: 150 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={focusHistory} margin={{ top: 8, right: 48, bottom: 0, left: 0 }}>
-                  <XAxis dataKey="time" tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                  <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} />
-                  <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
-                  <Line type="monotone" dataKey="value" stroke="#c084fc" strokeWidth={2} dot={false} isAnimationActive={false} />
-                </LineChart>
-              </ResponsiveContainer>
-              <div style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc" }}>
-                {neural.focusIndex.toFixed(1)}
+        {/* Mobile top bar */}
+        {isMobile && (
+          <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(12,8,24,0.97)", position: "sticky", top: 0, zIndex: 20 }}>
+            <a href="https://tokai.app" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+              <img src="/tokai_logo.png" alt="Tokai" style={{ width: 34 }} />
+              <div>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 20, letterSpacing: 4, lineHeight: 1 }}>
+                  <span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>AI</span>
+                </div>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 9, color: "#5a8fa8", letterSpacing: 1, marginTop: 2 }}>{t.version}</div>
               </div>
-            </div>
-          </Panel>
-
-          <Panel title={t.neuralInsights}>
-            <p style={{ fontSize: 15, color: "#c8d8e8", lineHeight: 1.65, fontStyle: "italic", margin: 0 }}>
-              "{getInsight()}"
-            </p>
-          </Panel>
-        </div>
-
-        {/* Bottom row */}
-        <div style={{ borderTop: "1px solid rgba(192,132,252,0.25)", paddingTop: 20 }}>
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc", letterSpacing: 3, marginBottom: 14 }}>{t.planningInterface}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 14 }}>
-            <AgentChat neuralState={neural} tasks={tasks.map(t => ({ text: t.text, done: t.done }))} lang={lang} />
-
-            <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                <div style={{ width: 3, height: 16, background: "#c084fc", borderRadius: 1, flexShrink: 0 }} />
-                <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, letterSpacing: 3 }}>
-                  {lang === "en" ? <><span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>TODO</span></> : <span style={{ color: "#c084fc" }}>{t.tokTodo}</span>}
-                </span>
+            </a>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "#5a8fa8" }}>{t.liveStream}</span>
+                <Toggle checked={liveStream} onChange={setLiveStream} />
               </div>
-              <input
-                value={newTask}
-                onChange={e => setNewTask(e.target.value)}
-                onKeyDown={addTask}
-                placeholder={t.taskPlaceholder}
-                style={{ width: "100%", padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 4, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, marginBottom: 10, boxSizing: "border-box", outline: "none" }}
-              />
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {tasks.map(task => (
-                  <div key={task.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 8px", background: "rgba(0,0,0,0.2)", borderRadius: 4, border: "1px solid rgba(192,132,252,0.1)" }}>
-                    <input type="checkbox" checked={task.done}
-                      onChange={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
-                      style={{ accentColor: "#c084fc", cursor: "pointer", flexShrink: 0 }} />
-                    <span style={{ flex: 1, fontSize: 15, color: task.done ? "#5a8fa8" : "#c8d8e8", textDecoration: task.done ? "line-through" : "none" }}>
-                      {task.text}
-                    </span>
-                    <button onClick={() => setTasks(p => p.filter(t => t.id !== task.id))}
-                      style={{ background: "none", border: "none", color: "#5a8fa8", cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 1 }}>
-                {t.progress} {completedCount}/{tasks.length} {completedCount > 0 && completedCount === tasks.length ? t.complete : ""}
-              </div>
+              <LangToggle lang={lang} setLang={setLang} />
             </div>
           </div>
+        )}
+
+        {/* Content area */}
+        <div style={{ padding: isMobile ? "16px" : "24px 28px", display: "flex", flexDirection: "column", gap: 20, flex: 1 }}>
+
+          {/* Desktop header */}
+          {!isMobile && (
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+              <div>
+                <h1 style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 52, fontWeight: 700, letterSpacing: 14, textShadow: "0 0 30px rgba(192,132,252,0.4), 0 0 60px rgba(192,132,252,0.15)", margin: "0 0 4px 0" }}>
+                  <span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>AI</span>
+                </h1>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 4 }}>{t.subtitle}</div>
+              </div>
+              <LangToggle lang={lang} setLang={setLang} />
+            </div>
+          )}
+
+          {/* Metric cards — 2 cols on mobile, 6 on desktop */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(6, 1fr)", gap: isMobile ? 10 : 14 }}>
+            <MetricCard title={t.focusIndex}>
+              <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
+                {neural.focusIndex.toFixed(1)}<span style={{ fontSize: 16, color: "#5a8fa8" }}>/100</span>
+              </div>
+              <Badge color={focusInfo.color}>{focusInfo.label}</Badge>
+            </MetricCard>
+
+            <MetricCard title={t.bioEnergy}>
+              <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
+                {Math.round(neural.bioEnergy)}<span style={{ fontSize: 16, color: "#5a8fa8" }}>%</span>
+              </div>
+              <div style={{ height: 4, background: "rgba(192,132,252,0.1)", borderRadius: 2 }}>
+                <div style={{ height: "100%", width: `${neural.bioEnergy}%`, background: "linear-gradient(90deg, #c084fc, #7c3aed)", borderRadius: 2, transition: "width 0.5s ease" }} />
+              </div>
+            </MetricCard>
+
+            <MetricCard title={t.neuralNoise}>
+              <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
+                {Math.round(neural.neuralNoise)}<span style={{ fontSize: 14, color: "#5a8fa8" }}> μV²</span>
+              </div>
+              <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: noiseInfo.color, letterSpacing: 2 }}>{noiseInfo.label}</span>
+            </MetricCard>
+
+            <MetricCard title={t.abRatio}>
+              <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>{neural.abRatio}</div>
+              <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 1 }}>
+                α:{neural.alpha.toFixed(2)}  β:{neural.beta.toFixed(2)}
+              </div>
+            </MetricCard>
+
+            <MetricCard title={t.focusWindow}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#e8f4ff", marginBottom: 8, lineHeight: 1.4 }}>
+                {focusHistory.length < 6 ? t.collectingData : `~${Math.max(3, Math.round((80 - neural.focusIndex) / 2))} min`}
+              </div>
+              <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", letterSpacing: 1 }}>
+                {focusHistory.length < 6 ? t.streamMoreSamples : `${t.confidence} ${Math.min(99, Math.round(50 + samples * 1.2))}%`}
+              </div>
+            </MetricCard>
+
+            <MetricCard title={t.waveBreakdown}>
+              <div style={{ height: 82 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={waveData} margin={{ top: 0, right: 4, bottom: 22, left: 4 }}>
+                    <XAxis dataKey="name" tick={{ fill: "#5a8fa8", fontSize: 8, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} />
+                    <YAxis hide domain={[0, 200]} />
+                    <Bar dataKey="value" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+                      <Cell fill="#c084fc" /><Cell fill="#7c3aed" />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </MetricCard>
+          </div>
+
+          {/* Charts row — stacked on mobile */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 360px", gap: 14 }}>
+            <Panel title={t.focusStream}>
+              <div style={{ position: "relative", height: 150 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={focusHistory} margin={{ top: 8, right: 48, bottom: 0, left: 0 }}>
+                    <XAxis dataKey="time" tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                    <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} />
+                    <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
+                    <Line type="monotone" dataKey="value" stroke="#c084fc" strokeWidth={2} dot={false} isAnimationActive={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+                <div style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc" }}>
+                  {neural.focusIndex.toFixed(1)}
+                </div>
+              </div>
+            </Panel>
+
+            <Panel title={t.neuralInsights}>
+              <p style={{ fontSize: 15, color: "#c8d8e8", lineHeight: 1.65, fontStyle: "italic", margin: 0 }}>
+                "{getInsight()}"
+              </p>
+            </Panel>
+          </div>
+
+          {/* Planning interface */}
+          <div style={{ borderTop: "1px solid rgba(192,132,252,0.25)", paddingTop: 20 }}>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc", letterSpacing: 3, marginBottom: 14 }}>{t.planningInterface}</div>
+            {/* Agent + Todo — stacked on mobile */}
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 380px", gap: 14 }}>
+              <AgentChat neuralState={neural} tasks={tasks.map(t => ({ text: t.text, done: t.done }))} lang={lang} />
+
+              <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                  <div style={{ width: 3, height: 16, background: "#c084fc", borderRadius: 1, flexShrink: 0 }} />
+                  <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, fontWeight: 700, letterSpacing: 3 }}>
+                    {lang === "en" ? <><span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>TODO</span></> : <span style={{ color: "#c084fc" }}>{t.tokTodo}</span>}
+                  </span>
+                </div>
+                <input
+                  value={newTask}
+                  onChange={e => setNewTask(e.target.value)}
+                  onKeyDown={addTask}
+                  placeholder={t.taskPlaceholder}
+                  style={{ width: "100%", padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 4, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, marginBottom: 10, boxSizing: "border-box", outline: "none" }}
+                />
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {tasks.map(task => (
+                    <div key={task.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 8px", background: "rgba(0,0,0,0.2)", borderRadius: 4, border: "1px solid rgba(192,132,252,0.1)" }}>
+                      <input type="checkbox" checked={task.done}
+                        onChange={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
+                        style={{ accentColor: "#c084fc", cursor: "pointer", flexShrink: 0 }} />
+                      <span style={{ flex: 1, fontSize: 15, color: task.done ? "#5a8fa8" : "#c8d8e8", textDecoration: task.done ? "line-through" : "none" }}>
+                        {task.text}
+                      </span>
+                      <button onClick={() => setTasks(p => p.filter(t => t.id !== task.id))}
+                        style={{ background: "none", border: "none", color: "#5a8fa8", cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 1 }}>
+                  {t.progress} {completedCount}/{tasks.length} {completedCount > 0 && completedCount === tasks.length ? t.complete : ""}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile footer with session info + links */}
+          {isMobile && (
+            <div style={{ borderTop: "1px solid rgba(192,132,252,0.15)", paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8" }}>
+                <span>{t.samples} {samples}</span>
+                <span>{t.status}: {liveStream ? <span style={{ color: "#c084fc" }}>{t.active}</span> : <span style={{ color: "#ffa040" }}>{t.paused}</span>}</span>
+                <span>{t.sessionLabel} {sessionDuration}m</span>
+              </div>
+              <a href="https://github.com/TokaiApp/Tokai-Pre-Alpha" target="_blank" rel="noopener noreferrer"
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5a8fa8", textDecoration: "none", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, letterSpacing: 1 }}>
+                <Github size={16} />{t.sourceCode}
+              </a>
+            </div>
+          )}
+
         </div>
       </main>
     </div>
