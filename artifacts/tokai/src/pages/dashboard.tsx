@@ -472,6 +472,10 @@ export default function Dashboard() {
                     <XAxis dataKey="time" tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
                     <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} />
                     <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
+                    {focusHistory.length > 1 && (() => {
+                      const avg = Math.round(focusHistory.reduce((s, p) => s + p.value, 0) / focusHistory.length);
+                      return <ReferenceLine y={avg} stroke="rgba(192,132,252,0.55)" strokeDasharray="6 3" label={{ value: `avg ${avg}`, position: "insideTopRight", fill: "#c084fc", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} />;
+                    })()}
                     <Line type="monotone" dataKey="value" stroke="#c084fc" strokeWidth={2} dot={false} isAnimationActive={false} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -508,7 +512,7 @@ export default function Dashboard() {
                   onChange={e => setNewTask(e.target.value)}
                   onKeyDown={addTask}
                   placeholder={t.taskPlaceholder}
-                  style={{ width: "100%", padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 4, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", fontSize: 15, marginBottom: 8, boxSizing: "border-box", outline: "none" }}
+                  style={{ width: "100%", padding: "6px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 4, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", fontSize: 16, marginBottom: 8, boxSizing: "border-box", outline: "none" }}
                 />
                 {/* Demand + time selectors */}
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
@@ -537,16 +541,16 @@ export default function Dashboard() {
                       <input type="checkbox" checked={task.done}
                         onChange={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
                         style={{ accentColor: "#c084fc", cursor: "pointer", flexShrink: 0 }} />
-                      <span style={{ flex: 1, fontSize: 14, color: task.done ? "#5a8fa8" : "#c8d8e8", textDecoration: task.done ? "line-through" : "none", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <span style={{ flex: 1, fontSize: 16, color: task.done ? "#5a8fa8" : "#c8d8e8", textDecoration: task.done ? "line-through" : "none", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {task.text}
                       </span>
                       {task.demand && (
-                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 9, padding: "1px 5px", border: `1px solid ${demandColor(task.demand)}`, color: demandColor(task.demand), borderRadius: 3, flexShrink: 0, letterSpacing: 1 }}>
+                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, padding: "1px 5px", border: `1px solid ${demandColor(task.demand)}`, color: demandColor(task.demand), borderRadius: 3, flexShrink: 0, letterSpacing: 1 }}>
                           {task.demand === "low" ? t.demandLow : task.demand === "medium" ? t.demandMed : t.demandHigh}
                         </span>
                       )}
                       {task.estimatedMinutes && (
-                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 9, color: "#5a8fa8", flexShrink: 0 }}>
+                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", flexShrink: 0 }}>
                           {task.estimatedMinutes}{t.minUnit}
                         </span>
                       )}
@@ -555,7 +559,7 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
-                <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 1 }}>
+                <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 1 }}>
                   {t.progress} {completedCount}/{tasks.length} {completedCount > 0 && completedCount === tasks.length ? t.complete : ""}
                 </div>
               </div>
