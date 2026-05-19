@@ -87,10 +87,19 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
     try {
       const s = localStorage.getItem(chatKey);
       if (s) { const d = JSON.parse(s); if (d.lang === lang && Array.isArray(d.messages) && d.messages.length > 0) return d.messages; }
-      // one-time migration from legacy key
+      // one-time migration from legacy key — delete after migrating so stale data can't interfere
       if (isToday) {
         const legacy = localStorage.getItem(CHAT_KEY_PREFIX);
-        if (legacy) { const d = JSON.parse(legacy); if (d.lang === lang && Array.isArray(d.messages) && d.messages.length > 0) { localStorage.setItem(chatKey, legacy); return d.messages; } }
+        if (legacy) {
+          const d = JSON.parse(legacy);
+          const valid = Array.isArray(d.messages) && d.messages.every((m: unknown) => m && typeof (m as {role:string}).role === "string" && typeof (m as {content:string}).content === "string");
+          if (valid && d.messages.length > 0) {
+            localStorage.setItem(chatKey, legacy);
+            localStorage.removeItem(CHAT_KEY_PREFIX);
+            return d.messages;
+          }
+          localStorage.removeItem(CHAT_KEY_PREFIX);
+        }
       }
     } catch {}
     if (!isToday) return [];
@@ -132,6 +141,14 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
   function clearKey() {
     localStorage.removeItem(STORAGE_KEY);
     setApiKey("");
+  }
+
+  function resetChat() {
+    // Clear current and legacy chat keys
+    localStorage.removeItem(chatKey);
+    localStorage.removeItem(CHAT_KEY_PREFIX);
+    const greeting = [{ role: "assistant" as const, content: t.greeting(neuralState.focusIndex.toFixed(1), String(Math.round(neuralState.bioEnergy))) }];
+    setMessages(greeting);
   }
 
   async function send() {
@@ -190,6 +207,11 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
             <span>{t.energy} {Math.round(neuralState.bioEnergy)}%</span>
             <span>{t.noise} {Math.round(neuralState.neuralNoise)} μV²</span>
           </>}
+          {apiKey && isToday && (
+            <button onClick={resetChat} style={{ background: "none", border: "1px solid rgba(192,132,252,0.25)", borderRadius: 4, color: "#5a8fa8", cursor: "pointer", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, padding: "4px 10px", letterSpacing: 1 }}>
+              {lang === "en" ? "RESET CHAT" : "重置對話"}
+            </button>
+          )}
           {apiKey && (
             <button onClick={clearKey} style={{ background: "none", border: "1px solid rgba(192,132,252,0.25)", borderRadius: 4, color: "#5a8fa8", cursor: "pointer", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, padding: "4px 10px", letterSpacing: 1 }}>
               {t.clearKey}
