@@ -363,7 +363,8 @@ export default function Dashboard() {
   }
 
   const completedCount = tasks.filter(t => t.done).length;
-  const sessionDuration = Math.floor((now.getTime() - sessionStart.current.getTime()) / 60000);
+  const sessionElapsed = Math.floor((now.getTime() - sessionStart.current.getTime()) / 1000);
+  const sessionDuration = `${Math.floor(sessionElapsed / 3600)}:${String(Math.floor((sessionElapsed % 3600) / 60)).padStart(2, "0")}:${String(sessionElapsed % 60).padStart(2, "0")}`;
   const fiveMinSamples = Math.round(5 * 60 / refreshRate);
   const recentSlice = focusHistory.slice(-fiveMinSamples);
   const avgFocus = recentSlice.length > 1
@@ -410,7 +411,7 @@ export default function Dashboard() {
               {([
                 [t.date, now.toISOString().slice(0, 10)],
                 [t.time, formatTime(now)],
-                [t.sessionLabel, `${sessionDuration}m`],
+                [t.sessionLabel, sessionDuration],
                 [t.samples, String(samples)],
                 [t.status, liveStream ? t.active : t.paused],
               ] as [string, string][]).map(([k, v]) => (
