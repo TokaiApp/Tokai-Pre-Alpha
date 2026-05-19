@@ -148,7 +148,7 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
       const res = await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next, neuralState, tasks, journalEntries, lang, userApiKey: apiKey }),
+        body: JSON.stringify({ messages: next.map(({ role, content }) => ({ role, content })), neuralState, tasks, journalEntries, lang, userApiKey: apiKey }),
       });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
