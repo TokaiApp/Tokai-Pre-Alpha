@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Github, Activity, BookOpen, ListChecks, Pill, Brain, Crosshair, Zap, Waves, BarChart2, Clock } from "lucide-react";
 import {
-  LineChart, Line, XAxis, YAxis, ReferenceLine, ReferenceArea,
+  LineChart, Line, XAxis, YAxis, ReferenceLine,
 } from "recharts";
 import AgentChat from "@/components/agent-chat";
 
@@ -944,43 +944,51 @@ export default function Dashboard() {
                     const atRight = el.scrollWidth - el.scrollLeft - el.clientWidth < 80;
                     if (!atRight) setIsLive(false);
                   }}>
-                  <LineChart width={chartWidth} height={168} data={focusHistory} margin={{ top: 8, right: 16, bottom: 18, left: 0 }}>
-                    <XAxis dataKey="time" tickFormatter={(v: string) => v.slice(0, 5)} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval={xInterval} />
-                    <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} width={32} />
-                    <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
-                    {avgFocus !== null && (
-                      <ReferenceLine y={avgFocus} stroke="rgba(192,132,252,0.55)" strokeDasharray="6 3" />
-                    )}
-                    {sessionAvg !== null && (
-                      <ReferenceLine y={sessionAvg} stroke="rgba(56,189,248,0.5)" strokeDasharray="6 3" />
-                    )}
-                    {dayAvg !== null && dayAvg !== sessionAvg && (
-                      <ReferenceLine y={dayAvg} stroke="rgba(74,222,128,0.5)" strokeDasharray="6 3" />
-                    )}
-                    {medLog.flatMap(med => {
-                      const key = med.focusTime || med.time;
-                      const idx = focusHistory.findIndex(p => p.time === key || (key.length === 5 && p.time.startsWith(key + ":")));
-                      if (idx < 0) return [];
-                      const chartX = focusHistory[idx].time;
-                      const peakSamples = Math.round(90 * 60 / refreshRate);
-                      const endIdx = Math.min(idx + peakSamples, focusHistory.length - 1);
-                      const x2 = focusHistory[endIdx]?.time;
-                      const items: React.ReactElement[] = [];
-                      if (x2 && x2 !== chartX) items.push(<ReferenceArea key={med.id + "_area"} x1={chartX} x2={x2} fill="rgba(251,191,36,0.06)" />);
-                      items.push(<ReferenceLine key={med.id} x={chartX} stroke="rgba(251,191,36,0.85)" strokeDasharray="3 3"
-                        label={{ value: med.name.length > 8 ? med.name.slice(0, 8) + "…" : med.name, position: "insideTopLeft", fill: "#fbbf24", fontSize: 9, fontFamily: "'Share Tech Mono', monospace" }} />);
-                      return items;
-                    })}
-                    {journal.filter(e => (e.date ?? todayStr()) === todayStr()).flatMap(entry => {
-                      const key = entry.focusTime || entry.time;
-                      const idx = focusHistory.findIndex(p => p.time === key || (key.length === 5 && p.time.startsWith(key + ":")));
-                      if (idx < 0) return [];
-                      const chartX = focusHistory[idx].time;
-                      return [<ReferenceLine key={"note_" + entry.id} x={chartX} stroke="rgba(100,200,160,0.7)" strokeDasharray="2 4"
-                        label={{ value: "✎", position: "insideTopRight", fill: "#6ee7b7", fontSize: 10 }} />];
-                    })}
-                    <Line type="monotone" dataKey="value" stroke="#c084fc" strokeWidth={2} dot={false} isAnimationActive={false} />
-                  </LineChart>
+                  <div style={{ width: chartWidth, height: 168, position: "relative" }}>
+                    <LineChart width={chartWidth} height={168} data={focusHistory} margin={{ top: 8, right: 16, bottom: 18, left: 0 }}>
+                      <XAxis dataKey="time" tickFormatter={(v: string) => v.slice(0, 5)} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval={xInterval} />
+                      <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} width={32} />
+                      <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
+                      {avgFocus !== null && <ReferenceLine y={avgFocus} stroke="rgba(192,132,252,0.55)" strokeDasharray="6 3" />}
+                      {sessionAvg !== null && <ReferenceLine y={sessionAvg} stroke="rgba(56,189,248,0.5)" strokeDasharray="6 3" />}
+                      {dayAvg !== null && dayAvg !== sessionAvg && <ReferenceLine y={dayAvg} stroke="rgba(74,222,128,0.5)" strokeDasharray="6 3" />}
+                      <Line type="monotone" dataKey="value" stroke="#c084fc" strokeWidth={2} dot={false} isAnimationActive={false} />
+                    </LineChart>
+                    {(() => {
+                      const N = focusHistory.length;
+                      const plotLeft = 32, plotRight = chartWidth - 16;
+                      const getX = (idx: number) => N <= 1 ? plotLeft : plotLeft + idx * (plotRight - plotLeft) / (N - 1);
+                      const findIdx = (key: string) => focusHistory.findIndex(p =>
+                        p.time === key || (key.length === 5 && p.time.startsWith(key + ":"))
+                      );
+                      return (
+                        <>
+                          {medLog.map(med => {
+                            const idx = findIdx(med.focusTime || med.time);
+                            if (idx < 0) return null;
+                            const x = getX(idx);
+                            return (
+                              <div key={med.id} style={{ position: "absolute", left: x, top: 8, height: 142, width: 0, borderLeft: "1.5px dashed rgba(251,191,36,0.9)", pointerEvents: "none" }}>
+                                <span style={{ position: "absolute", top: 2, left: 3, fontFamily: "'Share Tech Mono', monospace", fontSize: 9, color: "#fbbf24", whiteSpace: "nowrap", background: "rgba(12,8,24,0.75)", padding: "0 2px" }}>
+                                  {med.name.length > 10 ? med.name.slice(0, 10) + "…" : med.name}
+                                </span>
+                              </div>
+                            );
+                          })}
+                          {journal.filter(e => (e.date ?? todayStr()) === todayStr()).map(entry => {
+                            const idx = findIdx(entry.focusTime || entry.time);
+                            if (idx < 0) return null;
+                            const x = getX(idx);
+                            return (
+                              <div key={"note_" + entry.id} style={{ position: "absolute", left: x, top: 8, height: 142, width: 0, borderLeft: "1.5px dashed rgba(100,220,180,0.75)", pointerEvents: "none" }}>
+                                <span style={{ position: "absolute", top: 2, right: 3, fontFamily: "'Share Tech Mono', monospace", fontSize: 9, color: "#6ee7b7", whiteSpace: "nowrap" }}>✎</span>
+                              </div>
+                            );
+                          })}
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
                 <div style={{ position: "absolute", right: 4, top: 8, fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc", pointerEvents: "none" }}>
                   {neural.focusIndex.toFixed(1)}
