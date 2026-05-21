@@ -6,6 +6,8 @@ interface NeuralState {
   bioEnergy: number;
   neuralNoise: number;
   tbRatio: number;
+  theta?: number;
+  beta?: number;
 }
 
 interface Task {
@@ -14,13 +16,24 @@ interface Task {
   done: boolean;
   demand?: string | null;
   estimatedMinutes?: number | null;
+  deadline?: string;
+  createdAt?: string;
+  emoji?: string;
 }
 
 interface JournalEntry {
   text: string;
   time: string;
+  date?: string;
   focusIndex: number;
   mood: string[];
+}
+
+interface MedEntry {
+  id: string;
+  name: string;
+  dose: string;
+  time: string;
 }
 
 interface Message {
@@ -45,7 +58,7 @@ const UI = {
     error: "Neural link disrupted. Check that your API key is valid and try again.",
     keyPromptTitle: "ANTHROPIC API KEY REQUIRED",
     keyPromptDesc: "TokAgent runs on your own Anthropic API key. Your key is stored locally in your browser and never saved on our servers.",
-    keyPrivacy: "When you send a message, your neural metrics, tasks, and journal entries are transmitted to Anthropic's API to generate a response. Anthropic does not use API data to train its models. Nothing is stored on Tokai's servers. All local data lives in your browser only.",
+    keyPrivacy: "When you send a message, your neural metrics, tasks, journal entries, and medication log are transmitted to Anthropic's API to generate a response. Anthropic does not use API data to train its models. Nothing is stored on Tokai's servers. All local data lives in your browser only.",
     keyPlaceholder: "sk-ant-...",
     keySubmit: "CONNECT",
     keyGet: "Get a key at console.anthropic.com",
@@ -63,7 +76,7 @@ const UI = {
     error: "神經鏈路中斷。請確認 API 金鑰有效後重試。",
     keyPromptTitle: "需要 ANTHROPIC API 金鑰",
     keyPromptDesc: "TokAgent 使用你自己的 Anthropic API 金鑰運作。金鑰僅儲存在你的瀏覽器本機，不會儲存於我們的伺服器。",
-    keyPrivacy: "當你發送訊息時，你的神經指標、任務與日誌條目將傳送至 Anthropic API 以生成回應。Anthropic 不會使用 API 資料訓練模型。Tokai 伺服器不儲存任何資料，所有本機資料僅存於你的瀏覽器。",
+    keyPrivacy: "當你發送訊息時，你的神經指標、任務、日誌條目與藥物紀錄將傳送至 Anthropic API 以生成回應。Anthropic 不會使用 API 資料訓練模型。Tokai 伺服器不儲存任何資料，所有本機資料僅存於你的瀏覽器。",
     keyPlaceholder: "sk-ant-...",
     keySubmit: "連線",
     keyGet: "前往 console.anthropic.com 取得金鑰",
@@ -75,7 +88,16 @@ const STORAGE_KEY = "tokai_anthropic_key";
 const CHAT_KEY_PREFIX = "tokai_chat";
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
-export default function AgentChat({ neuralState, tasks, journalEntries = [], lang = "en", isMobile = false, selectedDate }: { neuralState: NeuralState; tasks: Task[]; journalEntries?: JournalEntry[]; lang?: "en" | "zh"; isMobile?: boolean; selectedDate?: string }) {
+export default function AgentChat({ neuralState, tasks, journalEntries = [], medLog = [], lang = "en", isMobile = false, selectedDate, onInfo }: {
+  neuralState: NeuralState;
+  tasks: Task[];
+  journalEntries?: JournalEntry[];
+  medLog?: MedEntry[];
+  lang?: "en" | "zh";
+  isMobile?: boolean;
+  selectedDate?: string;
+  onInfo?: () => void;
+}) {
   const t = UI[lang];
   const chatDate = selectedDate ?? todayStr();
   const chatKey = `${CHAT_KEY_PREFIX}_${chatDate}`;
@@ -87,7 +109,6 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
     try {
       const s = localStorage.getItem(chatKey);
       if (s) { const d = JSON.parse(s); if (d.lang === lang && Array.isArray(d.messages) && d.messages.length > 0) return d.messages; }
-      // one-time migration from legacy key — delete after migrating so stale data can't interfere
       if (isToday) {
         const legacy = localStorage.getItem(CHAT_KEY_PREFIX);
         if (legacy) {
@@ -144,7 +165,6 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
   }
 
   function resetChat() {
-    // Clear current and legacy chat keys
     localStorage.removeItem(chatKey);
     localStorage.removeItem(CHAT_KEY_PREFIX);
     const greeting = [{ role: "assistant" as const, content: t.greeting(neuralState.focusIndex.toFixed(1), String(Math.round(neuralState.bioEnergy))) }];
@@ -162,7 +182,6 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
     setLoading(true);
 
     try {
-      // Anthropic requires messages to start with a user turn — strip any leading assistant messages (greeting)
       const stripped = next.map(({ role, content }) => ({ role, content }));
       const firstUser = stripped.findIndex(m => m.role === "user");
       const apiMessages = firstUser > 0 ? stripped.slice(firstUser) : stripped;
@@ -170,7 +189,7 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
       const res = await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: apiMessages, neuralState, tasks, journalEntries, lang, userApiKey: apiKey }),
+        body: JSON.stringify({ messages: apiMessages, neuralState, tasks, journalEntries, medLog, lang, userApiKey: apiKey }),
       });
       if (!res.ok) {
         const errBody = await res.json().catch(() => null);
@@ -201,7 +220,7 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
           <span style={{ color: "#7c3aed" }}>TOK</span>
           <span style={{ color: "#c084fc" }}>{lang === "en" ? "AGENT · TASK PLANNER" : "AGENT · 任務規劃"}</span>
         </span>
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 16, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8" }}>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8" }}>
           {isMobile && <>
             <span>{t.focus} {neuralState.focusIndex.toFixed(1)}/100</span>
             <span>{t.energy} {Math.round(neuralState.bioEnergy)}%</span>
@@ -217,11 +236,18 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], lan
               {t.clearKey}
             </button>
           )}
+          {onInfo && (
+            <button onClick={onInfo}
+              style={{ background: "none", border: "1px solid rgba(192,132,252,0.25)", borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(192,132,252,0.5)", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, padding: 0, lineHeight: 1, flexShrink: 0 }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(192,132,252,0.6)"; (e.currentTarget as HTMLButtonElement).style.color = "#c084fc"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(192,132,252,0.25)"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(192,132,252,0.5)"; }}>
+              ?
+            </button>
+          )}
         </div>
       </div>
 
       {!apiKey ? (
-        /* ── Key entry prompt ── */
         <div style={{ flex: 1, padding: "28px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#c084fc", letterSpacing: 2 }}>{t.keyPromptTitle}</div>
           <p style={{ fontSize: 15, color: "#5a8fa8", lineHeight: 1.6, margin: 0 }}>{t.keyPromptDesc}</p>

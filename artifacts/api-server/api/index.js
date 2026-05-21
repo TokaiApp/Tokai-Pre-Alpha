@@ -12,7 +12,7 @@ app.get("/api/health", (_req, res) => {
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const { messages, neuralState, tasks, journalEntries, lang, userApiKey } = req.body;
+    const { messages, neuralState, tasks, journalEntries, medLog, lang, userApiKey } = req.body;
 
     const apiKey = userApiKey || process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
@@ -21,7 +21,7 @@ app.post("/api/chat", async (req, res) => {
     }
 
     const client = new Anthropic({ apiKey });
-    const { focusIndex, bioEnergy, neuralNoise, tbRatio } = neuralState;
+    const { focusIndex, bioEnergy, neuralNoise, tbRatio, theta, beta } = neuralState;
     const focusLabel = focusIndex > 70 ? "HIGH" : focusIndex > 40 ? "MODERATE" : "LOW";
     const energyLabel = bioEnergy > 70 ? "high" : bioEnergy > 40 ? "moderate" : "low";
     const noiseLabel = neuralNoise < 20 ? "clean" : neuralNoise < 40 ? "nominal" : "elevated";
@@ -32,15 +32,17 @@ Current neural and biological state:
 - Focus Index: ${focusIndex.toFixed(1)}/100 (${focusLabel})
 - Biological Energy: ${Math.round(bioEnergy)}% (${energyLabel})
 - Neural Noise: ${Math.round(neuralNoise)} μV² (${noiseLabel})
-- Theta/Beta Ratio (TBR): ${tbRatio} (elevated TBR is associated with ADHD inattention)
+- Theta/Beta Ratio (TBR): ${tbRatio} (elevated TBR >3.0 is associated with ADHD inattention)${theta != null && beta != null ? `\n- Raw EEG waves: θ (theta) ${Number(theta).toFixed(1)} μV²  β (beta) ${Number(beta).toFixed(1)} μV²` : ""}
 
 Current TokTodo task list:
 ${Array.isArray(tasks) && tasks.length > 0
   ? tasks.map(t => {
-      let s = `- [${t.done ? "DONE" : "TODO"}] ${t.title}`;
+      let s = `- [${t.done ? "DONE" : "TODO"}]${t.emoji ? ` ${t.emoji}` : ""} ${t.title}`;
       if (t.description) s += `\n  Description: ${t.description}`;
       if (t.demand) s += ` [Cognitive demand: ${t.demand}]`;
       if (t.estimatedMinutes) s += ` [Estimated time: ${t.estimatedMinutes} min]`;
+      if (t.deadline) s += ` [Deadline: ${t.deadline}]`;
+      if (t.createdAt) s += ` [Added: ${t.createdAt}]`;
       return s;
     }).join("\n")
   : "- (no tasks added yet)"}
@@ -49,10 +51,19 @@ User's TokNote journal entries (most recent first):
 ${Array.isArray(journalEntries) && journalEntries.length > 0
   ? [...journalEntries].reverse().slice(0, 10).map(e => {
       const moods = Array.isArray(e.mood) ? e.mood : (e.mood ? [e.mood] : []);
-      let s = `- [${e.time}] Focus ${e.focusIndex?.toFixed(1) ?? "?"} ${moods.length ? `· ${moods.join(", ")}` : ""}: ${e.text}`;
+      let s = `- [${e.date ? `${e.date} ` : ""}${e.time}] Focus ${e.focusIndex?.toFixed(1) ?? "?"} ${moods.length ? `· ${moods.join(", ")}` : ""}: ${e.text}`;
       return s;
     }).join("\n")
   : "- (no journal entries yet)"}
+
+User's TokMed medication and supplement log (most recent first):
+${Array.isArray(medLog) && medLog.length > 0
+  ? [...medLog].reverse().slice(0, 10).map(m => {
+      let s = `- [${m.time}] ${m.name}`;
+      if (m.dose) s += ` (${m.dose})`;
+      return s;
+    }).join("\n")
+  : "- (no medications or supplements logged)"}
 
 Task planning guidelines based on cognitive state:
 - Focus HIGH (>70): Suggest tackling the hardest, most cognitively demanding tasks first
@@ -60,7 +71,8 @@ Task planning guidelines based on cognitive state:
 - Focus LOW (<40): Suggest easy wins, breaks, physical movement, or administrative tasks
 
 Your behavior:
-- You can see the user's current TokTodo task list and TokNote journal entries above — reference them directly when relevant
+- You can see the user's full TokTodo task list, TokNote journal entries, and TokMed medication log above — reference them directly when relevant
+- When medications or supplements have been logged recently, consider whether they may be affecting the user's current neural state
 - Help the user decide what to add to their to-do list and in what order to tackle it
 - If the task list is empty, ask what they need to get done today
 - Recommend task sequencing based on their brain data and the actual tasks listed

@@ -140,7 +140,7 @@ type Demand = "low" | "medium" | "high";
 interface Task { id: string; title: string; description: string | null; done: boolean; demand: Demand | null; estimatedMinutes: number | null; createdAt?: string; deadline?: string; emoji?: string; }
 
 const TASK_EMOJIS = ["📚", "✍️", "💻", "📧", "💪", "🍳", "🧹", "🎯", "🔬", "📞", "🛒", "🎨"];
-interface MedEntry { id: string; name: string; dose: string; time: string; sampleIndex: number; rating: number | null; }
+interface MedEntry { id: string; name: string; dose: string; time: string; focusTime?: string; sampleIndex: number; rating: number | null; }
 type Mood = "hyperfocus" | "flow" | "focused" | "restless" | "scattered" | "anxious" | "fatigued" | "zoned-out" | "crashed" | "low";
 interface JournalEntry { id: string; text: string; time: string; date: string; focusIndex: number; mood: Mood[]; }
 
@@ -238,25 +238,65 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   );
 }
 
-function MetricCard({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
+const INFO = {
+  en: {
+    focusIndex: { title: "FOCUS INDEX", body: "A composite score from 0–100 derived from your theta and beta wave patterns. Above 70 is a strong focus window suited for deep work. Below 40 means your brain needs lower-demand tasks or rest." },
+    bioEnergy: { title: "BIO ENERGY", body: "Your estimated biological energy level. Simulated in pre-alpha — future versions will draw from HRV and wearable data. Use it as a rough guide to physical stamina alongside your neural focus." },
+    neuralNoise: { title: "NEURAL NOISE", body: "Background EEG signal noise in μV². Lower values mean a calmer, cleaner neural state. Above 40 often indicates heightened arousal, distraction, or environmental interference." },
+    tbRatio: { title: "T/B RATIO", body: "Theta-to-beta wave ratio. Elevated TBR above 3.0 is associated with ADHD-type inattention in the research literature. Lower values indicate more active, focused brain states." },
+    focusWindow: { title: "FOCUS WINDOW", body: "Predicted time remaining in your current focus state, based on recent trend data. Requires at least 6 samples to calculate. Use this to decide whether to start a long task or wrap up." },
+    focusStream: { title: "REAL-TIME FOCUS STREAM", body: "A scrollable real-time chart of your Focus Index over time. Reference lines show your 5-minute average, session average, and day average. Yellow vertical lines mark when you logged a medication or supplement." },
+    tokNote: { title: "TOKNOTE", body: "An ADHD-friendly journal. Each entry is automatically stamped with the date, time, and your Focus Index at that moment. Use it to track patterns between how you feel and how your brain is actually performing." },
+    tokAgent: { title: "TOKAGENT", body: "Your AI task planning assistant, powered by Claude (Anthropic). TokAgent reads your live neural metrics, full task list, journal entries, and medication log to recommend which tasks to tackle based on your current cognitive state." },
+    tokTodo: { title: "TOKTODO", body: "A task manager built around cognitive demand. Tag tasks as Low, Medium, or High demand so TokAgent can match them to your focus level. Add time estimates and deadlines for realistic planning. Tasks are organized by day." },
+    tokMed: { title: "TOKMED", body: "Log medications, supplements, and stimulants like coffee. Tokai tracks how your Focus Index changes in the 15–30 minutes after each entry, giving you real data on what affects your brain." },
+  },
+  zh: {
+    focusIndex: { title: "專注指數", body: "從 0 到 100 的綜合評分，源自 θ 與 β 腦波模式。70 以上代表適合深度工作的專注窗口；40 以下表示大腦需要低認知需求任務或休息。" },
+    bioEnergy: { title: "生理能量", body: "估算的生理能量水平。Pre-alpha 版本為模擬數值，未來版本將整合 HRV 與穿戴裝置數據。可作為體力的粗略參考。" },
+    neuralNoise: { title: "神經噪訊", body: "背景 EEG 訊號噪訊（μV²）。數值越低代表神經狀態越清晰；40 以上通常表示高喚醒、分心或環境干擾。" },
+    tbRatio: { title: "θ/β 比值", body: "θ 波與 β 波的比率。TBR 高於 3.0 與研究文獻中的 ADHD 型注意力不足有關；數值較低代表更專注的腦部狀態。" },
+    focusWindow: { title: "專注窗口", body: "根據近期趨勢預測目前專注狀態的剩餘時間，至少需要 6 個樣本。可用來判斷是否適合開始長時間任務。" },
+    focusStream: { title: "即時專注串流", body: "即時顯示專注指數的可捲動折線圖。參考線分別代表 5 分鐘均值、階段均值與當日均值。黃色垂直線標記你記錄藥物或補充品的時間點。" },
+    tokNote: { title: "TOKNOTE", body: "ADHD 友善日誌。每則條目自動標記日期、時間與當下的專注指數，幫助你追蹤感受與大腦實際表現之間的規律。" },
+    tokAgent: { title: "TOKAGENT", body: "由 Claude（Anthropic）驅動的 AI 任務規劃助手。TokAgent 讀取你的即時神經指標、任務清單、日誌與藥物紀錄，根據當前認知狀態推薦最適合的任務。" },
+    tokTodo: { title: "TOKTODO", body: "以認知負荷為核心設計的任務管理器。為每個任務標記低、中、高需求，讓 TokAgent 能配對你的專注程度。加入預估時間與截止日期，制定更切實際的計畫。" },
+    tokMed: { title: "TOKMED", body: "記錄藥物、補充品與咖啡等影響專注的物質。Tokai 追蹤記錄後 15–30 分鐘內專注指數的變化，為你提供有效成分的實際數據。" },
+  },
+};
+
+function InfoButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={e => { e.stopPropagation(); onClick(); }}
+      style={{ background: "none", border: "1px solid rgba(192,132,252,0.25)", borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(192,132,252,0.5)", fontFamily: "'Share Tech Mono', monospace", fontSize: 9, padding: 0, lineHeight: 1, flexShrink: 0, transition: "all 0.15s" }}
+      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(192,132,252,0.7)"; (e.currentTarget as HTMLButtonElement).style.color = "#c084fc"; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(192,132,252,0.25)"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(192,132,252,0.5)"; }}
+    >?</button>
+  );
+}
+
+function MetricCard({ title, icon, onInfo, children }: { title: string; icon?: React.ReactNode; onInfo?: () => void; children: React.ReactNode }) {
   return (
     <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.15)", borderRadius: 10, padding: "16px 20px", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: 0, left: 0, width: 3, height: "100%", background: "linear-gradient(180deg, #c084fc, #7c3aed)" }} />
       <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 2, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
         {icon}
-        {title}
+        <span style={{ flex: 1 }}>{title}</span>
+        {onInfo && <InfoButton onClick={onInfo} />}
       </div>
       {children}
     </div>
   );
 }
 
-function Panel({ title, children }: { title: React.ReactNode; children: React.ReactNode }) {
+function Panel({ title, onInfo, children }: { title: React.ReactNode; onInfo?: () => void; children: React.ReactNode }) {
   return (
     <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.15)", borderRadius: 10, padding: 16 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
         <div style={{ width: 3, height: 16, background: "#c084fc", borderRadius: 1, flexShrink: 0 }} />
-        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#c084fc", letterSpacing: 3 }}>{title}</span>
+        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#c084fc", letterSpacing: 3, flex: 1 }}>{title}</span>
+        {onInfo && <InfoButton onClick={onInfo} />}
       </div>
       {children}
     </div>
@@ -365,6 +405,8 @@ export default function Dashboard() {
   const journalBottomRef = useRef<HTMLDivElement>(null);
   const [selectedDate, setSelectedDate] = useState(todayStr());
   const [newTaskDeadline, setNewTaskDeadline] = useState("");
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(() => !!localStorage.getItem("tokai_disclaimer_accepted"));
+  const [infoModal, setInfoModal] = useState<{ title: string; body: string } | null>(null);
 
   const availableDates = useMemo(() => {
     const dates = new Set<string>([todayStr()]);
@@ -399,25 +441,31 @@ export default function Dashboard() {
   }, [focusHistory]);
 
   function getMedDelta(med: MedEntry) {
-    const baseFocus = focusHistory[med.sampleIndex]?.value;
-    if (baseFocus == null || focusHistory.length <= med.sampleIndex + 1) return null;
+    const idx = med.focusTime
+      ? focusHistory.findIndex(p => p.time === med.focusTime)
+      : med.sampleIndex;
+    if (idx < 0) return null;
+    const baseFocus = focusHistory[idx]?.value;
+    if (baseFocus == null || focusHistory.length <= idx + 1) return null;
     const windowSamples = Math.round(15 * 60 / refreshRate);
-    const endIdx = Math.min(med.sampleIndex + windowSamples, focusHistory.length - 1);
-    if (endIdx <= med.sampleIndex) return null;
+    const endIdx = Math.min(idx + windowSamples, focusHistory.length - 1);
+    if (endIdx <= idx) return null;
     const delta = Math.round(focusHistory[endIdx].value - baseFocus);
-    const minutes = Math.round((endIdx - med.sampleIndex) * refreshRate / 60);
+    const minutes = Math.round((endIdx - idx) * refreshRate / 60);
     return { delta, minutes };
   }
 
   function logMed() {
     const name = newMedName.trim();
     if (!name) return;
+    const sampleIndex = focusHistory.length - 1;
     setMedLog(prev => [...prev, {
       id: Date.now().toString(),
       name,
       dose: newMedDose.trim(),
       time: formatTime(new Date()),
-      sampleIndex: focusHistory.length - 1,
+      focusTime: focusHistory[sampleIndex]?.time,
+      sampleIndex,
       rating: null,
     }]);
     setNewMedName("");
@@ -710,7 +758,8 @@ export default function Dashboard() {
         <div>
           <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 3, marginBottom: 10, borderBottom: "1px solid rgba(192,132,252,0.2)", paddingBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
             <Pill size={14} color="#c084fc" />
-            <span><span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>MED</span></span>
+            <span style={{ flex: 1 }}><span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>MED</span></span>
+            <InfoButton onClick={() => setInfoModal(INFO[lang].tokMed)} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <input
@@ -830,14 +879,14 @@ export default function Dashboard() {
 
           {/* Metric cards — 2 cols on mobile, 5 on desktop */}
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(5, 1fr)", gap: isMobile ? 10 : 14 }}>
-            <MetricCard title={t.focusIndex} icon={<Crosshair size={12} color="#5a8fa8" />}>
+            <MetricCard title={t.focusIndex} icon={<Crosshair size={12} color="#5a8fa8" />} onInfo={() => setInfoModal(INFO[lang].focusIndex)}>
               <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
                 {neural.focusIndex.toFixed(1)}<span style={{ fontSize: 16, color: "#5a8fa8" }}>/100</span>
               </div>
               <Badge color={focusInfo.color}>{focusInfo.label}</Badge>
             </MetricCard>
 
-            <MetricCard title={t.bioEnergy} icon={<Zap size={12} color="#5a8fa8" />}>
+            <MetricCard title={t.bioEnergy} icon={<Zap size={12} color="#5a8fa8" />} onInfo={() => setInfoModal(INFO[lang].bioEnergy)}>
               <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
                 {Math.round(neural.bioEnergy)}<span style={{ fontSize: 16, color: "#5a8fa8" }}>%</span>
               </div>
@@ -846,14 +895,14 @@ export default function Dashboard() {
               </div>
             </MetricCard>
 
-            <MetricCard title={t.neuralNoise} icon={<Waves size={12} color="#5a8fa8" />}>
+            <MetricCard title={t.neuralNoise} icon={<Waves size={12} color="#5a8fa8" />} onInfo={() => setInfoModal(INFO[lang].neuralNoise)}>
               <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>
                 {Math.round(neural.neuralNoise)}<span style={{ fontSize: 14, color: "#5a8fa8" }}> μV²</span>
               </div>
               <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: noiseInfo.color, letterSpacing: 2 }}>{noiseInfo.label}</span>
             </MetricCard>
 
-            <MetricCard title={t.tbRatio} icon={<BarChart2 size={12} color="#5a8fa8" />}>
+            <MetricCard title={t.tbRatio} icon={<BarChart2 size={12} color="#5a8fa8" />} onInfo={() => setInfoModal(INFO[lang].tbRatio)}>
               <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8 }}>{neural.tbRatio}</div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Badge color={tbrInfo.color}>{tbrInfo.label}</Badge>
@@ -863,7 +912,7 @@ export default function Dashboard() {
               </div>
             </MetricCard>
 
-            <MetricCard title={t.focusWindow} icon={<Clock size={12} color="#5a8fa8" />}>
+            <MetricCard title={t.focusWindow} icon={<Clock size={12} color="#5a8fa8" />} onInfo={() => setInfoModal(INFO[lang].focusWindow)}>
               <div style={{ fontSize: 34, fontWeight: 700, color: "#e8f4ff", marginBottom: 8, lineHeight: 1.2 }}>
                 {focusHistory.length < 6 ? t.collectingData : `~${Math.max(3, Math.round((80 - neural.focusIndex) / 2))} min`}
               </div>
@@ -876,14 +925,17 @@ export default function Dashboard() {
 
           {/* Focus stream — full width */}
           <div style={{ minWidth: 0 }}>
-            <Panel title={
-              <span style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Activity size={14} color="#c084fc" /><span>{t.focusStream}</span></span>
-                {avgFocus !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(192,132,252,0.6)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "5m avg" : "5分均值"} {avgFocus}</span>}
-                {sessionAvg !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(56,189,248,0.7)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "session avg" : "階段均值"} {sessionAvg}</span>}
-                {dayAvg !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(74,222,128,0.7)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "day avg" : "日均值"} {dayAvg}</span>}
-              </span>
-            }>
+            <Panel
+              onInfo={() => setInfoModal(INFO[lang].focusStream)}
+              title={
+                <span style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Activity size={14} color="#c084fc" /><span>{t.focusStream}</span></span>
+                  {avgFocus !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(192,132,252,0.6)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "5m avg" : "5分均值"} {avgFocus}</span>}
+                  {sessionAvg !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(56,189,248,0.7)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "session avg" : "階段均值"} {sessionAvg}</span>}
+                  {dayAvg !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(74,222,128,0.7)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "day avg" : "日均值"} {dayAvg}</span>}
+                </span>
+              }
+            >
               <div ref={chartWrapRef} style={{ width: "100%", position: "relative" }}>
                 <div ref={chartScrollRef} style={{ width: chartWrapWidth, height: 168, overflowX: "scroll", overflowY: "hidden" }}
                   onScroll={e => {
@@ -905,10 +957,13 @@ export default function Dashboard() {
                       <ReferenceLine y={dayAvg} stroke="rgba(74,222,128,0.5)" strokeDasharray="6 3" />
                     )}
                     {medLog.map(med => {
-                      if (!focusHistory[med.sampleIndex]) return null;
+                      const idx = med.focusTime
+                        ? focusHistory.findIndex(p => p.time === med.focusTime)
+                        : med.sampleIndex;
+                      if (idx < 0 || !focusHistory[idx]) return null;
                       const peakSamples = Math.round(90 * 60 / refreshRate);
-                      const endIdx = Math.min(med.sampleIndex + peakSamples, focusHistory.length - 1);
-                      const x1 = focusHistory[med.sampleIndex].time;
+                      const endIdx = Math.min(idx + peakSamples, focusHistory.length - 1);
+                      const x1 = focusHistory[idx].time;
                       const x2 = focusHistory[endIdx]?.time;
                       return [
                         x2 && x2 !== x1 && <ReferenceArea key={med.id + "_area"} x1={x1} x2={x2} fill="rgba(251,191,36,0.06)" />,
@@ -963,10 +1018,11 @@ export default function Dashboard() {
             {/* Header */}
             <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", gap: 10, background: "rgba(192,132,252,0.03)", flexShrink: 0 }}>
               <BookOpen size={16} color="#c084fc" style={{ flexShrink: 0 }} />
-              <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, fontWeight: 700, letterSpacing: 3 }}>
+              <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, fontWeight: 700, letterSpacing: 3, flex: 1 }}>
                 <span style={{ color: "#7c3aed" }}>TOK</span>
                 <span style={{ color: "#c084fc" }}>{lang === "en" ? "NOTE · JOURNAL" : "NOTE · 日誌"}</span>
               </span>
+              <InfoButton onClick={() => setInfoModal(INFO[lang].tokNote)} />
             </div>
             {/* Neural Insight — pinned, always visible */}
             <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.1)", background: "rgba(192,132,252,0.02)", flexShrink: 0, display: "flex", alignItems: "flex-start", gap: 8 }}>
@@ -1078,15 +1134,26 @@ export default function Dashboard() {
               )}
             </div>
 
-          <AgentChat key={selectedDate} selectedDate={selectedDate} neuralState={neural} tasks={tasks.map(t => ({ title: t.title, description: t.description, done: t.done, demand: t.demand, estimatedMinutes: t.estimatedMinutes }))} journalEntries={journal.map(e => ({ text: e.text, time: e.time, focusIndex: e.focusIndex, mood: e.mood }))} lang={lang} isMobile={isMobile} />
+          <AgentChat
+            key={selectedDate}
+            selectedDate={selectedDate}
+            neuralState={neural}
+            tasks={tasks.map(tk => ({ id: tk.id, title: tk.title, description: tk.description, done: tk.done, demand: tk.demand, estimatedMinutes: tk.estimatedMinutes, createdAt: tk.createdAt, deadline: tk.deadline, emoji: tk.emoji }))}
+            journalEntries={journal.map(e => ({ text: e.text, time: e.time, date: e.date, focusIndex: e.focusIndex, mood: e.mood }))}
+            medLog={medLog.map(m => ({ id: m.id, name: m.name, dose: m.dose, time: m.time }))}
+            lang={lang}
+            isMobile={isMobile}
+            onInfo={() => setInfoModal(INFO[lang].tokAgent)}
+          />
           <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)", height: 480, display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                   <ListChecks size={16} color="#c084fc" style={{ flexShrink: 0 }} />
-                  <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, fontWeight: 700, letterSpacing: 3 }}>
+                  <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, fontWeight: 700, letterSpacing: 3, flex: 1 }}>
                     {lang === "en"
                       ? <><span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>TODO · CHECKLIST</span></>
                       : <><span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>TODO · {t.tokTodo}</span></>}
                   </span>
+                  <InfoButton onClick={() => setInfoModal(INFO[lang].tokTodo)} />
                 </div>
                 {/* Task creation form (today only) */}
                 {selectedDate === todayStr() ? (<>
@@ -1202,6 +1269,51 @@ export default function Dashboard() {
 
         </div>
       </main>
+
+      {/* ── Disclaimer modal ── */}
+      {!disclaimerAccepted && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ width: "100%", maxWidth: 480, background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 14, padding: 28, boxShadow: "0 0 60px rgba(192,132,252,0.12)", display: "flex", flexDirection: "column", gap: 18 }}>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#c084fc", letterSpacing: 3, borderBottom: "1px solid rgba(192,132,252,0.2)", paddingBottom: 10 }}>
+              TOKAI · {lang === "zh" ? "使用聲明" : "DISCLAIMER"}
+            </div>
+            <p style={{ margin: 0, fontSize: 15, color: "#c8d8e8", lineHeight: 1.7, fontFamily: "'Rajdhani', sans-serif" }}>
+              {lang === "zh"
+                ? <>Tokai 是一款<strong style={{ color: "#c084fc" }}>研究原型</strong>，並非醫療裝置。Pre-alpha 版本中的神經指標均為模擬數值。本應用程式不用於診斷、治療或提供任何 ADHD 或其他疾病的臨床建議。</>
+                : <>Tokai is a <strong style={{ color: "#c084fc" }}>research prototype</strong> and is not a medical device. Neural metrics in this pre-alpha version are simulated. This app is not intended to diagnose, treat, or provide clinical guidance for ADHD or any other condition.</>}
+            </p>
+            <p style={{ margin: 0, fontSize: 15, color: "#c8d8e8", lineHeight: 1.7, fontFamily: "'Rajdhani', sans-serif" }}>
+              {lang === "zh"
+                ? "你的資料儲存於本機裝置。若提供 API 金鑰，TokAgent 將透過 Anthropic API 使用你的資料生成回應。"
+                : "Your data is stored locally on your device. TokAgent may use your data to generate responses via the Anthropic API if an API key is provided."}
+            </p>
+            <button
+              onClick={() => { localStorage.setItem("tokai_disclaimer_accepted", "1"); setDisclaimerAccepted(true); }}
+              style={{ padding: "10px 0", background: "rgba(192,132,252,0.15)", border: "1px solid rgba(192,132,252,0.5)", borderRadius: 6, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 2, cursor: "pointer", transition: "background 0.2s" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(192,132,252,0.28)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "rgba(192,132,252,0.15)")}
+            >
+              {lang === "zh" ? "我已了解 · 繼續" : "I UNDERSTAND · CONTINUE"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Info modal ── */}
+      {infoModal && (
+        <div onClick={() => setInfoModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 250, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 440, background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 12, padding: 24, boxShadow: "0 0 48px rgba(192,132,252,0.12)", display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 3, height: 16, background: "#c084fc", borderRadius: 1, flexShrink: 0 }} />
+              <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc", letterSpacing: 3, flex: 1 }}>{infoModal.title}</span>
+              <button onClick={() => setInfoModal(null)} style={{ background: "none", border: "none", color: "#5a8fa8", cursor: "pointer", fontSize: 22, padding: 0, lineHeight: 1 }}>×</button>
+            </div>
+            <p style={{ margin: 0, fontSize: 15, color: "#c8d8e8", lineHeight: 1.7, fontFamily: "'Rajdhani', sans-serif" }}>
+              {infoModal.body}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Task detail modal ── */}
       {(() => {
