@@ -956,20 +956,18 @@ export default function Dashboard() {
                     {dayAvg !== null && dayAvg !== sessionAvg && (
                       <ReferenceLine y={dayAvg} stroke="rgba(74,222,128,0.5)" strokeDasharray="6 3" />
                     )}
-                    {medLog.map(med => {
-                      const idx = med.focusTime
-                        ? focusHistory.findIndex(p => p.time === med.focusTime)
-                        : med.sampleIndex;
-                      if (idx < 0 || !focusHistory[idx]) return null;
+                    {medLog.flatMap(med => {
+                      const x1 = med.focusTime || med.time;
+                      const idx = focusHistory.findIndex(p => p.time === x1);
+                      if (idx < 0) return [];
                       const peakSamples = Math.round(90 * 60 / refreshRate);
                       const endIdx = Math.min(idx + peakSamples, focusHistory.length - 1);
-                      const x1 = focusHistory[idx].time;
                       const x2 = focusHistory[endIdx]?.time;
-                      return [
-                        x2 && x2 !== x1 && <ReferenceArea key={med.id + "_area"} x1={x1} x2={x2} fill="rgba(251,191,36,0.06)" />,
-                        <ReferenceLine key={med.id} x={x1} stroke="rgba(251,191,36,0.7)" strokeDasharray="3 3"
-                          label={{ value: med.name.length > 10 ? med.name.slice(0, 10) + "…" : med.name, position: "insideTopLeft", fill: "#fbbf24", fontSize: 9, fontFamily: "'Share Tech Mono', monospace" }} />,
-                      ];
+                      const items: React.ReactElement[] = [];
+                      if (x2 && x2 !== x1) items.push(<ReferenceArea key={med.id + "_area"} x1={x1} x2={x2} fill="rgba(251,191,36,0.06)" />);
+                      items.push(<ReferenceLine key={med.id} x={x1} stroke="rgba(251,191,36,0.7)" strokeDasharray="3 3"
+                        label={{ value: med.name.length > 10 ? med.name.slice(0, 10) + "…" : med.name, position: "insideTopLeft", fill: "#fbbf24", fontSize: 9, fontFamily: "'Share Tech Mono', monospace" }} />);
+                      return items;
                     })}
                     <Line type="monotone" dataKey="value" stroke="#c084fc" strokeWidth={2} dot={false} isAnimationActive={false} />
                   </LineChart>
