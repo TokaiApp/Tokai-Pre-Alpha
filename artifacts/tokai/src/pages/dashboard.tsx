@@ -142,7 +142,7 @@ interface Task { id: string; title: string; description: string | null; done: bo
 const TASK_EMOJIS = ["📚", "✍️", "💻", "📧", "💪", "🍳", "🧹", "🎯", "🔬", "📞", "🛒", "🎨"];
 interface MedEntry { id: string; name: string; dose: string; time: string; focusTime?: string; sampleIndex: number; rating: number | null; }
 type Mood = "hyperfocus" | "flow" | "focused" | "restless" | "scattered" | "anxious" | "fatigued" | "zoned-out" | "crashed" | "low";
-interface JournalEntry { id: string; text: string; time: string; date: string; focusIndex: number; mood: Mood[]; }
+interface JournalEntry { id: string; text: string; time: string; date: string; focusIndex: number; mood: Mood[]; focusTime?: string; }
 
 ;(() => {
   try {
@@ -204,6 +204,7 @@ function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
 function formatTime(d: Date) { return d.toTimeString().slice(0, 5); }
+function formatTimeSec(d: Date) { return d.toTimeString().slice(0, 8); }
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 function formatDateTime(d: Date) { return `${todayStr()} ${d.toTimeString().slice(0, 5)}`; }
 function formatDayLabel(dateStr: string, lang: string): string {
@@ -362,7 +363,7 @@ export default function Dashboard() {
       const s = localStorage.getItem("tokai_focus_history");
       if (s) { const parsed = JSON.parse(s); if (parsed.length > 0) return parsed; }
     } catch {}
-    return [{ time: formatTime(new Date()), value: 35.6 }];
+    return [{ time: formatTimeSec(new Date()), value: 35.6 }];
   });
 
   const [tasks, setTasks] = useState<Task[]>(() => {
@@ -507,7 +508,7 @@ export default function Dashboard() {
   function addJournalEntry() {
     const text = journalInput.trim();
     if (!text) return;
-    setJournal(prev => [...prev, { id: Date.now().toString(), text, time: formatTime(new Date()), date: todayStr(), focusIndex: neural.focusIndex, mood: selectedMoods }]);
+    setJournal(prev => [...prev, { id: Date.now().toString(), text, time: formatTime(new Date()), date: todayStr(), focusIndex: neural.focusIndex, mood: selectedMoods, focusTime: focusHistory[focusHistory.length - 1]?.time }]);
     setJournalInput("");
     setSelectedMoods([]);
     setMoodDropdownOpen(false);
@@ -597,7 +598,7 @@ export default function Dashboard() {
     setNeural(next);
     neuralRef.current = next;
     const maxSamples = Math.round(30 * 60 / refreshRate);
-    setFocusHistory(h => [...h, { time: formatTime(new Date()), value: next.focusIndex }].slice(-maxSamples));
+    setFocusHistory(h => [...h, { time: formatTimeSec(new Date()), value: next.focusIndex }].slice(-maxSamples));
     setSamples(s => s + 1);
   }, [refreshRate]);
 
@@ -944,7 +945,7 @@ export default function Dashboard() {
                     if (!atRight) setIsLive(false);
                   }}>
                   <LineChart width={chartWidth} height={168} data={focusHistory} margin={{ top: 8, right: 16, bottom: 18, left: 0 }}>
-                    <XAxis dataKey="time" tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval={xInterval} />
+                    <XAxis dataKey="time" tickFormatter={(v: string) => v.slice(0, 5)} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval={xInterval} />
                     <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} width={32} />
                     <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
                     {avgFocus !== null && (
@@ -957,17 +958,26 @@ export default function Dashboard() {
                       <ReferenceLine y={dayAvg} stroke="rgba(74,222,128,0.5)" strokeDasharray="6 3" />
                     )}
                     {medLog.flatMap(med => {
-                      const x1 = med.focusTime || med.time;
-                      const idx = focusHistory.findIndex(p => p.time === x1);
+                      const key = med.focusTime || med.time;
+                      const idx = focusHistory.findIndex(p => p.time === key || (key.length === 5 && p.time.startsWith(key + ":")));
                       if (idx < 0) return [];
+                      const chartX = focusHistory[idx].time;
                       const peakSamples = Math.round(90 * 60 / refreshRate);
                       const endIdx = Math.min(idx + peakSamples, focusHistory.length - 1);
                       const x2 = focusHistory[endIdx]?.time;
                       const items: React.ReactElement[] = [];
-                      if (x2 && x2 !== x1) items.push(<ReferenceArea key={med.id + "_area"} x1={x1} x2={x2} fill="rgba(251,191,36,0.06)" />);
-                      items.push(<ReferenceLine key={med.id} x={x1} stroke="rgba(251,191,36,0.7)" strokeDasharray="3 3"
-                        label={{ value: med.name.length > 10 ? med.name.slice(0, 10) + "…" : med.name, position: "insideTopLeft", fill: "#fbbf24", fontSize: 9, fontFamily: "'Share Tech Mono', monospace" }} />);
+                      if (x2 && x2 !== chartX) items.push(<ReferenceArea key={med.id + "_area"} x1={chartX} x2={x2} fill="rgba(251,191,36,0.06)" />);
+                      items.push(<ReferenceLine key={med.id} x={chartX} stroke="rgba(251,191,36,0.85)" strokeDasharray="3 3"
+                        label={{ value: med.name.length > 8 ? med.name.slice(0, 8) + "…" : med.name, position: "insideTopLeft", fill: "#fbbf24", fontSize: 9, fontFamily: "'Share Tech Mono', monospace" }} />);
                       return items;
+                    })}
+                    {journal.filter(e => (e.date ?? todayStr()) === todayStr()).flatMap(entry => {
+                      const key = entry.focusTime || entry.time;
+                      const idx = focusHistory.findIndex(p => p.time === key || (key.length === 5 && p.time.startsWith(key + ":")));
+                      if (idx < 0) return [];
+                      const chartX = focusHistory[idx].time;
+                      return [<ReferenceLine key={"note_" + entry.id} x={chartX} stroke="rgba(100,200,160,0.7)" strokeDasharray="2 4"
+                        label={{ value: "✎", position: "insideTopRight", fill: "#6ee7b7", fontSize: 10 }} />];
                     })}
                     <Line type="monotone" dataKey="value" stroke="#c084fc" strokeWidth={2} dot={false} isAnimationActive={false} />
                   </LineChart>
@@ -1009,6 +1019,41 @@ export default function Dashboard() {
               ))}
             </select>
           </div>
+
+          {/* TokMed — mobile only (desktop shows in sidebar) */}
+          {isMobile && (
+            <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 10, padding: 16 }}>
+              <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 3, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                <Pill size={14} color="#fbbf24" />
+                <span style={{ flex: 1 }}><span style={{ color: "#b45309" }}>TOK</span><span style={{ color: "#fbbf24" }}>MED · LOG</span></span>
+                <InfoButton onClick={() => setInfoModal(INFO[lang].tokMed)} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <input value={newMedName} onChange={e => setNewMedName(e.target.value)} onKeyDown={e => e.key === "Enter" && logMed()} placeholder={t.medNamePlaceholder}
+                  style={{ width: "100%", padding: "8px 12px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(251,191,36,0.25)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 16, outline: "none", boxSizing: "border-box" }} />
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input value={newMedDose} onChange={e => setNewMedDose(e.target.value)} onKeyDown={e => e.key === "Enter" && logMed()} placeholder={t.medDosePlaceholder}
+                    style={{ flex: 1, padding: "8px 12px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(251,191,36,0.25)", borderRadius: 6, color: "#d0e8f8", fontFamily: "'Rajdhani', sans-serif", fontSize: 16, outline: "none", minWidth: 0 }} />
+                  <button onClick={logMed} disabled={!newMedName.trim()}
+                    style={{ padding: "8px 16px", background: newMedName.trim() ? "rgba(251,191,36,0.15)" : "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.4)", borderRadius: 6, color: "#fbbf24", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 1, cursor: newMedName.trim() ? "pointer" : "not-allowed", flexShrink: 0 }}>
+                    {t.medLogBtn}
+                  </button>
+                </div>
+                {medLog.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4, maxHeight: 160, overflowY: "auto" }}>
+                    {medLog.map(med => (
+                      <div key={med.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 5 }}>
+                        <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#fbbf24", flexShrink: 0 }} />
+                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#fbbf24", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{med.name}{med.dose ? ` · ${med.dose}` : ""}</span>
+                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.7)", flexShrink: 0 }}>{med.time}</span>
+                        <button onClick={() => deleteMed(med.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.5)", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, cursor: "pointer", padding: 0, flexShrink: 0 }}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* TokNote · TokAgent · TokTodo */}
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 14 }}>
