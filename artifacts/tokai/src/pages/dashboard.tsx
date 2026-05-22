@@ -897,13 +897,18 @@ export default function Dashboard({ session }: { session: Session }) {
         </div>
 
       <div style={{ flex: 1 }} />
-      <button
-        onClick={() => supabase.auth.signOut()}
-        style={{ width: "100%", padding: "10px 0", background: "rgba(248,113,113,0.07)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 6, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#f87171", letterSpacing: 2, cursor: "pointer", transition: "background 0.2s, border-color 0.2s" }}
-        onMouseEnter={e => { e.currentTarget.style.background = "rgba(248,113,113,0.15)"; e.currentTarget.style.borderColor = "rgba(248,113,113,0.6)"; }}
-        onMouseLeave={e => { e.currentTarget.style.background = "rgba(248,113,113,0.07)"; e.currentTarget.style.borderColor = "rgba(248,113,113,0.3)"; }}>
-        SIGN OUT
-      </button>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5, wordBreak: "break-all" }}>
+          {session.user.email}
+        </div>
+        <button
+          onClick={() => supabase.auth.signOut()}
+          style={{ width: "100%", padding: "10px 0", background: "rgba(248,113,113,0.07)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 6, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#f87171", letterSpacing: 2, cursor: "pointer", transition: "background 0.2s, border-color 0.2s" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(248,113,113,0.15)"; e.currentTarget.style.borderColor = "rgba(248,113,113,0.6)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(248,113,113,0.07)"; e.currentTarget.style.borderColor = "rgba(248,113,113,0.3)"; }}>
+          SIGN OUT
+        </button>
+      </div>
 
       </aside>
 
@@ -912,22 +917,43 @@ export default function Dashboard({ session }: { session: Session }) {
 
         {/* Mobile top bar */}
         {isMobile && (
-          <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(12,8,24,0.97)", position: "sticky", top: 0, zIndex: 20 }}>
-            <a href="https://tokai.app" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-              <img src="/tokai_logo.png" alt="Tokai" style={{ width: 34 }} />
-              <div>
-                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 20, letterSpacing: 4, lineHeight: 1 }}>
-                  <span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>AI</span>
+          <div style={{ borderBottom: "1px solid rgba(192,132,252,0.15)", background: "rgba(12,8,24,0.97)", position: "sticky", top: 0, zIndex: 20 }}>
+            <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <a href="https://tokai.app" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+                <img src="/tokai_logo.png" alt="Tokai" style={{ width: 34 }} />
+                <div>
+                  <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 20, letterSpacing: 4, lineHeight: 1 }}>
+                    <span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>AI</span>
+                  </div>
+                  <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 9, color: "#5a8fa8", letterSpacing: 1, marginTop: 2 }}>{t.version}</div>
                 </div>
-                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 9, color: "#5a8fa8", letterSpacing: 1, marginTop: 2 }}>{t.version}</div>
+              </a>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "#5a8fa8" }}>{t.liveStream}</span>
+                  <Toggle checked={liveStream} onChange={setLiveStream} />
+                </div>
+                <LangToggle lang={lang} setLang={setLang} />
               </div>
-            </a>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "#5a8fa8" }}>{t.liveStream}</span>
-                <Toggle checked={liveStream} onChange={setLiveStream} />
+            </div>
+            <div style={{ padding: "6px 16px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5 }}>
+                  {session.user.email}
+                </div>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.4)", letterSpacing: 0.5 }}>
+                  Developed by{" "}
+                  <a href="https://austinhua.com" target="_blank" rel="noopener noreferrer"
+                    style={{ color: "rgba(90,143,168,0.4)", textDecoration: "none" }}>
+                    Austin Hua
+                  </a>
+                </div>
               </div>
-              <LangToggle lang={lang} setLang={setLang} />
+              <button
+                onClick={() => supabase.auth.signOut()}
+                style={{ padding: "6px 14px", background: "rgba(248,113,113,0.07)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 6, fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#f87171", letterSpacing: 1, cursor: "pointer", flexShrink: 0 }}>
+                SIGN OUT
+              </button>
             </div>
           </div>
         )}
