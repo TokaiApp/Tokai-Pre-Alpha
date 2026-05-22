@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { supabase } from "@/lib/supabase";
 import { Github, Activity, BookOpen, ListChecks, Pill, Brain, Crosshair, Zap, Waves, BarChart2, Clock } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, ReferenceLine,
@@ -836,6 +837,13 @@ export default function Dashboard() {
               Austin Hua
             </a>
           </div>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            style={{ marginTop: 12, background: "none", border: "none", padding: 0, fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.4)", letterSpacing: 1, cursor: "pointer", textAlign: "left" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "#f87171")}
+            onMouseLeave={e => (e.currentTarget.style.color = "rgba(90,143,168,0.4)")}>
+            SIGN OUT
+          </button>
         </div>
 
       </aside>

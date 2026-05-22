@@ -19,5 +19,8 @@
     "react-dom": "catalog:",
     "recharts": "^2.15.2",
     "vite": "catalog:"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.106.1"
   }
 }
