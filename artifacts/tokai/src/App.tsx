@@ -15,7 +15,11 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (session === undefined) return null;
+  if (session === undefined) return (
+    <div style={{ minHeight: "100vh", background: "#0c0818", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 2 }}>
+      LOADING...
+    </div>
+  );
   if (!session) return <Login />;
   return <Dashboard />;
 }
