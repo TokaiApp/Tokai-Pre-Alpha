@@ -837,14 +837,16 @@ export default function Dashboard() {
               Austin Hua
             </a>
           </div>
-          <button
-            onClick={() => supabase.auth.signOut()}
-            style={{ marginTop: 12, background: "none", border: "none", padding: 0, fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.4)", letterSpacing: 1, cursor: "pointer", textAlign: "left" }}
-            onMouseEnter={e => (e.currentTarget.style.color = "#f87171")}
-            onMouseLeave={e => (e.currentTarget.style.color = "rgba(90,143,168,0.4)")}>
-            SIGN OUT
-          </button>
         </div>
+
+      <div style={{ flex: 1 }} />
+      <button
+        onClick={() => supabase.auth.signOut()}
+        style={{ width: "100%", padding: "10px 0", background: "rgba(248,113,113,0.07)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 6, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#f87171", letterSpacing: 2, cursor: "pointer", transition: "background 0.2s, border-color 0.2s" }}
+        onMouseEnter={e => { e.currentTarget.style.background = "rgba(248,113,113,0.15)"; e.currentTarget.style.borderColor = "rgba(248,113,113,0.6)"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "rgba(248,113,113,0.07)"; e.currentTarget.style.borderColor = "rgba(248,113,113,0.3)"; }}>
+        SIGN OUT
+      </button>
 
       </aside>
 
