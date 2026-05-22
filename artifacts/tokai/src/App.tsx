@@ -21,5 +21,5 @@ export default function App() {
     </div>
   );
   if (!session) return <Login />;
-  return <Dashboard />;
+  return <Dashboard session={session} />;
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { Github, Activity, BookOpen, ListChecks, Pill, Brain, Crosshair, Zap, Waves, BarChart2, Clock } from "lucide-react";
 import {
@@ -145,55 +146,6 @@ interface MedEntry { id: string; name: string; dose: string; time: string; focus
 type Mood = "hyperfocus" | "flow" | "focused" | "restless" | "scattered" | "anxious" | "fatigued" | "zoned-out" | "crashed" | "low";
 interface JournalEntry { id: string; text: string; time: string; date: string; focusIndex: number; mood: Mood[]; focusTime?: string; }
 
-;(() => {
-  try {
-    if (localStorage.getItem("tokai_demo_seeded")) return;
-
-    const existingJournal = (() => { try { const s = localStorage.getItem("tokai_journal"); return s ? JSON.parse(s) : []; } catch { return []; } })();
-    const demoJournal = [
-      { id: "demo-j1", text: "Starting the week with a plan. Reviewed my thesis outline over coffee — feels manageable today.", time: "08:12", date: "2026-05-18", focusIndex: 52.3, mood: ["focused"] },
-      { id: "demo-j2", text: "Deep work block finished. Got through the methodology section. Brain is tired now but satisfied.", time: "12:45", date: "2026-05-18", focusIndex: 38.7, mood: ["fatigued"] },
-      { id: "demo-j3", text: "Short walk helped reset. Back at it — data analysis scripts are making more sense now.", time: "15:20", date: "2026-05-18", focusIndex: 61.2, mood: ["flow"] },
-      { id: "demo-j4", text: "Slow start to Sunday. Tried to work but kept getting distracted. Focus feels very scattered.", time: "10:05", date: "2026-05-16", focusIndex: 28.4, mood: ["scattered", "restless"] },
-      { id: "demo-j5", text: "Took a proper break and watched something. Feel a bit better. Going to try one light session before the day ends.", time: "14:30", date: "2026-05-16", focusIndex: 41.8, mood: ["low"] },
-    ];
-    const mergedJournal = [...existingJournal, ...demoJournal.filter((d: { id: string }) => !existingJournal.some((e: { id: string }) => e.id === d.id))];
-    localStorage.setItem("tokai_journal", JSON.stringify(mergedJournal));
-
-    const existingTasks = (() => { try { const s = localStorage.getItem("tokai_tasks"); return s ? JSON.parse(s) : []; } catch { return []; } })();
-    const demoTasks = [
-      { id: "demo-t1", title: "Write methodology section", description: "Draft the research methodology chapter for the thesis.", done: true, demand: "high", estimatedMinutes: 90, createdAt: "2026-05-18 08:45", emoji: "✍️" },
-      { id: "demo-t2", title: "Review data analysis scripts", description: "Check the Python scripts for data processing and output errors.", done: true, demand: "medium", estimatedMinutes: 60, createdAt: "2026-05-18 08:45", emoji: "💻" },
-      { id: "demo-t3", title: "Email supervisor — weekly update", description: null, done: true, demand: "low", estimatedMinutes: 20, createdAt: "2026-05-18 08:45", emoji: "📧" },
-      { id: "demo-t4", title: "Read 2 papers for lit review", description: null, done: false, demand: "high", estimatedMinutes: 120, createdAt: "2026-05-18 14:00", emoji: "📚" },
-      { id: "demo-t5", title: "Organize research notes", description: "Sort and label notes from the past two weeks of reading.", done: true, demand: "low", estimatedMinutes: 20, createdAt: "2026-05-16 10:30", emoji: "📚" },
-      { id: "demo-t6", title: "Rest and recharge", description: "Take the afternoon off. Watch something, go for a walk.", done: true, demand: "low", estimatedMinutes: null, createdAt: "2026-05-16 13:00", emoji: undefined },
-    ];
-    const mergedTasks = [...existingTasks, ...demoTasks.filter((d: { id: string }) => !existingTasks.some((e: { id: string }) => e.id === d.id))];
-    localStorage.setItem("tokai_tasks", JSON.stringify(mergedTasks));
-
-    if (!localStorage.getItem("tokai_chat_2026-05-18")) {
-      localStorage.setItem("tokai_chat_2026-05-18", JSON.stringify({ messages: [
-        { role: "assistant", content: "Your neural data is streaming. I can see your tasks and today's journal. What would you like to work on first?" },
-        { role: "user", content: "Good morning! What should I tackle first today?", timestamp: "08:15" },
-        { role: "assistant", content: "Your focus is moderate (52.3/100) — a solid window for structured planning. Start with the methodology section (high demand) while your brain is fresh. Save the paper reading for after lunch. The email to your supervisor can close out the day as a low-demand win.", timestamp: "08:15" },
-        { role: "user", content: "I finished the methodology section. Now what?", timestamp: "12:50" },
-        { role: "assistant", content: "Strong progress. Your focus has dipped to 38.7 — that's expected after a high-demand block. Move to the data analysis scripts (medium demand) and if you feel cognitive drag after 30 minutes, switch to the supervisor email to close out cleanly.", timestamp: "12:50" },
-      ]}));
-    }
-    if (!localStorage.getItem("tokai_chat_2026-05-16")) {
-      localStorage.setItem("tokai_chat_2026-05-16", JSON.stringify({ messages: [
-        { role: "assistant", content: "Your neural data is streaming. I can see your tasks and today's journal. What would you like to work on first?" },
-        { role: "user", content: "It's Sunday and I can't focus at all. What should I do?", timestamp: "10:10" },
-        { role: "assistant", content: "Your brain is signaling low focus (28.4/100) and elevated neural noise — this is your nervous system asking for rest. On a Sunday, that's completely appropriate. Try organizing your notes (low demand, 20 min) or simply rest. Recovery is productive.", timestamp: "10:10" },
-        { role: "user", content: "OK I'll try to just organize my notes then", timestamp: "10:12" },
-        { role: "assistant", content: "That's the right call. Set a 20-minute timer and don't push past it. Organizing notes is low cognitive load and can feel satisfying when your brain needs a gentler pace.", timestamp: "10:12" },
-      ]}));
-    }
-
-    localStorage.setItem("tokai_demo_seeded", "1");
-  } catch {}
-})();
 
 function demandColor(d: Demand) {
   if (d === "low") return "#4ade80";
@@ -326,7 +278,8 @@ function LangToggle({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void 
   );
 }
 
-export default function Dashboard() {
+export default function Dashboard({ session }: { session: Session }) {
+  const userId = session.user.id;
   const [lang, setLang] = useState<Lang>("en");
   const t = T[lang];
 
@@ -367,17 +320,8 @@ export default function Dashboard() {
     return [{ time: formatTimeSec(new Date()), value: 35.6 }];
   });
 
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    try {
-      const s = localStorage.getItem("tokai_tasks");
-      if (s) { const parsed = JSON.parse(s); if (parsed.length > 0) return parsed; }
-    } catch {}
-    return [
-      { id: "1", title: "Review morning notes", description: "Scan yesterday's capture for open action items before the day's first focus block.", done: false, demand: "low", estimatedMinutes: 15 },
-      { id: "2", title: "Deep work block: project spec", description: null, done: false, demand: "high", estimatedMinutes: 90 },
-      { id: "3", title: "Reply to priority emails", description: null, done: false, demand: "medium", estimatedMinutes: 30 },
-    ];
-  });
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [newTask, setNewTask] = useState("");
   const [newTaskDesc, setNewTaskDesc] = useState("");
   const [newTaskDemand, setNewTaskDemand] = useState<Demand | null>(null);
@@ -386,18 +330,14 @@ export default function Dashboard() {
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
-  const [medLog, setMedLog] = useState<MedEntry[]>(() => {
-    try { const s = localStorage.getItem("tokai_med_log"); return s ? JSON.parse(s) : []; } catch { return []; }
-  });
+  const [medLog, setMedLog] = useState<MedEntry[]>([]);
   const [newMedName, setNewMedName] = useState("");
   const [newMedDose, setNewMedDose] = useState("");
   const [editingMedId, setEditingMedId] = useState<string | null>(null);
   const [editMedName, setEditMedName] = useState("");
   const [editMedDose, setEditMedDose] = useState("");
 
-  const [journal, setJournal] = useState<JournalEntry[]>(() => {
-    try { const s = localStorage.getItem("tokai_journal"); return s ? JSON.parse(s) : []; } catch { return []; }
-  });
+  const [journal, setJournal] = useState<JournalEntry[]>([]);
   const [journalInput, setJournalInput] = useState("");
   const [selectedMoods, setSelectedMoods] = useState<Mood[]>([]);
   const [moodDropdownOpen, setMoodDropdownOpen] = useState(false);
@@ -424,23 +364,123 @@ export default function Dashboard() {
   }, [journal, tasks]);
 
   useEffect(() => {
-    try { localStorage.setItem("tokai_med_log", JSON.stringify(medLog)); } catch {}
-  }, [medLog]);
-
-  useEffect(() => {
-    try { localStorage.setItem("tokai_journal", JSON.stringify(journal)); } catch {}
-  }, [journal]);
-
-  useEffect(() => {
-    try { localStorage.setItem("tokai_tasks", JSON.stringify(tasks)); } catch {}
-  }, [tasks]);
-
-  useEffect(() => {
     try {
       // cap at 1800 samples (~30 min at 1s, ~90 min at 3s) to stay well within localStorage limits
       localStorage.setItem("tokai_focus_history", JSON.stringify(focusHistory.slice(-1800)));
     } catch {}
   }, [focusHistory]);
+
+  // Load all user data from Supabase on mount
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const [{ data: tData }, { data: mData }, { data: jData }] = await Promise.all([
+        supabase.from("tasks").select("*").eq("user_id", userId),
+        supabase.from("med_log").select("*").eq("user_id", userId).order("logged_at"),
+        supabase.from("journal_entries").select("*").eq("user_id", userId),
+      ]);
+      if (cancelled) return;
+
+      const mappedTasks: Task[] = (tData ?? []).map((r: Record<string, unknown>) => ({
+        id: r.id as string, title: r.title as string, description: r.description as string | null,
+        done: r.done as boolean, demand: r.demand as Demand | null,
+        estimatedMinutes: r.estimated_minutes as number | null, createdAt: r.created_at as string | undefined,
+        deadline: r.deadline as string | undefined, emoji: r.emoji as string | undefined,
+      }));
+      const mappedMeds: MedEntry[] = (mData ?? []).map((r: Record<string, unknown>) => ({
+        id: r.id as string, name: r.name as string, dose: r.dose as string,
+        time: r.time as string, focusTime: r.focus_time as string | undefined,
+        sampleIndex: r.sample_index as number, rating: r.rating as number | null,
+      }));
+      const mappedJournal: JournalEntry[] = (jData ?? []).map((r: Record<string, unknown>) => ({
+        id: r.id as string, text: r.text as string, time: r.time as string,
+        date: r.date as string, focusIndex: r.focus_index as number,
+        mood: r.mood as Mood[], focusTime: r.focus_time as string | undefined,
+      }));
+
+      // Seed demo data for brand-new users
+      if (mappedTasks.length === 0 && mappedJournal.length === 0) {
+        const demoTasks = [
+          { id: "demo-t1", user_id: userId, title: "Write methodology section", description: "Draft the research methodology chapter for the thesis.", done: true, demand: "high", estimated_minutes: 90, created_at: "2026-05-18 08:45", emoji: "✍️" },
+          { id: "demo-t2", user_id: userId, title: "Review data analysis scripts", description: "Check the Python scripts for data processing and output errors.", done: true, demand: "medium", estimated_minutes: 60, created_at: "2026-05-18 08:45", emoji: "💻" },
+          { id: "demo-t3", user_id: userId, title: "Email supervisor — weekly update", description: null, done: true, demand: "low", estimated_minutes: 20, created_at: "2026-05-18 08:45", emoji: "📧" },
+          { id: "demo-t4", user_id: userId, title: "Read 2 papers for lit review", description: null, done: false, demand: "high", estimated_minutes: 120, created_at: "2026-05-18 14:00", emoji: "📚" },
+          { id: "demo-t5", user_id: userId, title: "Organize research notes", description: "Sort and label notes from the past two weeks of reading.", done: true, demand: "low", estimated_minutes: 20, created_at: "2026-05-16 10:30", emoji: "📚" },
+          { id: "demo-t6", user_id: userId, title: "Rest and recharge", description: "Take the afternoon off. Watch something, go for a walk.", done: true, demand: "low", estimated_minutes: null, created_at: "2026-05-16 13:00", emoji: null },
+        ];
+        const demoJournal = [
+          { id: "demo-j1", user_id: userId, text: "Starting the week with a plan. Reviewed my thesis outline over coffee — feels manageable today.", time: "08:12", date: "2026-05-18", focus_index: 52.3, mood: ["focused"] },
+          { id: "demo-j2", user_id: userId, text: "Deep work block finished. Got through the methodology section. Brain is tired now but satisfied.", time: "12:45", date: "2026-05-18", focus_index: 38.7, mood: ["fatigued"] },
+          { id: "demo-j3", user_id: userId, text: "Short walk helped reset. Back at it — data analysis scripts are making more sense now.", time: "15:20", date: "2026-05-18", focus_index: 61.2, mood: ["flow"] },
+          { id: "demo-j4", user_id: userId, text: "Slow start to Sunday. Tried to work but kept getting distracted. Focus feels very scattered.", time: "10:05", date: "2026-05-16", focus_index: 28.4, mood: ["scattered", "restless"] },
+          { id: "demo-j5", user_id: userId, text: "Took a proper break and watched something. Feel a bit better. Going to try one light session before the day ends.", time: "14:30", date: "2026-05-16", focus_index: 41.8, mood: ["low"] },
+        ];
+        await Promise.all([
+          supabase.from("tasks").insert(demoTasks),
+          supabase.from("journal_entries").insert(demoJournal),
+        ]);
+        if (!localStorage.getItem("tokai_chat_2026-05-18")) {
+          localStorage.setItem("tokai_chat_2026-05-18", JSON.stringify({ messages: [
+            { role: "assistant", content: "Your neural data is streaming. I can see your tasks and today's journal. What would you like to work on first?" },
+            { role: "user", content: "Good morning! What should I tackle first today?", timestamp: "08:15" },
+            { role: "assistant", content: "Your focus is moderate (52.3/100) — a solid window for structured planning. Start with the methodology section (high demand) while your brain is fresh. Save the paper reading for after lunch. The email to your supervisor can close out the day as a low-demand win.", timestamp: "08:15" },
+            { role: "user", content: "I finished the methodology section. Now what?", timestamp: "12:50" },
+            { role: "assistant", content: "Strong progress. Your focus has dipped to 38.7 — that's expected after a high-demand block. Move to the data analysis scripts (medium demand) and if you feel cognitive drag after 30 minutes, switch to the supervisor email to close out cleanly.", timestamp: "12:50" },
+          ]}));
+        }
+        if (!localStorage.getItem("tokai_chat_2026-05-16")) {
+          localStorage.setItem("tokai_chat_2026-05-16", JSON.stringify({ messages: [
+            { role: "assistant", content: "Your neural data is streaming. I can see your tasks and today's journal. What would you like to work on first?" },
+            { role: "user", content: "It's Sunday and I can't focus at all. What should I do?", timestamp: "10:10" },
+            { role: "assistant", content: "Your brain is signaling low focus (28.4/100) and elevated neural noise — this is your nervous system asking for rest. On a Sunday, that's completely appropriate. Try organizing your notes (low demand, 20 min) or simply rest. Recovery is productive.", timestamp: "10:10" },
+            { role: "user", content: "OK I'll try to just organize my notes then", timestamp: "10:12" },
+            { role: "assistant", content: "That's the right call. Set a 20-minute timer and don't push past it. Organizing notes is low cognitive load and can feel satisfying when your brain needs a gentler pace.", timestamp: "10:12" },
+          ]}));
+        }
+        setTasks(demoTasks.map(r => ({ id: r.id, title: r.title, description: r.description, done: r.done, demand: r.demand as Demand, estimatedMinutes: r.estimated_minutes, createdAt: r.created_at, emoji: r.emoji ?? undefined })));
+        setJournal(demoJournal.map(r => ({ id: r.id, text: r.text, time: r.time, date: r.date, focusIndex: r.focus_index, mood: r.mood as Mood[] })));
+      } else {
+        setTasks(mappedTasks);
+        setMedLog(mappedMeds);
+        setJournal(mappedJournal);
+      }
+      setDataLoaded(true);
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  // Persist task text-field edits to Supabase when the detail modal closes
+  const tasksRef = useRef<Task[]>([]);
+  useEffect(() => { tasksRef.current = tasks; }, [tasks]);
+  const prevSelectedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const prev = prevSelectedRef.current;
+    prevSelectedRef.current = selectedTaskId;
+    if (!prev || !dataLoaded) return;
+    const task = tasksRef.current.find(t => t.id === prev);
+    if (!task) return;
+    supabase.from("tasks").update({
+      title: task.title, description: task.description,
+      estimated_minutes: task.estimatedMinutes, deadline: task.deadline ?? null,
+    }).eq("id", task.id);
+  }, [selectedTaskId, dataLoaded]);
+
+  async function updateTask(id: string, changes: Partial<Task>) {
+    setTasks(p => p.map(t => t.id === id ? { ...t, ...changes } : t));
+    const db: Record<string, unknown> = {};
+    if ("done" in changes) db.done = changes.done;
+    if ("emoji" in changes) db.emoji = changes.emoji ?? null;
+    if ("demand" in changes) db.demand = changes.demand ?? null;
+    if ("deadline" in changes) db.deadline = changes.deadline ?? null;
+    if (Object.keys(db).length > 0) await supabase.from("tasks").update(db).eq("id", id);
+  }
+
+  async function deleteTask(id: string) {
+    setTasks(p => p.filter(tk => tk.id !== id));
+    setSelectedTaskId(null);
+    await supabase.from("tasks").delete().eq("id", id);
+  }
 
   function getMedDelta(med: MedEntry) {
     const idx = med.focusTime
@@ -457,21 +497,22 @@ export default function Dashboard() {
     return { delta, minutes };
   }
 
-  function logMed() {
+  async function logMed() {
     const name = newMedName.trim();
     if (!name) return;
     const sampleIndex = focusHistory.length - 1;
-    setMedLog(prev => [...prev, {
-      id: Date.now().toString(),
-      name,
-      dose: newMedDose.trim(),
-      time: formatTime(new Date()),
-      focusTime: focusHistory[sampleIndex]?.time,
-      sampleIndex,
-      rating: null,
-    }]);
+    const entry: MedEntry = {
+      id: Date.now().toString(), name, dose: newMedDose.trim(),
+      time: formatTime(new Date()), focusTime: focusHistory[sampleIndex]?.time,
+      sampleIndex, rating: null,
+    };
+    setMedLog(prev => [...prev, entry]);
     setNewMedName("");
     setNewMedDose("");
+    await supabase.from("med_log").insert({
+      id: entry.id, user_id: userId, name: entry.name, dose: entry.dose,
+      time: entry.time, focus_time: entry.focusTime ?? null, sample_index: entry.sampleIndex, rating: null,
+    });
   }
 
   function startEditMed(med: MedEntry) {
@@ -480,20 +521,25 @@ export default function Dashboard() {
     setEditMedDose(med.dose);
   }
 
-  function saveMedEdit(id: string) {
+  async function saveMedEdit(id: string) {
     const name = editMedName.trim();
     if (!name) { deleteMed(id); return; }
-    setMedLog(prev => prev.map(m => m.id === id ? { ...m, name, dose: editMedDose.trim() } : m));
+    const dose = editMedDose.trim();
+    setMedLog(prev => prev.map(m => m.id === id ? { ...m, name, dose } : m));
     setEditingMedId(null);
+    await supabase.from("med_log").update({ name, dose }).eq("id", id);
   }
 
-  function deleteMed(id: string) {
+  async function deleteMed(id: string) {
     setMedLog(prev => prev.filter(m => m.id !== id));
     setEditingMedId(null);
+    await supabase.from("med_log").delete().eq("id", id);
   }
 
-  function setMedRating(id: string, rating: number) {
-    setMedLog(prev => prev.map(m => m.id === id ? { ...m, rating: m.rating === rating ? null : rating } : m));
+  async function setMedRating(id: string, rating: number) {
+    const newRating = medLog.find(m => m.id === id)?.rating === rating ? null : rating;
+    setMedLog(prev => prev.map(m => m.id === id ? { ...m, rating: newRating } : m));
+    await supabase.from("med_log").update({ rating: newRating }).eq("id", id);
   }
 
   useEffect(() => {
@@ -506,13 +552,23 @@ export default function Dashboard() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [moodDropdownOpen]);
 
-  function addJournalEntry() {
+  async function addJournalEntry() {
     const text = journalInput.trim();
     if (!text) return;
-    setJournal(prev => [...prev, { id: Date.now().toString(), text, time: formatTime(new Date()), date: todayStr(), focusIndex: neural.focusIndex, mood: selectedMoods, focusTime: focusHistory[focusHistory.length - 1]?.time }]);
+    const entry: JournalEntry = {
+      id: Date.now().toString(), text, time: formatTime(new Date()), date: todayStr(),
+      focusIndex: neural.focusIndex, mood: selectedMoods,
+      focusTime: focusHistory[focusHistory.length - 1]?.time,
+    };
+    setJournal(prev => [...prev, entry]);
     setJournalInput("");
     setSelectedMoods([]);
     setMoodDropdownOpen(false);
+    await supabase.from("journal_entries").insert({
+      id: entry.id, user_id: userId, text: entry.text, time: entry.time,
+      date: entry.date, focus_index: entry.focusIndex, mood: entry.mood,
+      focus_time: entry.focusTime ?? null,
+    });
   }
 
   function startEditNote(entry: JournalEntry) {
@@ -520,16 +576,18 @@ export default function Dashboard() {
     setEditNoteText(entry.text);
   }
 
-  function saveNoteEdit(id: string) {
+  async function saveNoteEdit(id: string) {
     const text = editNoteText.trim();
     if (!text) { deleteNote(id); return; }
     setJournal(prev => prev.map(e => e.id === id ? { ...e, text } : e));
     setEditingNoteId(null);
+    await supabase.from("journal_entries").update({ text }).eq("id", id);
   }
 
-  function deleteNote(id: string) {
+  async function deleteNote(id: string) {
     setJournal(prev => prev.filter(e => e.id !== id));
     setEditingNoteId(null);
+    await supabase.from("journal_entries").delete().eq("id", id);
   }
 
   useEffect(() => {
@@ -645,25 +703,23 @@ export default function Dashboard() {
     return t.insightLow(f.toFixed(1), String(Math.round(e)));
   }
 
-  function addTask(e: React.KeyboardEvent<HTMLInputElement>) {
+  async function addTask(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" && newTask.trim()) {
-      setTasks(prev => [...prev, {
-        id: Date.now().toString(),
-        title: newTask.trim(),
-        description: newTaskDesc.trim() || null,
-        done: false,
-        demand: newTaskDemand,
+      const task: Task = {
+        id: Date.now().toString(), title: newTask.trim(),
+        description: newTaskDesc.trim() || null, done: false, demand: newTaskDemand,
         estimatedMinutes: newTaskTime ? parseInt(newTaskTime) : null,
-        createdAt: formatDateTime(new Date()),
-        deadline: newTaskDeadline || undefined,
+        createdAt: formatDateTime(new Date()), deadline: newTaskDeadline || undefined,
         emoji: newTaskEmoji || undefined,
-      }]);
-      setNewTask("");
-      setNewTaskDesc("");
-      setNewTaskDemand(null);
-      setNewTaskTime("");
-      setNewTaskDeadline("");
-      setNewTaskEmoji("");
+      };
+      setTasks(prev => [...prev, task]);
+      setNewTask(""); setNewTaskDesc(""); setNewTaskDemand(null);
+      setNewTaskTime(""); setNewTaskDeadline(""); setNewTaskEmoji("");
+      await supabase.from("tasks").insert({
+        id: task.id, user_id: userId, title: task.title, description: task.description,
+        done: false, demand: task.demand, estimated_minutes: task.estimatedMinutes,
+        created_at: task.createdAt, deadline: task.deadline ?? null, emoji: task.emoji ?? null,
+      });
     }
   }
 
@@ -680,6 +736,7 @@ export default function Dashboard() {
       const data = await res.json();
       if (data.description) {
         setTasks(p => p.map(t => t.id === task.id ? { ...t, description: data.description } : t));
+        await supabase.from("tasks").update({ description: data.description }).eq("id", task.id);
       }
     } catch { /* silent */ }
     setGeneratingId(null);
@@ -1276,7 +1333,7 @@ export default function Dashboard() {
                       <div style={{ display: "flex", alignItems: "flex-start", gap: 6, minWidth: 0 }}>
                         <div onClick={e => e.stopPropagation()}>
                           <input type="checkbox" checked={task.done}
-                            onChange={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
+                            onChange={() => updateTask(task.id, { done: !task.done })}
                             style={{ accentColor: "#c084fc", cursor: "pointer", flexShrink: 0, marginTop: 3 }} />
                         </div>
                         {task.emoji && <span style={{ fontSize: 16, flexShrink: 0, lineHeight: 1, opacity: task.done ? 0.5 : 1 }}>{task.emoji}</span>}
@@ -1394,7 +1451,7 @@ export default function Dashboard() {
               {/* Done toggle + title */}
               <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                 <input type="checkbox" checked={task.done}
-                  onChange={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
+                  onChange={() => updateTask(task.id, { done: !task.done })}
                   style={{ accentColor: "#c084fc", cursor: "pointer", flexShrink: 0, marginTop: 6, width: 16, height: 16 }} />
                 <input
                   value={task.title}
@@ -1406,7 +1463,7 @@ export default function Dashboard() {
               {/* Emoji picker */}
               <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
                 {TASK_EMOJIS.map(e => (
-                  <button key={e} onClick={() => setTasks(p => p.map(tk => tk.id === task.id ? { ...tk, emoji: tk.emoji === e ? undefined : e } : tk))}
+                  <button key={e} onClick={() => updateTask(task.id, { emoji: task.emoji === e ? undefined : e })}
                     style={{ fontSize: 20, lineHeight: 1, padding: "4px 6px", background: task.emoji === e ? "rgba(192,132,252,0.2)" : "transparent", border: `1px solid ${task.emoji === e ? "rgba(192,132,252,0.5)" : "rgba(192,132,252,0.12)"}`, borderRadius: 5, cursor: "pointer", transition: "all 0.12s" }}>
                     {e}
                   </button>
@@ -1435,7 +1492,7 @@ export default function Dashboard() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "#5a8fa8", letterSpacing: 1, flexShrink: 0 }}>{t.demandLabel}:</span>
                 {(["low", "medium", "high"] as Demand[]).map(d => (
-                  <button key={d} onClick={() => setTasks(p => p.map(tk => tk.id === task.id ? { ...tk, demand: tk.demand === d ? null : d } : tk))}
+                  <button key={d} onClick={() => updateTask(task.id, { demand: task.demand === d ? null : d })}
                     style={{ padding: "3px 10px", background: task.demand === d ? demandColor(d) + "22" : "transparent", border: `1px solid ${task.demand === d ? demandColor(d) : "rgba(192,132,252,0.2)"}`, borderRadius: 3, color: task.demand === d ? demandColor(d) : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: "pointer", letterSpacing: 1 }}>
                     {d === "low" ? t.demandLow : d === "medium" ? t.demandMed : t.demandHigh}
                   </button>
@@ -1461,7 +1518,7 @@ export default function Dashboard() {
                   style={{ flex: 1, padding: "4px 8px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 4, color: task.deadline ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, outline: "none", colorScheme: "dark" }}
                 />
                 {task.deadline && (
-                  <button onClick={() => setTasks(p => p.map(tk => tk.id === task.id ? { ...tk, deadline: undefined } : tk))}
+                  <button onClick={() => updateTask(task.id, { deadline: undefined })}
                     style={{ background: "none", border: "none", color: "rgba(90,143,168,0.5)", cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
                 )}
               </div>
@@ -1474,7 +1531,7 @@ export default function Dashboard() {
                   </span>
                 )}
                 <button
-                  onClick={() => { setTasks(p => p.filter(tk => tk.id !== task.id)); setSelectedTaskId(null); }}
+                  onClick={() => deleteTask(task.id)}
                   style={{ padding: "5px 12px", background: "transparent", border: "1px solid rgba(255,80,80,0.3)", borderRadius: 4, color: "rgba(255,80,80,0.6)", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, cursor: "pointer", letterSpacing: 1, marginLeft: "auto" }}
                 >
                   {t.deleteTask}
