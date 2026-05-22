@@ -25,9 +25,10 @@ function ResetPassword() {
     setLoading(true);
     setError(null);
     const { error } = await supabase.auth.updateUser({ password });
-    if (error) setError(error.message);
-    else setDone(true);
+    if (error) { setError(error.message); setLoading(false); return; }
+    setDone(true);
     setLoading(false);
+    setTimeout(() => supabase.auth.signOut(), 2000);
   }
 
   return (
@@ -70,13 +71,14 @@ function ResetPassword() {
 
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
-  const [recovering, setRecovering] = useState(false);
+  const [recovering, setRecovering] = useState(() =>
+    window.location.hash.includes("type=recovery")
+  );
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") setRecovering(true);
-      else setRecovering(false);
       setSession(session);
     });
     return () => subscription.unsubscribe();
