@@ -235,7 +235,7 @@ function MetricCard({ title, icon, onInfo, children }: { title: string; icon?: R
   return (
     <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.15)", borderRadius: 10, padding: "16px 20px", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: 0, left: 0, width: 3, height: "100%", background: "linear-gradient(180deg, #c084fc, #7c3aed)" }} />
-      <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 2, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 14, color: "#5a8fa8", letterSpacing: 2, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
         {icon}
         <span style={{ flex: 1 }}>{title}</span>
         {onInfo && <InfoButton onClick={onInfo} />}
@@ -270,7 +270,7 @@ function LangToggle({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void 
   return (
     <button
       onClick={() => setLang(lang === "en" ? "zh" : "en")}
-      style={{ display: "flex", alignItems: "center", gap: 0, background: "rgba(192,132,252,0.06)", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 6, overflow: "hidden", cursor: "pointer", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 1 }}
+      style={{ display: "flex", alignItems: "center", gap: 0, background: "rgba(192,132,252,0.06)", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 6, overflow: "hidden", cursor: "pointer", fontFamily: "'Share Tech Mono', monospace", fontSize: 15, letterSpacing: 1 }}
     >
       <span style={{ width: 48, textAlign: "center", padding: "6px 0", display: "inline-block", color: lang === "en" ? "#c084fc" : "#5a8fa8", fontWeight: lang === "en" ? 700 : 400, background: lang === "en" ? "rgba(192,132,252,0.15)" : "transparent", transition: "all 0.2s" }}>EN</span>
       <span style={{ color: "rgba(192,132,252,0.3)", padding: "6px 0" }}>|</span>
@@ -353,6 +353,7 @@ export default function Dashboard({ session }: { session: Session }) {
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(() => !!localStorage.getItem("tokai_disclaimer_accepted"));
   const [infoModal, setInfoModal] = useState<{ title: string; body: string } | null>(null);
   const [moodAssessment, setMoodAssessment] = useState<MoodAssessment | null>(null);
+  const [moodCapturedUrl, setMoodCapturedUrl] = useState<string | null>(null);
   const [moodCheckLoading, setMoodCheckLoading] = useState(false);
   const [moodCheckError, setMoodCheckError] = useState<string | null>(null);
   const [showMoodConsent, setShowMoodConsent] = useState(false);
@@ -619,6 +620,7 @@ export default function Dashboard({ session }: { session: Session }) {
     setMoodCheckError(null);
     try {
       const { base64, mimeType } = await compressImage(file);
+      setMoodCapturedUrl(`data:image/jpeg;base64,${base64}`);
       const res = await fetch(`${API_BASE}/api/mood-check`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -845,7 +847,7 @@ export default function Dashboard({ session }: { session: Session }) {
       <aside style={{ width: 240, minWidth: 240, padding: "24px 20px", borderRight: "1px solid rgba(192,132,252,0.15)", display: isMobile ? "none" : "flex", flexDirection: "column", gap: 24, position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
         <a href="https://tokai.app" target="_blank" rel="noopener noreferrer" style={{ display: "flex", flexDirection: "column", alignItems: "center", textDecoration: "none" }}>
           <img src="/tokai_logo.png" alt="Tokai" style={{ width: 120, display: "block", marginBottom: 6 }} />
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 2, textAlign: "center" }}>{t.version}</div>
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, color: "#5a8fa8", letterSpacing: 2, textAlign: "center" }}>{t.version}</div>
         </a>
 
         <div>
@@ -897,7 +899,7 @@ export default function Dashboard({ session }: { session: Session }) {
             onMouseLeave={e => (e.currentTarget.style.color = "#5a8fa8")}>
             <Github size={20} />{t.sourceCode}
           </a>
-          <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5 }}>
+          <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 14, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5 }}>
             Developed by:{" "}
             <a href="https://austinhua.com" target="_blank" rel="noopener noreferrer"
               style={{ color: "rgba(90,143,168,0.5)", textDecoration: "none", transition: "color 0.2s" }}
@@ -917,7 +919,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <span style={{ color: "#c084fc" }}>: {tokEn}</span>
           </div>
         </div>
-        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5, wordBreak: "break-all" }}>
+        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5, wordBreak: "break-all" }}>
           {session.user.email}
         </div>
         <button
@@ -964,7 +966,7 @@ export default function Dashboard({ session }: { session: Session }) {
                     <span style={{ color: "#c084fc" }}>: {tokEn}</span>
                   </div>
                 </div>
-                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5 }}>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5 }}>
                   {session.user.email}
                 </div>
                 <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.4)", letterSpacing: 0.5 }}>
@@ -1050,9 +1052,9 @@ export default function Dashboard({ session }: { session: Session }) {
               title={
                 <span style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Activity size={14} color="#c084fc" /><span>{t.focusStream}</span></span>
-                  {avgFocus !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(192,132,252,0.6)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "5m avg" : "5分均值"} {avgFocus}</span>}
-                  {sessionAvg !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(56,189,248,0.7)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "session avg" : "階段均值"} {sessionAvg}</span>}
-                  {dayAvg !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(74,222,128,0.7)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "day avg" : "日均值"} {dayAvg}</span>}
+                  {avgFocus !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, color: "rgba(192,132,252,0.8)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "5m avg" : "5分均值"} {avgFocus}</span>}
+                  {sessionAvg !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, color: "rgba(56,189,248,0.85)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "session avg" : "階段均值"} {sessionAvg}</span>}
+                  {dayAvg !== null && <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, color: "rgba(74,222,128,0.85)", letterSpacing: 1, fontWeight: 400 }}>{lang === "en" ? "day avg" : "日均值"} {dayAvg}</span>}
                 </span>
               }
             >
@@ -1065,7 +1067,7 @@ export default function Dashboard({ session }: { session: Session }) {
                   }}>
                   <div style={{ width: chartWidth, height: 168, position: "relative" }}>
                     <LineChart width={chartWidth} height={168} data={focusHistory} margin={{ top: 8, right: 16, bottom: 18, left: 0 }}>
-                      <XAxis dataKey="time" tickFormatter={(v: string) => v.slice(0, 5)} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval={xInterval} />
+                      <XAxis dataKey="time" tickFormatter={(v: string) => v.slice(0, 5)} tick={{ fill: "#5a8fa8", fontSize: 12, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} interval={xInterval} />
                       <YAxis domain={[0, 100]} tick={{ fill: "#5a8fa8", fontSize: 10, fontFamily: "'Share Tech Mono', monospace" }} axisLine={false} tickLine={false} ticks={[0, 20, 40, 60, 80, 100]} width={32} />
                       <ReferenceLine y={60} stroke="rgba(255,80,80,0.35)" strokeDasharray="4 4" />
                       {avgFocus !== null && <ReferenceLine y={avgFocus} stroke="rgba(192,132,252,0.55)" strokeDasharray="6 3" />}
@@ -1120,12 +1122,12 @@ export default function Dashboard({ session }: { session: Session }) {
                     { label: "▶", delta: 200, title: "Scroll right" },
                   ].map(({ label, delta, title }) => (
                     <button key={label} onClick={() => scrollChart(delta)} title={title}
-                      style={{ padding: "2px 10px", background: "rgba(192,132,252,0.07)", border: "1px solid rgba(192,132,252,0.25)", borderRadius: 4, color: "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, cursor: "pointer", lineHeight: 1.6 }}>
+                      style={{ padding: "5px 14px", background: "rgba(192,132,252,0.07)", border: "1px solid rgba(192,132,252,0.25)", borderRadius: 4, color: "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 14, cursor: "pointer", lineHeight: 1.6 }}>
                       {label}
                     </button>
                   ))}
                   <button onClick={goToLive} title="Jump to live"
-                    style={{ padding: "2px 10px", background: isLive ? "rgba(192,132,252,0.2)" : "rgba(192,132,252,0.07)", border: `1px solid ${isLive ? "rgba(192,132,252,0.7)" : "rgba(192,132,252,0.25)"}`, borderRadius: 4, color: isLive ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, cursor: "pointer", letterSpacing: 1, lineHeight: 1.6, transition: "all 0.2s" }}>
+                    style={{ padding: "5px 14px", background: isLive ? "rgba(192,132,252,0.2)" : "rgba(192,132,252,0.07)", border: `1px solid ${isLive ? "rgba(192,132,252,0.7)" : "rgba(192,132,252,0.25)"}`, borderRadius: 4, color: isLive ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 14, cursor: "pointer", letterSpacing: 1, lineHeight: 1.6, transition: "all 0.2s" }}>
                     ▶▶ LIVE
                   </button>
                 </div>
@@ -1168,19 +1170,25 @@ export default function Dashboard({ session }: { session: Session }) {
             </div>
             {/* Mood assessment result banner */}
             {moodAssessment && (
-              <div style={{ padding: "7px 16px", borderBottom: "1px solid rgba(192,132,252,0.1)", background: "rgba(192,132,252,0.04)", flexShrink: 0, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <Camera size={11} color="#5a8fa8" style={{ flexShrink: 0 }} />
-                {([
-                  { k: lang === "en" ? "MOOD" : "情緒", v: moodAssessment.mood, colors: { positive: "#4ade80", neutral: "#c084fc", low: "#f472b6" } as Record<string, string> },
-                  { k: lang === "en" ? "ENERGY" : "能量", v: moodAssessment.energy, colors: { high: "#4ade80", moderate: "#ffa040", low: "#f472b6" } as Record<string, string> },
-                  { k: lang === "en" ? "STRESS" : "壓力", v: moodAssessment.stress, colors: { calm: "#4ade80", mild: "#ffa040", elevated: "#f472b6" } as Record<string, string> },
-                ] as { k: string; v: string; colors: Record<string, string> }[]).map(({ k, v, colors }) => (
-                  <span key={k} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, padding: "1px 6px", border: `1px solid ${colors[v] ?? "#c084fc"}`, color: colors[v] ?? "#c084fc", borderRadius: 3, letterSpacing: 1, whiteSpace: "nowrap" }}>
-                    {k}: {v.toUpperCase()}
-                  </span>
-                ))}
-                <span style={{ flex: 1, fontSize: 13, color: "rgba(200,216,232,0.65)", fontFamily: "'Rajdhani', sans-serif", fontStyle: "italic", minWidth: 0 }}>{moodAssessment.suggestion}</span>
-                <button onClick={() => setMoodAssessment(null)} style={{ background: "none", border: "none", color: "rgba(90,143,168,0.5)", cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
+              <div style={{ padding: "8px 16px", borderBottom: "1px solid rgba(192,132,252,0.1)", background: "rgba(192,132,252,0.04)", flexShrink: 0, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                {moodCapturedUrl && (
+                  <img src={moodCapturedUrl} alt="Mood scan" style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 6, border: "1px solid rgba(192,132,252,0.3)", flexShrink: 0 }} />
+                )}
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    {([
+                      { k: lang === "en" ? "MOOD" : "情緒", v: moodAssessment.mood, colors: { positive: "#4ade80", neutral: "#c084fc", low: "#f472b6" } as Record<string, string> },
+                      { k: lang === "en" ? "ENERGY" : "能量", v: moodAssessment.energy, colors: { high: "#4ade80", moderate: "#ffa040", low: "#f472b6" } as Record<string, string> },
+                      { k: lang === "en" ? "STRESS" : "壓力", v: moodAssessment.stress, colors: { calm: "#4ade80", mild: "#ffa040", elevated: "#f472b6" } as Record<string, string> },
+                    ] as { k: string; v: string; colors: Record<string, string> }[]).map(({ k, v, colors }) => (
+                      <span key={k} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, padding: "1px 7px", border: `1px solid ${colors[v] ?? "#c084fc"}`, color: colors[v] ?? "#c084fc", borderRadius: 3, letterSpacing: 1, whiteSpace: "nowrap" }}>
+                        {k}: {v.toUpperCase()}
+                      </span>
+                    ))}
+                  </div>
+                  <span style={{ fontSize: 13, color: "rgba(200,216,232,0.7)", fontFamily: "'Rajdhani', sans-serif", fontStyle: "italic" }}>{moodAssessment.suggestion}</span>
+                </div>
+                <button onClick={() => { setMoodAssessment(null); setMoodCapturedUrl(null); }} style={{ background: "none", border: "none", color: "rgba(90,143,168,0.5)", cursor: "pointer", fontSize: 18, padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
               </div>
             )}
             {/* Entries */}
@@ -1212,18 +1220,18 @@ export default function Dashboard({ session }: { session: Session }) {
                       onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(192,132,252,0.35)")}
                       onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(192,132,252,0.14)")}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8" }}>{entry.date ? `${entry.date} ${entry.time}` : entry.time}</span>
-                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc" }}>{t.noteFocusLabel} {entry.focusIndex.toFixed(1)}</span>
+                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8" }}>{entry.date ? `${entry.date} ${entry.time}` : entry.time}</span>
+                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc" }}>{t.noteFocusLabel} {entry.focusIndex.toFixed(1)}</span>
                         {(() => {
                           const moodMap: Record<string, string> = { hyperfocus: t.moodHyperfocus, flow: t.moodFlow, focused: t.moodFocused, restless: t.moodRestless, scattered: t.moodScattered, anxious: t.moodAnxious, fatigued: t.moodFatigued, "zoned-out": t.moodZonedOut, crashed: t.moodCrashed, low: t.moodLow };
                           const moods = Array.isArray(entry.mood) ? entry.mood : (entry.mood ? [entry.mood as string] : []);
                           return moods.map(m => (
-                            <span key={m} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, padding: "1px 6px", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 3, color: "#c084fc", letterSpacing: 1 }}>
+                            <span key={m} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, padding: "1px 6px", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 3, color: "#c084fc", letterSpacing: 1 }}>
                               {moodMap[m] ?? m}
                             </span>
                           ));
                         })()}
-                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(192,132,252,0.3)", marginLeft: "auto" }}>✎</span>
+                        <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "rgba(192,132,252,0.3)", marginLeft: "auto" }}>✎</span>
                       </div>
                       <p style={{ margin: 0, fontSize: 16, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", lineHeight: 1.5 }}>{entry.text}</p>
                     </div>
@@ -1233,7 +1241,7 @@ export default function Dashboard({ session }: { session: Session }) {
               </div>
               {/* Input + mood tags (today only) */}
               {selectedDate !== todayStr() ? (
-                <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(192,132,252,0.1)", background: "rgba(0,0,0,0.15)", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.5)", letterSpacing: 1, flexShrink: 0 }}>
+                <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(192,132,252,0.1)", background: "rgba(0,0,0,0.15)", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "rgba(90,143,168,0.5)", letterSpacing: 1, flexShrink: 0 }}>
                   {lang === "en" ? "PAST DAY · READ ONLY" : "歷史日期 · 唯讀"}
                 </div>
               ) : (
@@ -1275,7 +1283,7 @@ export default function Dashboard({ session }: { session: Session }) {
                 <div ref={moodDropdownRef} style={{ position: "relative", flexShrink: 0 }}>
                   <button
                     onClick={() => setMoodDropdownOpen(o => !o)}
-                    style={{ padding: "8px 12px", background: moodDropdownOpen ? "rgba(192,132,252,0.15)" : "rgba(192,132,252,0.06)", border: `1px solid ${moodDropdownOpen ? "rgba(192,132,252,0.5)" : "rgba(192,132,252,0.25)"}`, borderRadius: 6, color: selectedMoods.length ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, cursor: "pointer", letterSpacing: 1, whiteSpace: "nowrap", transition: "all 0.15s" }}
+                    style={{ padding: "8px 12px", background: moodDropdownOpen ? "rgba(192,132,252,0.15)" : "rgba(192,132,252,0.06)", border: `1px solid ${moodDropdownOpen ? "rgba(192,132,252,0.5)" : "rgba(192,132,252,0.25)"}`, borderRadius: 6, color: selectedMoods.length ? "#c084fc" : "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 14, cursor: "pointer", letterSpacing: 1, whiteSpace: "nowrap", transition: "all 0.15s" }}
                   >
                     {selectedMoods.length === 0 ? (lang === "zh" ? "專注 (自評) ▾" : "FOCUS (SELF-REPORT) ▾") : `${selectedMoods.length} SELECTED ▾`}
                   </button>
@@ -1293,7 +1301,7 @@ export default function Dashboard({ session }: { session: Session }) {
                             <div style={{ width: 14, height: 14, border: `1px solid ${active ? "#c084fc" : "rgba(192,132,252,0.35)"}`, borderRadius: 3, background: active ? "rgba(192,132,252,0.25)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                               {active && <div style={{ width: 8, height: 8, background: "#c084fc", borderRadius: 1 }} />}
                             </div>
-                            <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: active ? "#c084fc" : "#d0e8f8", letterSpacing: 0.5 }}>{label[m]}</span>
+                            <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 14, color: active ? "#c084fc" : "#d0e8f8", letterSpacing: 0.5 }}>{label[m]}</span>
                           </div>
                         );
                       })}
@@ -1341,7 +1349,7 @@ export default function Dashboard({ session }: { session: Session }) {
                   </div>
                 </div>
               ) : (
-                <div style={{ padding: "4px 0", fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(251,191,36,0.4)", letterSpacing: 1 }}>
+                <div style={{ padding: "4px 0", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "rgba(251,191,36,0.4)", letterSpacing: 1 }}>
                   {lang === "en" ? "PAST DAY · READ ONLY" : "歷史日期 · 唯讀"}
                 </div>
               )}
@@ -1365,14 +1373,14 @@ export default function Dashboard({ session }: { session: Session }) {
                   onMouseEnter={e => { if (selectedDate === todayStr()) (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(251,191,36,0.35)"; }}
                   onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(251,191,36,0.14)"}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", flexShrink: 0 }}>{med.time}</span>
-                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#fbbf24", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{med.name}{med.dose ? ` · ${med.dose}` : ""}</span>
+                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", flexShrink: 0 }}>{med.time}</span>
+                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 15, color: "#fbbf24", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{med.name}{med.dose ? ` · ${med.dose}` : ""}</span>
                     {selectedDate === todayStr() && (
                       <button onClick={e => { e.stopPropagation(); deleteMed(med.id); }} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.4)", cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1, flexShrink: 0 }}>✕</button>
                     )}
                   </div>
                   {(() => { const delta = getMedDelta(med); return delta ? (
-                    <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: delta.delta > 0 ? "#4ade80" : delta.delta < 0 ? "#f472b6" : "#5a8fa8", letterSpacing: 0.5, marginTop: 3 }}>
+                    <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: delta.delta > 0 ? "#4ade80" : delta.delta < 0 ? "#f472b6" : "#5a8fa8", letterSpacing: 0.5, marginTop: 3 }}>
                       {delta.delta > 0 ? "+" : ""}{delta.delta} focus in {delta.minutes}m
                     </div>
                   ) : null; })()}
@@ -1449,7 +1457,7 @@ export default function Dashboard({ session }: { session: Session }) {
                   </div>
                 </div>
                 </>) : (
-                <div style={{ padding: "8px 12px", marginBottom: 10, border: "1px solid rgba(192,132,252,0.12)", borderRadius: 4, fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.5)", letterSpacing: 1 }}>
+                <div style={{ padding: "8px 12px", marginBottom: 10, border: "1px solid rgba(192,132,252,0.12)", borderRadius: 4, fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "rgba(90,143,168,0.5)", letterSpacing: 1 }}>
                   {lang === "en" ? "PAST DAY · READ ONLY" : "歷史日期 · 唯讀"}
                 </div>
                 )}
@@ -1474,31 +1482,31 @@ export default function Dashboard({ session }: { session: Session }) {
                           {task.title}
                         </span>
                         {task.demand && (
-                          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, padding: "1px 5px", border: `1px solid ${demandColor(task.demand)}`, color: demandColor(task.demand), borderRadius: 3, flexShrink: 0, letterSpacing: 1 }}>
+                          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, padding: "1px 5px", border: `1px solid ${demandColor(task.demand)}`, color: demandColor(task.demand), borderRadius: 3, flexShrink: 0, letterSpacing: 1 }}>
                             {task.demand === "low" ? t.demandLow : task.demand === "medium" ? t.demandMed : t.demandHigh}
                           </span>
                         )}
                         {task.estimatedMinutes && (
-                          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", flexShrink: 0 }}>
+                          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", flexShrink: 0 }}>
                             {task.estimatedMinutes}{t.minUnit}
                           </span>
                         )}
                       </div>
                       {/* Description preview */}
                       {task.description && (
-                        <p style={{ margin: 0, marginLeft: 22, fontSize: 13, color: "#5a8fa8", lineHeight: 1.5, fontStyle: "italic", fontFamily: "'Rajdhani', sans-serif", wordBreak: "break-word" }}>
+                        <p style={{ margin: 0, marginLeft: 22, fontSize: 14, color: "#5a8fa8", lineHeight: 1.5, fontStyle: "italic", fontFamily: "'Rajdhani', sans-serif", wordBreak: "break-word" }}>
                           {task.description}
                         </p>
                       )}
                       {task.deadline && (
-                        <span style={{ marginLeft: 22, fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(251,191,36,0.7)", letterSpacing: 1 }}>
+                        <span style={{ marginLeft: 22, fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "rgba(251,191,36,0.7)", letterSpacing: 1 }}>
                           {lang === "en" ? "DUE" : "截止"} {task.deadline}
                         </span>
                       )}
                     </div>
                   ))}
                 </div>
-                <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 1 }}>
+                <div style={{ marginTop: 10, fontFamily: "'Share Tech Mono', monospace", fontSize: 14, color: "#5a8fa8", letterSpacing: 1 }}>
                   {t.progress} {visibleCompleted}/{visibleTasks.length} {visibleCompleted > 0 && visibleCompleted === visibleTasks.length ? t.complete : ""}
                 </div>
               </div>
