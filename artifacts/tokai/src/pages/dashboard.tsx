@@ -281,6 +281,7 @@ function LangToggle({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void 
 
 export default function Dashboard({ session }: { session: Session }) {
   const userId = session.user.id;
+  const tokEn = 100; // Alpha: fixed allocation. Beta: fetch from DB per user.
   const [lang, setLang] = useState<Lang>("en");
   const t = T[lang];
 
@@ -894,8 +895,14 @@ export default function Dashboard({ session }: { session: Session }) {
 
       <div style={{ flex: 1 }} />
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5, wordBreak: "break-all" }}>
-          {session.user.email}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5, wordBreak: "break-all", flex: 1, minWidth: 0 }}>
+            {session.user.email}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(192,132,252,0.08)", border: "1px solid rgba(192,132,252,0.22)", borderRadius: 20, padding: "3px 8px 3px 3px", flexShrink: 0 }}>
+            <img src="/tok-en.png" alt="TokEn" style={{ width: 18, height: 18, borderRadius: "50%" }} />
+            <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc", letterSpacing: 0.5 }}>{tokEn}</span>
+          </div>
         </div>
         <button
           onClick={() => supabase.auth.signOut()}
@@ -934,8 +941,14 @@ export default function Dashboard({ session }: { session: Session }) {
             </div>
             <div style={{ padding: "6px 16px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5 }}>
-                  {session.user.email}
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5 }}>
+                    {session.user.email}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 3, background: "rgba(192,132,252,0.08)", border: "1px solid rgba(192,132,252,0.22)", borderRadius: 20, padding: "2px 6px 2px 2px", flexShrink: 0 }}>
+                    <img src="/tok-en.png" alt="TokEn" style={{ width: 14, height: 14, borderRadius: "50%" }} />
+                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "#c084fc", letterSpacing: 0.5 }}>{tokEn}</span>
+                  </div>
                 </div>
                 <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.4)", letterSpacing: 0.5 }}>
                   Developed by{" "}
