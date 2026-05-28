@@ -617,35 +617,50 @@ export default function Dashboard({ session }: { session: Session }) {
     e.target.value = "";
     setMoodCheckLoading(true);
     setMoodCheckError(null);
-    const reader = new FileReader();
-    reader.onerror = () => {
-      setMoodCheckError(lang === "en" ? "Could not read image." : "無法讀取圖片。");
-      setMoodCheckLoading(false);
-    };
-    reader.onload = async () => {
-      const base64 = (reader.result as string).split(",")[1];
-      const mimeType = (file.type || "image/jpeg") as "image/jpeg" | "image/png" | "image/webp";
-      try {
-        const res = await fetch(`${API_BASE}/api/mood-check`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: base64, mimeType, userApiKey: localStorage.getItem("tokai_anthropic_key") ?? "" }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
-        if (data.mood) {
-          setMoodAssessment(data);
-        } else {
-          throw new Error("Unexpected response from scan.");
-        }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Scan failed.";
-        console.error("Mood check error:", msg);
-        setMoodCheckError(lang === "en" ? `Scan failed: ${msg}` : `掃描失敗：${msg}`);
+    try {
+      const { base64, mimeType } = await compressImage(file);
+      const res = await fetch(`${API_BASE}/api/mood-check`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64, mimeType, userApiKey: localStorage.getItem("tokai_anthropic_key") ?? "" }),
+      });
+      const text = await res.text();
+      let data: Record<string, unknown>;
+      try { data = JSON.parse(text); }
+      catch { throw new Error(`Server returned non-JSON (${res.status}): ${text.slice(0, 120)}`); }
+      if (!res.ok) throw new Error((data.error as string) ?? `HTTP ${res.status}`);
+      if (data.mood) {
+        setMoodAssessment(data as unknown as MoodAssessment);
+      } else {
+        throw new Error("Unexpected response from scan.");
       }
-      setMoodCheckLoading(false);
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Scan failed.";
+      console.error("Mood check error:", msg);
+      setMoodCheckError(lang === "en" ? `Scan failed: ${msg}` : `掃描失敗：${msg}`);
+    }
+    setMoodCheckLoading(false);
+  }
+
+  function compressImage(file: File, maxWidth = 800, quality = 0.7): Promise<{ base64: string; mimeType: "image/jpeg" }> {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not load image.")); };
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("Canvas unavailable.")); return; }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve({ base64: dataUrl.split(",")[1], mimeType: "image/jpeg" });
+      };
+      img.src = url;
+    });
   }
 
   useEffect(() => {
