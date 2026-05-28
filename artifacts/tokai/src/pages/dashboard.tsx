@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { Github, Activity, BookOpen, ListChecks, Pill, Brain, Crosshair, Zap, Waves, BarChart2, Clock } from "lucide-react";
+import { Github, Activity, BookOpen, ListChecks, Pill, Brain, Crosshair, Zap, Waves, BarChart2, Clock, Camera } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, ReferenceLine,
 } from "recharts";
@@ -145,6 +145,7 @@ const TASK_EMOJIS = ["📚", "✍️", "💻", "📧", "💪", "🍳", "🧹", "
 interface MedEntry { id: string; name: string; dose: string; time: string; focusTime?: string; sampleIndex: number; rating: number | null; }
 type Mood = "hyperfocus" | "flow" | "focused" | "restless" | "scattered" | "anxious" | "fatigued" | "zoned-out" | "crashed" | "low";
 interface JournalEntry { id: string; text: string; time: string; date: string; focusIndex: number; mood: Mood[]; focusTime?: string; }
+interface MoodAssessment { mood: "positive" | "neutral" | "low"; energy: "high" | "moderate" | "low"; stress: "calm" | "mild" | "elevated"; suggestion: string; }
 
 
 function demandColor(d: Demand) {
@@ -349,6 +350,10 @@ export default function Dashboard({ session }: { session: Session }) {
   const [newTaskDeadline, setNewTaskDeadline] = useState("");
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(() => !!localStorage.getItem("tokai_disclaimer_accepted"));
   const [infoModal, setInfoModal] = useState<{ title: string; body: string } | null>(null);
+  const [moodAssessment, setMoodAssessment] = useState<MoodAssessment | null>(null);
+  const [moodCheckLoading, setMoodCheckLoading] = useState(false);
+  const [showMoodConsent, setShowMoodConsent] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const availableDates = useMemo(() => {
     const dates = new Set<string>([todayStr()]);
@@ -588,6 +593,39 @@ export default function Dashboard({ session }: { session: Session }) {
     setJournal(prev => prev.filter(e => e.id !== id));
     setEditingNoteId(null);
     await supabase.from("journal_entries").delete().eq("id", id);
+  }
+
+  function triggerMoodCheck() {
+    if (!localStorage.getItem("tokai_mood_consent")) {
+      setShowMoodConsent(true);
+    } else {
+      cameraInputRef.current?.click();
+    }
+  }
+
+  async function handleImageCapture(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    setMoodCheckLoading(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = (reader.result as string).split(",")[1];
+      const mimeType = (file.type || "image/jpeg") as "image/jpeg" | "image/png" | "image/webp";
+      try {
+        const res = await fetch(`${API_BASE}/api/mood-check`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageBase64: base64, mimeType, userApiKey: localStorage.getItem("tokai_anthropic_key") ?? "" }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.mood) setMoodAssessment(data);
+        }
+      } catch { /* silent */ }
+      setMoodCheckLoading(false);
+    };
+    reader.readAsDataURL(file);
   }
 
   useEffect(() => {
@@ -1175,6 +1213,23 @@ export default function Dashboard({ session }: { session: Session }) {
                 "{getInsight()}"
               </p>
             </div>
+            {/* Mood assessment result banner */}
+            {moodAssessment && (
+              <div style={{ padding: "7px 16px", borderBottom: "1px solid rgba(192,132,252,0.1)", background: "rgba(192,132,252,0.04)", flexShrink: 0, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <Camera size={11} color="#5a8fa8" style={{ flexShrink: 0 }} />
+                {([
+                  { k: lang === "en" ? "MOOD" : "情緒", v: moodAssessment.mood, colors: { positive: "#4ade80", neutral: "#c084fc", low: "#f472b6" } as Record<string, string> },
+                  { k: lang === "en" ? "ENERGY" : "能量", v: moodAssessment.energy, colors: { high: "#4ade80", moderate: "#ffa040", low: "#f472b6" } as Record<string, string> },
+                  { k: lang === "en" ? "STRESS" : "壓力", v: moodAssessment.stress, colors: { calm: "#4ade80", mild: "#ffa040", elevated: "#f472b6" } as Record<string, string> },
+                ] as { k: string; v: string; colors: Record<string, string> }[]).map(({ k, v, colors }) => (
+                  <span key={k} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, padding: "1px 6px", border: `1px solid ${colors[v] ?? "#c084fc"}`, color: colors[v] ?? "#c084fc", borderRadius: 3, letterSpacing: 1, whiteSpace: "nowrap" }}>
+                    {k}: {v.toUpperCase()}
+                  </span>
+                ))}
+                <span style={{ flex: 1, fontSize: 13, color: "rgba(200,216,232,0.65)", fontFamily: "'Rajdhani', sans-serif", fontStyle: "italic", minWidth: 0 }}>{moodAssessment.suggestion}</span>
+                <button onClick={() => setMoodAssessment(null)} style={{ background: "none", border: "none", color: "rgba(90,143,168,0.5)", cursor: "pointer", fontSize: 16, padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
+              </div>
+            )}
             {/* Entries */}
             <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
                 {(() => {
@@ -1231,6 +1286,14 @@ export default function Dashboard({ session }: { session: Session }) {
               ) : (
               <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(192,132,252,0.15)", display: "flex", gap: 8, alignItems: "center", background: "rgba(0,0,0,0.15)", flexShrink: 0 }}>
                 <input
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  ref={cameraInputRef}
+                  onChange={handleImageCapture}
+                  style={{ display: "none" }}
+                />
+                <input
                   value={journalInput}
                   onChange={e => setJournalInput(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && addJournalEntry()}
@@ -1239,6 +1302,16 @@ export default function Dashboard({ session }: { session: Session }) {
                   onFocus={e => (e.target.style.borderColor = "rgba(192,132,252,0.5)")}
                   onBlur={e => (e.target.style.borderColor = "rgba(192,132,252,0.2)")}
                 />
+                <button
+                  onClick={triggerMoodCheck}
+                  disabled={moodCheckLoading}
+                  title={lang === "en" ? "Mood scan (photo)" : "情緒掃描（拍照）"}
+                  style={{ padding: "8px 10px", background: moodAssessment ? "rgba(192,132,252,0.15)" : "rgba(192,132,252,0.05)", border: `1px solid ${moodAssessment ? "rgba(192,132,252,0.5)" : "rgba(192,132,252,0.2)"}`, borderRadius: 6, color: moodAssessment ? "#c084fc" : "#5a8fa8", cursor: moodCheckLoading ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" }}
+                  onMouseEnter={e => { if (!moodCheckLoading) { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(192,132,252,0.5)"; (e.currentTarget as HTMLButtonElement).style.color = "#c084fc"; } }}
+                  onMouseLeave={e => { if (!moodAssessment) { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(192,132,252,0.2)"; (e.currentTarget as HTMLButtonElement).style.color = "#5a8fa8"; } }}
+                >
+                  {moodCheckLoading ? <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, letterSpacing: 1 }}>...</span> : <Camera size={14} />}
+                </button>
                 <div ref={moodDropdownRef} style={{ position: "relative", flexShrink: 0 }}>
                   <button
                     onClick={() => setMoodDropdownOpen(o => !o)}
@@ -1288,6 +1361,7 @@ export default function Dashboard({ session }: { session: Session }) {
             lang={lang}
             isMobile={isMobile}
             onInfo={() => setInfoModal(INFO[lang].tokAgent)}
+            moodAssessment={moodAssessment ?? undefined}
           />
           <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 10, padding: 16, boxShadow: "0 0 24px rgba(192,132,252,0.07)", height: 480, display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
@@ -1439,6 +1513,50 @@ export default function Dashboard({ session }: { session: Session }) {
             >
               {lang === "zh" ? "我已了解 · 繼續" : "I UNDERSTAND · CONTINUE"}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Mood consent modal ── */}
+      {showMoodConsent && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", zIndex: 350, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ width: "100%", maxWidth: 420, background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.45)", borderRadius: 14, padding: 28, boxShadow: "0 0 60px rgba(192,132,252,0.12)", display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Camera size={14} color="#c084fc" />
+              <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc", letterSpacing: 3 }}>
+                {lang === "en" ? "MOOD CHECK-IN" : "情緒掃描"}
+              </span>
+            </div>
+            <p style={{ margin: 0, fontSize: 15, color: "#c8d8e8", lineHeight: 1.7, fontFamily: "'Rajdhani', sans-serif" }}>
+              {lang === "en"
+                ? "Tokai will analyze a photo to assess your mood and energy state, then personalize your task session accordingly."
+                : "Tokai 將分析一張照片來評估你的情緒與能量狀態，並據此個人化你的任務工作階段。"}
+            </p>
+            <p style={{ margin: 0, fontSize: 13, color: "#5a8fa8", lineHeight: 1.6, fontFamily: "'Share Tech Mono', monospace", letterSpacing: 0.3 }}>
+              {lang === "en"
+                ? "The image is sent to Claude's API for analysis and is not stored on Tokai's servers."
+                : "照片將傳送至 Claude API 進行分析，不會儲存於 Tokai 伺服器。"}
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => {
+                  localStorage.setItem("tokai_mood_consent", "1");
+                  setShowMoodConsent(false);
+                  cameraInputRef.current?.click();
+                }}
+                style={{ flex: 1, padding: "10px 0", background: "rgba(192,132,252,0.15)", border: "1px solid rgba(192,132,252,0.5)", borderRadius: 6, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, letterSpacing: 2, cursor: "pointer", transition: "background 0.2s" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(192,132,252,0.28)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "rgba(192,132,252,0.15)")}
+              >
+                {lang === "en" ? "ALLOW · SCAN" : "允許 · 掃描"}
+              </button>
+              <button
+                onClick={() => setShowMoodConsent(false)}
+                style={{ padding: "10px 18px", background: "transparent", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#5a8fa8", fontFamily: "'Share Tech Mono', monospace", fontSize: 11, letterSpacing: 2, cursor: "pointer" }}
+              >
+                {lang === "en" ? "NOT NOW" : "稍後"}
+              </button>
+            </div>
           </div>
         </div>
       )}

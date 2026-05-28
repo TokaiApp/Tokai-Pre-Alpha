@@ -10,9 +10,10 @@ if (process.env.ANTHROPIC_API_KEY) {
 
 router.post("/chat", async (req, res) => {
   try {
-    const { messages, neuralState } = req.body as {
+    const { messages, neuralState, moodAssessment } = req.body as {
       messages: { role: "user" | "assistant"; content: string }[];
       neuralState: { focusIndex: number; bioEnergy: number; neuralNoise: number; abRatio: number };
+      moodAssessment?: { mood: string; energy: string; stress: string; suggestion: string };
     };
 
     if (!client) {
@@ -48,10 +49,16 @@ Your behavior:
 - Keep responses concise — 2-4 sentences unless the user asks for more detail
 - Be direct and actionable
 - Use a calm, focused tone
-- Do not use emojis`;
+- Do not use emojis${moodAssessment ? `
+
+Mood check-in (AI vision scan of user's selfie taken at session start):
+- Apparent mood: ${moodAssessment.mood}
+- Apparent energy: ${moodAssessment.energy}
+- Apparent stress: ${moodAssessment.stress}
+- Recommendation: ${moodAssessment.suggestion}` : ""}`;
 
     const response = await client.messages.create({
-      model: "claude-sonnet-4-5",
+      model: "claude-sonnet-4-6",
       max_tokens: 512,
       system,
       messages,
@@ -64,6 +71,56 @@ Your behavior:
   } catch (err) {
     console.error("Chat route error:", err);
     res.status(500).json({ content: "Neural link failure. Please retry." });
+  }
+});
+
+router.post("/mood-check", async (req, res) => {
+  try {
+    const { imageBase64, mimeType = "image/jpeg", userApiKey } = req.body as {
+      imageBase64: string;
+      mimeType?: "image/jpeg" | "image/png" | "image/webp";
+      userApiKey?: string;
+    };
+
+    const anthropic = client ?? (userApiKey ? new Anthropic({ apiKey: userApiKey }) : null);
+    if (!anthropic) {
+      res.status(503).json({ error: "No API key configured." });
+      return;
+    }
+
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 256,
+      system: `You are a wellness assistant in Tokai, a productivity app for people with ADHD.
+Analyze the person's apparent emotional and energy state from their selfie.
+Reply ONLY with a valid JSON object — no prose, no markdown fences — in this exact shape:
+{"mood":"positive","energy":"high","stress":"calm","suggestion":"one short actionable sentence"}
+Valid values: mood = positive|neutral|low, energy = high|moderate|low, stress = calm|mild|elevated`,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: mimeType as "image/jpeg" | "image/png" | "image/webp",
+                data: imageBase64,
+              },
+            },
+            { type: "text", text: "Here is my selfie. Please assess my state." },
+          ],
+        },
+      ],
+    });
+
+    const block = response.content[0];
+    if (block.type !== "text") throw new Error("Unexpected content type");
+    const assessment = JSON.parse(block.text);
+    res.json(assessment);
+  } catch (err) {
+    console.error("Mood check error:", err);
+    res.status(500).json({ error: "Mood check failed." });
   }
 });
 

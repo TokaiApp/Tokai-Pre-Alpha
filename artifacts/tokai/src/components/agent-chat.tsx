@@ -36,6 +36,13 @@ interface MedEntry {
   time: string;
 }
 
+interface MoodAssessment {
+  mood: "positive" | "neutral" | "low";
+  energy: "high" | "moderate" | "low";
+  stress: "calm" | "mild" | "elevated";
+  suggestion: string;
+}
+
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -88,7 +95,7 @@ const STORAGE_KEY = "tokai_anthropic_key";
 const CHAT_KEY_PREFIX = "tokai_chat";
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
-export default function AgentChat({ neuralState, tasks, journalEntries = [], medLog = [], lang = "en", isMobile = false, selectedDate, onInfo }: {
+export default function AgentChat({ neuralState, tasks, journalEntries = [], medLog = [], lang = "en", isMobile = false, selectedDate, onInfo, moodAssessment }: {
   neuralState: NeuralState;
   tasks: Task[];
   journalEntries?: JournalEntry[];
@@ -97,6 +104,7 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], med
   isMobile?: boolean;
   selectedDate?: string;
   onInfo?: () => void;
+  moodAssessment?: MoodAssessment;
 }) {
   const t = UI[lang];
   const chatDate = selectedDate ?? todayStr();
@@ -189,7 +197,7 @@ export default function AgentChat({ neuralState, tasks, journalEntries = [], med
       const res = await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: apiMessages, neuralState, tasks, journalEntries, medLog, lang, userApiKey: apiKey }),
+        body: JSON.stringify({ messages: apiMessages, neuralState, tasks, journalEntries, medLog, lang, userApiKey: apiKey, moodAssessment }),
       });
       if (!res.ok) {
         const errBody = await res.json().catch(() => null);
