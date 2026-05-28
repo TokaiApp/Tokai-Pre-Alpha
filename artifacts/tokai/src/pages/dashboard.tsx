@@ -176,7 +176,7 @@ function drift(val: number, amount: number, min: number, max: number) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#c084fc", letterSpacing: 3, marginBottom: 10, borderBottom: "1px solid rgba(192,132,252,0.2)", paddingBottom: 4 }}>
+    <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#c084fc", letterSpacing: 3, marginBottom: 10, borderBottom: "1px solid rgba(192,132,252,0.2)", paddingBottom: 4 }}>
       {children}
     </div>
   );
@@ -235,7 +235,7 @@ function MetricCard({ title, icon, onInfo, children }: { title: string; icon?: R
   return (
     <div style={{ background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.15)", borderRadius: 10, padding: "16px 20px", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: 0, left: 0, width: 3, height: "100%", background: "linear-gradient(180deg, #c084fc, #7c3aed)" }} />
-      <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#5a8fa8", letterSpacing: 2, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 2, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
         {icon}
         <span style={{ flex: 1 }}>{title}</span>
         {onInfo && <InfoButton onClick={onInfo} />}
@@ -260,7 +260,7 @@ function Panel({ title, onInfo, children }: { title: React.ReactNode; onInfo?: (
 
 function Badge({ children, color }: { children: React.ReactNode; color: string }) {
   return (
-    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, padding: "2px 8px", border: `1px solid ${color}`, color, borderRadius: 3, letterSpacing: 1 }}>
+    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, padding: "2px 8px", border: `1px solid ${color}`, color, borderRadius: 3, letterSpacing: 1 }}>
       {children}
     </span>
   );
@@ -855,7 +855,7 @@ export default function Dashboard({ session }: { session: Session }) {
 
         <div>
           <SectionLabel>{t.sessionInfo}</SectionLabel>
-          <table style={{ width: "100%", fontSize: 14, borderCollapse: "collapse" }}>
+          <table style={{ width: "100%", fontSize: 15, borderCollapse: "collapse" }}>
             <tbody>
               {([
                 [t.date, now.toISOString().slice(0, 10)],
@@ -875,7 +875,7 @@ export default function Dashboard({ session }: { session: Session }) {
 
         <div>
           <SectionLabel>{t.aboutTokai}</SectionLabel>
-          <p style={{ fontSize: 14, color: "#5a8fa8", lineHeight: 1.6, margin: "0 0 12px 0" }}>{t.aboutText}</p>
+          <p style={{ fontSize: 15, color: "#5a8fa8", lineHeight: 1.6, margin: "0 0 12px 0" }}>{t.aboutText}</p>
           <a href="https://github.com/TokaiApp/Tokai-Pre-Alpha" target="_blank" rel="noopener noreferrer"
             style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#5a8fa8", textDecoration: "none", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 1, transition: "color 0.2s" }}
             onMouseEnter={e => (e.currentTarget.style.color = "#c084fc")}
@@ -894,15 +894,18 @@ export default function Dashboard({ session }: { session: Session }) {
         </div>
 
       <div style={{ flex: 1 }} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5, wordBreak: "break-all", flex: 1, minWidth: 0 }}>
-            {session.user.email}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "rgba(192,132,252,0.06)", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 8 }}>
+          <img src="/tok-en.png" alt="TokEn" style={{ width: 30, height: 30, flexShrink: 0 }} />
+          <div>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, letterSpacing: 3 }}>
+              <span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>ENS</span>
+            </div>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 22, color: "#c084fc", lineHeight: 1.1 }}>{tokEn}</div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(192,132,252,0.08)", border: "1px solid rgba(192,132,252,0.22)", borderRadius: 20, padding: "3px 8px 3px 3px", flexShrink: 0 }}>
-            <img src="/tok-en.png" alt="TokEn" style={{ width: 18, height: 18, borderRadius: "50%" }} />
-            <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#c084fc", letterSpacing: 0.5 }}>{tokEn}</span>
-          </div>
+        </div>
+        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5, wordBreak: "break-all" }}>
+          {session.user.email}
         </div>
         <button
           onClick={() => supabase.auth.signOut()}
@@ -940,15 +943,18 @@ export default function Dashboard({ session }: { session: Session }) {
               </div>
             </div>
             <div style={{ padding: "6px 16px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5 }}>
-                    {session.user.email}
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <img src="/tok-en.png" alt="TokEn" style={{ width: 22, height: 22, flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 9, letterSpacing: 2 }}>
+                      <span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>ENS</span>
+                    </div>
+                    <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 16, color: "#c084fc", lineHeight: 1.1 }}>{tokEn}</div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 3, background: "rgba(192,132,252,0.08)", border: "1px solid rgba(192,132,252,0.22)", borderRadius: 20, padding: "2px 6px 2px 2px", flexShrink: 0 }}>
-                    <img src="/tok-en.png" alt="TokEn" style={{ width: 14, height: 14, borderRadius: "50%" }} />
-                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "#c084fc", letterSpacing: 0.5 }}>{tokEn}</span>
-                  </div>
+                </div>
+                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.5)", letterSpacing: 0.5 }}>
+                  {session.user.email}
                 </div>
                 <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.4)", letterSpacing: 0.5 }}>
                   Developed by{" "}
@@ -1145,7 +1151,7 @@ export default function Dashboard({ session }: { session: Session }) {
             {/* Neural Insight — pinned, always visible */}
             <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(192,132,252,0.1)", background: "rgba(192,132,252,0.02)", flexShrink: 0, display: "flex", alignItems: "flex-start", gap: 8 }}>
               <Brain size={14} color="rgba(192,132,252,0.5)" style={{ flexShrink: 0, marginTop: 3 }} />
-              <p style={{ margin: 0, fontSize: 14, color: "rgba(200,216,232,0.7)", lineHeight: 1.6, fontStyle: "italic", fontFamily: "'Rajdhani', sans-serif" }}>
+              <p style={{ margin: 0, fontSize: 15, color: "rgba(200,216,232,0.7)", lineHeight: 1.6, fontStyle: "italic", fontFamily: "'Rajdhani', sans-serif" }}>
                 "{getInsight()}"
               </p>
             </div>
@@ -1208,7 +1214,7 @@ export default function Dashboard({ session }: { session: Session }) {
                         })()}
                         <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(192,132,252,0.3)", marginLeft: "auto" }}>✎</span>
                       </div>
-                      <p style={{ margin: 0, fontSize: 15, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", lineHeight: 1.5 }}>{entry.text}</p>
+                      <p style={{ margin: 0, fontSize: 16, color: "#c8d8e8", fontFamily: "'Rajdhani', sans-serif", lineHeight: 1.5 }}>{entry.text}</p>
                     </div>
                   ))
                 })()}
@@ -1453,7 +1459,7 @@ export default function Dashboard({ session }: { session: Session }) {
                             style={{ accentColor: "#c084fc", cursor: "pointer", flexShrink: 0, marginTop: 3 }} />
                         </div>
                         {task.emoji && <span style={{ fontSize: 16, flexShrink: 0, lineHeight: 1, opacity: task.done ? 0.5 : 1 }}>{task.emoji}</span>}
-                        <span style={{ flex: 1, fontSize: 16, fontWeight: 600, color: task.done ? "#5a8fa8" : "#c8d8e8", textDecoration: task.done ? "line-through" : "none", minWidth: 0, wordBreak: "break-word" }}>
+                        <span style={{ flex: 1, fontSize: 17, fontWeight: 600, color: task.done ? "#5a8fa8" : "#c8d8e8", textDecoration: task.done ? "line-through" : "none", minWidth: 0, wordBreak: "break-word" }}>
                           {task.title}
                         </span>
                         {task.demand && (

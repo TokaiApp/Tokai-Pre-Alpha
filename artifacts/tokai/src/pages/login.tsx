@@ -52,10 +52,10 @@ export default function Login() {
       <div style={{ width: "100%", maxWidth: 400, background: "linear-gradient(135deg, #120d28, #160f30)", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 14, padding: 32, display: "flex", flexDirection: "column", gap: 20, boxShadow: "0 0 60px rgba(192,132,252,0.08)" }}>
 
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 36, letterSpacing: 10 }}>
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 40, letterSpacing: 10 }}>
             <span style={{ color: "#7c3aed" }}>TOK</span><span style={{ color: "#c084fc" }}>AI</span>
           </div>
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "#5a8fa8", letterSpacing: 2, marginTop: 6 }}>
+          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#5a8fa8", letterSpacing: 2, marginTop: 6 }}>
             {mode === "signin" ? "SIGN IN TO YOUR ACCOUNT" : mode === "signup" ? "CREATE ACCOUNT" : "RESET PASSWORD"}
           </div>
         </div>
@@ -72,17 +72,17 @@ export default function Login() {
             />
           )}
           {error && (
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#f87171", letterSpacing: 0.5 }}>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#f87171", letterSpacing: 0.5 }}>
               {error}
             </div>
           )}
           {message && (
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "#6ee7b7", letterSpacing: 0.5 }}>
+            <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "#6ee7b7", letterSpacing: 0.5 }}>
               {message}
             </div>
           )}
           <button type="submit" disabled={loading}
-            style={{ padding: "11px 0", background: loading ? "rgba(192,132,252,0.08)" : "rgba(192,132,252,0.18)", border: "1px solid rgba(192,132,252,0.5)", borderRadius: 6, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 2, cursor: loading ? "default" : "pointer", transition: "background 0.2s" }}>
+            style={{ padding: "13px 0", background: loading ? "rgba(192,132,252,0.08)" : "rgba(192,132,252,0.18)", border: "1px solid rgba(192,132,252,0.5)", borderRadius: 6, color: "#c084fc", fontFamily: "'Share Tech Mono', monospace", fontSize: 14, letterSpacing: 2, cursor: loading ? "default" : "pointer", transition: "background 0.2s" }}>
             {loading ? "..." : mode === "signin" ? "SIGN IN" : mode === "signup" ? "CREATE ACCOUNT" : "SEND RESET LINK"}
           </button>
         </form>
@@ -91,11 +91,11 @@ export default function Login() {
           <>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ flex: 1, height: 1, background: "rgba(192,132,252,0.15)" }} />
-              <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: "rgba(90,143,168,0.5)", letterSpacing: 1 }}>OR</span>
+              <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 12, color: "rgba(90,143,168,0.5)", letterSpacing: 1 }}>OR</span>
               <div style={{ flex: 1, height: 1, background: "rgba(192,132,252,0.15)" }} />
             </div>
             <button onClick={handleGoogle}
-              style={{ padding: "11px 0", background: "transparent", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#c8d8e8", fontFamily: "'Share Tech Mono', monospace", fontSize: 13, letterSpacing: 1, cursor: "pointer", transition: "border-color 0.2s", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}
+              style={{ padding: "13px 0", background: "transparent", border: "1px solid rgba(192,132,252,0.2)", borderRadius: 6, color: "#c8d8e8", fontFamily: "'Share Tech Mono', monospace", fontSize: 14, letterSpacing: 1, cursor: "pointer", transition: "border-color 0.2s", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(192,132,252,0.45)")}
               onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(192,132,252,0.2)")}>
               <svg width="18" height="18" viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
@@ -113,7 +113,7 @@ export default function Login() {
         <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
           {mode !== "signin" && (
             <span onClick={() => { setMode("signin"); setError(null); setMessage(null); }}
-              style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.6)", cursor: "pointer", letterSpacing: 0.5 }}
+              style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "rgba(90,143,168,0.6)", cursor: "pointer", letterSpacing: 0.5 }}
               onMouseEnter={e => (e.currentTarget.style.color = "#c084fc")}
               onMouseLeave={e => (e.currentTarget.style.color = "rgba(90,143,168,0.6)")}>
               Sign in
@@ -121,7 +121,7 @@ export default function Login() {
           )}
           {mode !== "signup" && (
             <span onClick={() => { setMode("signup"); setError(null); setMessage(null); }}
-              style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.6)", cursor: "pointer", letterSpacing: 0.5 }}
+              style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "rgba(90,143,168,0.6)", cursor: "pointer", letterSpacing: 0.5 }}
               onMouseEnter={e => (e.currentTarget.style.color = "#c084fc")}
               onMouseLeave={e => (e.currentTarget.style.color = "rgba(90,143,168,0.6)")}>
               Create account
@@ -129,7 +129,7 @@ export default function Login() {
           )}
           {mode !== "reset" && (
             <span onClick={() => { setMode("reset"); setError(null); setMessage(null); }}
-              style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: "rgba(90,143,168,0.6)", cursor: "pointer", letterSpacing: 0.5 }}
+              style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 13, color: "rgba(90,143,168,0.6)", cursor: "pointer", letterSpacing: 0.5 }}
               onMouseEnter={e => (e.currentTarget.style.color = "#c084fc")}
               onMouseLeave={e => (e.currentTarget.style.color = "rgba(90,143,168,0.6)")}>
               Forgot password
